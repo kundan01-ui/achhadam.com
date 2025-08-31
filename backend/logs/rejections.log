@@ -1,0 +1,93 @@
+2025-08-31 23:44:50 [ERROR]: unhandledRejection: Expected ident
+file:///C:/Users/Acer/Desktop/Achhadam/backend/src/middleware/errorHandler.ts:25
+    method: string;
+    ...(any | undefined);
+    ^^^
+  };
+
+SyntaxError: Expected ident
+    at parseTypeScript (node:internal/modules/typescript:72:36)
+    at processTypeScriptCode (node:internal/modules/typescript:146:42)
+    at stripTypeScriptModuleTypes (node:internal/modules/typescript:209:22)
+    at ModuleLoader.<anonymous> (node:internal/modules/esm/translators:301:16)
+    at ModuleLoader.#translate (node:internal/modules/esm/loader:550:12)
+    at ModuleLoader.loadAndTranslateForRequireInImportedCJS (node:internal/modules/esm/loader:582:33)
+    at ModuleLoader.#createModuleJob (node:internal/modules/esm/loader:619:36)
+    at ModuleLoader.#getJobFromResolveResult (node:internal/modules/esm/loader:346:34)
+    at ModuleLoader.getModuleJobForRequireInImportedCJS (node:internal/modules/esm/loader:326:41)
+    at require (node:internal/modules/esm/translators:151:32) {"error":{"code":"ERR_INVALID_TYPESCRIPT_SYNTAX"},"rejection":true,"date":"Sun Aug 31 2025 23:44:50 GMT+0530 (India Standard Time)","process":{"pid":23484,"uid":null,"gid":null,"cwd":"C:\\Users\\Acer\\Desktop\\Achhadam\\backend","execPath":"C:\\Program Files\\nodejs\\node.exe","version":"v24.6.0","argv":["C:\\Users\\Acer\\Desktop\\Achhadam\\backend\\node_modules\\ts-node\\dist\\child\\child-entrypoint.js","C:\\Users\\Acer\\Desktop\\Achhadam\\backend\\src\\server.ts"],"memoryUsage":{"rss":215863296,"heapTotal":122523648,"heapUsed":66544912,"external":36974731,"arrayBuffers":26210864}},"os":{"loadavg":[0,0,0],"uptime":84054.328},"trace":[{"column":36,"file":"node:internal/modules/typescript","function":"parseTypeScript","line":72,"method":null,"native":false},{"column":42,"file":"node:internal/modules/typescript","function":"processTypeScriptCode","line":146,"method":null,"native":false},{"column":22,"file":"node:internal/modules/typescript","function":"stripTypeScriptModuleTypes","line":209,"method":null,"native":false},{"column":16,"file":"node:internal/modules/esm/translators","function":null,"line":301,"method":null,"native":false},{"column":12,"file":"node:internal/modules/esm/loader","function":"ModuleLoader.#translate","line":550,"method":"#translate","native":false},{"column":33,"file":"node:internal/modules/esm/loader","function":"ModuleLoader.loadAndTranslateForRequireInImportedCJS","line":582,"method":"loadAndTranslateForRequireInImportedCJS","native":false},{"column":36,"file":"node:internal/modules/esm/loader","function":"ModuleLoader.#createModuleJob","line":619,"method":"#createModuleJob","native":false},{"column":34,"file":"node:internal/modules/esm/loader","function":"ModuleLoader.#getJobFromResolveResult","line":346,"method":"#getJobFromResolveResult","native":false},{"column":41,"file":"node:internal/modules/esm/loader","function":"ModuleLoader.getModuleJobForRequireInImportedCJS","line":326,"method":"getModuleJobForRequireInImportedCJS","native":false},{"column":32,"file":"node:internal/modules/esm/translators","function":"require","line":151,"method":null,"native":false}],"service":"achhadam-backend","environment":"development"}
+file:///C:/Users/Acer/Desktop/Achhadam/backend/src/middleware/errorHandler.ts:25
+    method: string;
+    ...(any | undefined);
+    ^^^
+  };
+
+SyntaxError: Expected ident
+    at parseTypeScript (node:internal/modules/typescript:72:36)
+    at processTypeScriptCode (node:internal/modules/typescript:146:42)
+    at stripTypeScriptModuleTypes (node:internal/modules/typescript:209:22)
+    at ModuleLoader.<anonymous> (node:internal/modules/esm/translators:301:16)
+    at ModuleLoader.#translate (node:internal/modules/esm/loader:550:12)
+    at ModuleLoader.loadAndTranslateForRequireInImportedCJS (node:internal/modules/esm/loader:582:33)
+    at ModuleLoader.#createModuleJob (node:internal/modules/esm/loader:619:36)
+    at ModuleLoader.#getJobFromResolveResult (node:internal/modules/esm/loader:346:34)
+    at ModuleLoader.getModuleJobForRequireInImportedCJS (node:internal/modules/esm/loader:326:41)
+    at require (node:internal/modules/esm/translators:151:32)
+2025-08-31 23:47:18 [ERROR]: unhandledRejection: Unexpected token 'export'
+C:\Users\Acer\Desktop\Achhadam\backend\src\middleware\errorHandler.ts:4
+export class AppError extends Error {
+^^^^^^
+
+SyntaxError: Unexpected token 'export'
+    at loadCJSModule (node:internal/modules/esm/translators:124:25)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:209:7)
+    at ModuleJob.runSync (node:internal/modules/esm/module_job:343:39)
+    at require (node:internal/modules/esm/translators:152:9)
+    at Object.<anonymous> (C:\Users\Acer\Desktop\Achhadam\backend\src\server.ts:16:26)
+    at loadCJSModule (node:internal/modules/esm/translators:167:3)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:209:7)
+    at ModuleJob.run (node:internal/modules/esm/module_job:371:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:669:26) {"error":{},"rejection":true,"date":"Sun Aug 31 2025 23:47:18 GMT+0530 (India Standard Time)","process":{"pid":29372,"uid":null,"gid":null,"cwd":"C:\\Users\\Acer\\Desktop\\Achhadam\\backend","execPath":"C:\\Program Files\\nodejs\\node.exe","version":"v24.6.0","argv":["C:\\Users\\Acer\\Desktop\\Achhadam\\backend\\node_modules\\ts-node\\dist\\child\\child-entrypoint.js","C:\\Users\\Acer\\Desktop\\Achhadam\\backend\\src\\server.ts"],"memoryUsage":{"rss":215834624,"heapTotal":122523648,"heapUsed":66606232,"external":36974777,"arrayBuffers":26210912}},"os":{"loadavg":[0,0,0],"uptime":84202.015},"trace":[{"column":25,"file":"node:internal/modules/esm/translators","function":"loadCJSModule","line":124,"method":null,"native":false},{"column":7,"file":"node:internal/modules/esm/translators","function":null,"line":209,"method":null,"native":false},{"column":39,"file":"node:internal/modules/esm/module_job","function":"ModuleJob.runSync","line":343,"method":"runSync","native":false},{"column":9,"file":"node:internal/modules/esm/translators","function":"require","line":152,"method":null,"native":false},{"column":26,"file":"C:\\Users\\Acer\\Desktop\\Achhadam\\backend\\src\\server.ts","function":null,"line":16,"method":null,"native":false},{"column":3,"file":"node:internal/modules/esm/translators","function":"loadCJSModule","line":167,"method":null,"native":false},{"column":7,"file":"node:internal/modules/esm/translators","function":null,"line":209,"method":null,"native":false},{"column":25,"file":"node:internal/modules/esm/module_job","function":"ModuleJob.run","line":371,"method":"run","native":false},{"column":26,"file":"node:internal/modules/esm/loader","function":"async onImport.tracePromise.__proto__","line":669,"method":"__proto__","native":false}],"service":"achhadam-backend","environment":"development"}
+C:\Users\Acer\Desktop\Achhadam\backend\src\middleware\errorHandler.ts:4
+export class AppError extends Error {
+^^^^^^
+
+SyntaxError: Unexpected token 'export'
+    at loadCJSModule (node:internal/modules/esm/translators:124:25)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:209:7)
+    at ModuleJob.runSync (node:internal/modules/esm/module_job:343:39)
+    at require (node:internal/modules/esm/translators:152:9)
+    at Object.<anonymous> (C:\Users\Acer\Desktop\Achhadam\backend\src\server.ts:16:26)
+    at loadCJSModule (node:internal/modules/esm/translators:167:3)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:209:7)
+    at ModuleJob.run (node:internal/modules/esm/module_job:371:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:669:26)
+2025-08-31 23:50:14 [ERROR]: unhandledRejection: Cannot use import statement outside a module
+C:\Users\Acer\Desktop\Achhadam\backend\src\routes\api\users\index.ts:1
+import { Router } from 'express';
+^^^^^^
+
+SyntaxError: Cannot use import statement outside a module
+    at loadCJSModule (node:internal/modules/esm/translators:124:25)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:209:7)
+    at ModuleJob.runSync (node:internal/modules/esm/module_job:343:39)
+    at require (node:internal/modules/esm/translators:152:9)
+    at Object.<anonymous> (C:\Users\Acer\Desktop\Achhadam\backend\src\server.ts:21:20)
+    at loadCJSModule (node:internal/modules/esm/translators:167:3)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:209:7)
+    at ModuleJob.run (node:internal/modules/esm/module_job:371:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:669:26) {"error":{},"rejection":true,"date":"Sun Aug 31 2025 23:50:14 GMT+0530 (India Standard Time)","process":{"pid":12280,"uid":null,"gid":null,"cwd":"C:\\Users\\Acer\\Desktop\\Achhadam\\backend","execPath":"C:\\Program Files\\nodejs\\node.exe","version":"v24.6.0","argv":["C:\\Users\\Acer\\Desktop\\Achhadam\\backend\\node_modules\\ts-node\\dist\\child\\child-entrypoint.js","C:\\Users\\Acer\\Desktop\\Achhadam\\backend\\src\\server.ts"],"memoryUsage":{"rss":216997888,"heapTotal":122785792,"heapUsed":67028536,"external":37027110,"arrayBuffers":26263215}},"os":{"loadavg":[0,0,0],"uptime":84378.562},"trace":[{"column":25,"file":"node:internal/modules/esm/translators","function":"loadCJSModule","line":124,"method":null,"native":false},{"column":7,"file":"node:internal/modules/esm/translators","function":null,"line":209,"method":null,"native":false},{"column":39,"file":"node:internal/modules/esm/module_job","function":"ModuleJob.runSync","line":343,"method":"runSync","native":false},{"column":9,"file":"node:internal/modules/esm/translators","function":"require","line":152,"method":null,"native":false},{"column":20,"file":"C:\\Users\\Acer\\Desktop\\Achhadam\\backend\\src\\server.ts","function":null,"line":21,"method":null,"native":false},{"column":3,"file":"node:internal/modules/esm/translators","function":"loadCJSModule","line":167,"method":null,"native":false},{"column":7,"file":"node:internal/modules/esm/translators","function":null,"line":209,"method":null,"native":false},{"column":25,"file":"node:internal/modules/esm/module_job","function":"ModuleJob.run","line":371,"method":"run","native":false},{"column":26,"file":"node:internal/modules/esm/loader","function":"async onImport.tracePromise.__proto__","line":669,"method":"__proto__","native":false}],"service":"achhadam-backend","environment":"development"}
+C:\Users\Acer\Desktop\Achhadam\backend\src\routes\api\users\index.ts:1
+import { Router } from 'express';
+^^^^^^
+
+SyntaxError: Cannot use import statement outside a module
+    at loadCJSModule (node:internal/modules/esm/translators:124:25)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:209:7)
+    at ModuleJob.runSync (node:internal/modules/esm/module_job:343:39)
+    at require (node:internal/modules/esm/translators:152:9)
+    at Object.<anonymous> (C:\Users\Acer\Desktop\Achhadam\backend\src\server.ts:21:20)
+    at loadCJSModule (node:internal/modules/esm/translators:167:3)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:209:7)
+    at ModuleJob.run (node:internal/modules/esm/module_job:371:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:669:26)
