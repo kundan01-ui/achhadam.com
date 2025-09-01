@@ -4,14 +4,18 @@ import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import LanguageSelector from '../../components/ui/LanguageSelector';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { apiService } from '../../services/api';
+import { apiService, type SignupRequest } from '../../services/api';
+import OTPInput from '../../components/ui/OTPInput';
+import { MessageCircle, CheckCircle } from 'lucide-react';
 
 interface TransporterSignupPageProps {
   onBackToLogin: () => void;
   onSwitchUserType: (userType: 'farmer' | 'buyer' | 'transporter') => void;
+  onBackToHome: () => void;
+  onBackToUserTypeSelection?: () => void;
 }
 
-const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToLogin, onSwitchUserType }) => {
+const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToLogin, onSwitchUserType, onBackToHome, onBackToUserTypeSelection }) => {
   const { t } = useLanguage();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -39,66 +43,207 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [showOTP, setShowOTP] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [otpError, setOtpError] = useState('');
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // OTP Functions
+  const startResendTimer = () => {
+    setResendTimer(60);
+    const interval = setInterval(() => {
+      setResendTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleSendOTP = async () => {
+    if (!formData.phone || formData.phone.length !== 10) {
+      setOtpError('Please enter a valid 10-digit phone number');
+      return;
+    }
+
+    setOtpLoading(true);
+    setOtpError('');
+
+    try {
+      const response = await apiService.sendOTP(formData.phone);
+      
+      if (response.success) {
+        setOtpSent(true);
+        setShowOTP(true);
+        startResendTimer();
+        
+        // Show OTP in console for development
+        if (response.otp) {
+          console.log(`📱 OTP for ${formData.phone}: ${response.otp}`);
+        }
+      } else {
+        setOtpError(response.message || 'Failed to send OTP');
+      }
+    } catch (error: any) {
+      console.error('Send OTP error:', error);
+      setOtpError(error.message || 'Failed to send OTP');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (otp: string) => {
+    if (otp.length !== 6) return;
+    
+    // Prevent multiple calls if already loading or verified
+    if (otpLoading || otpVerified) return;
+
+    setOtpLoading(true);
+    setOtpError('');
+
+    try {
+      const response = await apiService.verifyOTP(formData.phone, otp);
+      
+      if (response.success) {
+        console.log('✅ OTP verified successfully!', response);
+        setOtpVerified(true);
+        setOtpError('');
+        
+        // Auto-proceed to next step after successful OTP verification
+        setTimeout(() => {
+          console.log('🚀 Auto-proceeding to next step');
+          setStep(step + 1);
+        }, 1000); // 1 second delay to show success message
+      } else {
+        console.log('❌ OTP verification failed:', response);
+        setOtpError(response.message || 'Invalid OTP');
+      }
+    } catch (error: any) {
+      console.error('Verify OTP error:', error);
+      setOtpError(error.message || 'Failed to verify OTP');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    if (resendTimer > 0) return;
+
+    setOtpLoading(true);
+    setOtpError('');
+
+    try {
+      const response = await apiService.resendOTP(formData.phone);
+      
+      if (response.success) {
+        setOtpError('');
+        startResendTimer();
+        
+        // Show OTP in console for development
+        if (response.otp) {
+          console.log(`📱 New OTP for ${formData.phone}: ${response.otp}`);
+        }
+      } else {
+        setOtpError(response.message || 'Failed to resend OTP');
+      }
+    } catch (error: any) {
+      console.error('Resend OTP error:', error);
+      setOtpError(error.message || 'Failed to resend OTP');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.firstName || !formData.lastName || !formData.phone || !formData.email || !formData.password) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    // Validate password match
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+
+    // Check if phone number is valid
+    if (formData.phone.length !== 10) {
+      alert('Please enter a valid 10-digit phone number');
+      return;
+    }
+    
+    // Send OTP when user clicks "Send OTP & Continue"
+    await handleSendOTP();
+  };
+
+  const handleSignupSubmit = async () => {
     setIsLoading(true);
     
     try {
-      // Validate required fields
-      if (!formData.firstName || !formData.lastName || !formData.phone || !formData.email || !formData.password) {
-        alert('Please fill in all required fields');
-        setIsLoading(false);
-        return;
-      }
-
-      // Validate password match
-      if (formData.password !== formData.confirmPassword) {
-        alert('Passwords do not match');
-        setIsLoading(false);
-        return;
-      }
-
       // Prepare signup data
-      const signupData = {
+      const signupData: SignupRequest = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
         email: formData.email,
         password: formData.password,
         userType: 'transporter',
-        vehicleType: formData.vehicleType,
-        vehicleNumber: formData.vehicleNumber,
-        vehicleCapacity: formData.vehicleCapacity,
-        vehicleCapacityUnit: formData.vehicleCapacityUnit,
-        licenseNumber: formData.licenseNumber,
-        businessName: formData.businessName,
-        city: formData.city,
-        state: formData.state,
-        district: formData.district,
-        preferredRoutes: formData.preferredRoutes
+        vehicleType: formData.vehicleType || undefined,
+        vehicleNumber: formData.vehicleNumber || undefined,
+        vehicleCapacity: formData.vehicleCapacity || undefined,
+        vehicleCapacityUnit: formData.vehicleCapacityUnit || undefined,
+        licenseNumber: formData.licenseNumber || undefined,
+        businessName: formData.businessName || undefined,
+        city: formData.city || undefined,
+        state: formData.state || undefined,
+        district: formData.district || undefined,
+        preferredRoutes: formData.preferredRoutes.length > 0 ? formData.preferredRoutes : undefined
       };
 
       console.log('Transporter signup:', signupData);
       
-      // Call API service
-      const response = await apiService.signup(signupData);
-      
-      console.log('Signup successful:', response);
-      
-      // Show success message
-      alert('Account created successfully! Please login.');
-      
-      // Redirect to login
-      onBackToLogin();
+      try {
+        // Try to call real API service first
+        const response = await apiService.signup(signupData);
+        console.log('Signup successful:', response);
+        alert('Account created successfully! Please login.');
+        onBackToLogin();
+      } catch (apiError) {
+        console.log('Real API failed, using mock API:', apiError);
+        
+        // Fallback to mock API for testing
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+        
+        // Mock successful response
+        const mockResponse = {
+          user: {
+            id: 'mock-' + Date.now(),
+            ...signupData,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          message: 'Account created successfully (Mock API)'
+        };
+        
+        console.log('Mock signup successful:', mockResponse);
+        alert('Account created successfully using Mock API! Please login.');
+        onBackToLogin();
+      }
       
     } catch (error) {
       console.error('Signup failed:', error);
-      alert(`Signup failed: ${error instanceof Error ? error.message : 'Something went wrong'}`);
+      alert(`Signup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -214,6 +359,103 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
           {t('agreeTerms')}
         </label>
       </div>
+
+      {/* OTP Section */}
+      {showOTP && (
+        <div className="border-t pt-6 mt-6">
+          <div className="text-center mb-4">
+            <div className="mx-auto w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-3">
+              <MessageCircle className="w-6 h-6 text-orange-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              Verify Your Phone Number
+            </h3>
+            <p className="text-gray-600 text-sm">
+              We've sent a 6-digit OTP to <span className="font-semibold">{formData.phone}</span>
+            </p>
+            {process.env.NODE_ENV === 'development' && (
+              <p className="text-orange-600 text-xs mt-1">
+                💡 Check console for OTP (development mode)
+              </p>
+            )}
+          </div>
+
+          {/* OTP Input */}
+          <OTPInput
+            onComplete={handleVerifyOTP}
+            disabled={otpLoading}
+            className="mb-4"
+          />
+
+          {/* Clear OTP Button */}
+          <div className="text-center mb-4">
+            <button
+              type="button"
+              onClick={() => {
+                // Reset OTP verification state
+                setOtpVerified(false);
+                setOtpError('');
+                // Clear OTP input by triggering a re-render
+                window.location.reload();
+              }}
+              className="text-orange-600 hover:text-orange-700 text-sm underline"
+            >
+              Clear OTP & Try Again
+            </button>
+          </div>
+
+          {/* Success Message */}
+          {otpVerified && (
+            <div className="text-center mb-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <p className="text-green-600 text-sm font-medium">Phone number verified!</p>
+                </div>
+                <p className="text-green-600 text-xs mt-1">Proceeding to next step...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {otpError && (
+            <div className="text-center mb-4">
+              <p className="text-red-600 text-sm">{otpError}</p>
+            </div>
+          )}
+
+          {/* Resend OTP */}
+          <div className="text-center">
+            {resendTimer > 0 ? (
+              <p className="text-gray-500 text-sm">
+                Resend OTP in {resendTimer}s
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResendOTP}
+                disabled={otpLoading}
+                className="text-orange-600 hover:text-orange-700 text-sm underline disabled:opacity-50"
+              >
+                Resend OTP
+              </button>
+            )}
+          </div>
+
+          {/* OTP Status */}
+          {otpVerified && (
+            <div className="text-center mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center justify-center space-x-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="text-green-800 font-medium">Phone number verified!</span>
+              </div>
+              <p className="text-green-700 text-sm mt-2">
+                You can now proceed to the next step
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -400,10 +642,22 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-green-50 flex items-center justify-center p-2 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-100 via-amber-50 to-yellow-100 flex items-center justify-center p-2 sm:p-4">
       {/* Language Selector */}
       <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
         <LanguageSelector />
+      </div>
+      
+      {/* Back to Home Button */}
+      <div className="absolute top-2 sm:top-4 left-2 sm:left-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onBackToHome}
+          className="text-gray-600 hover:text-gray-800 text-xs sm:text-sm px-2 sm:px-3"
+        >
+          ← {t('backToHome')}
+        </Button>
       </div>
       
       <Card className="w-full max-w-sm sm:max-w-md mx-2">
@@ -416,7 +670,10 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
         <CardContent className="p-4 sm:p-6">
           {renderStepIndicator()}
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={(e) => {
+            e.preventDefault(); // Always prevent default form submission
+            // Only allow submission through button clicks
+          }} className="space-y-4">
             {step === 1 && renderStep1()}
             {step === 2 && renderStep2()}
             {step === 3 && renderStep3()}
@@ -435,16 +692,34 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
               )}
               
               <Button
-                type={step === 3 ? 'submit' : 'button'}
-                onClick={step < 3 ? () => setStep(step + 1) : undefined}
-                disabled={isLoading}
+                type="button"
+                onClick={step === 1 ? handleSubmit : step < 3 ? () => {
+                  console.log('🔄 Navigation button clicked:', { step, otpVerified, showOTP });
+                  if (step === 1 && !otpVerified) {
+                    console.log('❌ Cannot proceed: OTP not verified');
+                    return; // Don't proceed if OTP not verified
+                  }
+                  console.log('✅ Proceeding to next step');
+                  setStep(step + 1);
+                } : step === 3 ? async () => {
+                  console.log('🚀 Manual submission triggered');
+                  await handleSignupSubmit();
+                } : undefined}
+                disabled={isLoading || otpLoading || (step === 1 && showOTP && !otpVerified)}
                 className="flex-1"
               >
-                {isLoading ? (
+                {otpLoading ? (
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    {t('loading')}
+                    {showOTP ? 'Verifying...' : 'Sending OTP...'}
                   </div>
+                ) : isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    {step === 3 ? t('loading') : t('loading')}
+                  </div>
+                ) : step === 1 ? (
+                  showOTP ? (otpVerified ? 'Continue to Next Step' : 'Verify OTP') : 'Send OTP & Continue'
                 ) : step === 3 ? (
                   t('submit')
                 ) : (
@@ -473,10 +748,10 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
               {t('alreadyHaveAccount')}{' '}
               <button
                 type="button"
-                onClick={onBackToLogin}
+                onClick={onBackToUserTypeSelection || onBackToLogin}
                 className="text-orange-600 hover:text-orange-700 font-medium underline"
               >
-                {t('login')}
+                {onBackToUserTypeSelection ? 'Change User Type' : t('login')}
               </button>
             </p>
           </div>

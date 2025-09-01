@@ -10,6 +10,7 @@ interface LoginPageProps {
   onSignupClick: () => void;
   onUserTypeSelect: (userType: 'farmer' | 'buyer' | 'transporter', user: any) => void;
   onBackToHome: () => void;
+  onForgotPassword?: () => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, onBackToHome }) => {
@@ -63,7 +64,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-2 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-100 via-emerald-50 to-teal-100 flex items-center justify-center p-2 sm:p-4">
       {/* Language Selector */}
       <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
         <LanguageSelector />
@@ -77,7 +78,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
           onClick={onBackToHome}
           className="text-gray-600 hover:text-gray-800 text-xs sm:text-sm px-2 sm:px-3"
         >
-          ← {t('back')} {t('dashboard')}
+          ← {t('backToHome')}
         </Button>
       </div>
       
@@ -133,7 +134,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
             <div className="text-right">
               <button
                 type="button"
-                className="text-xs sm:text-sm text-green-600 hover:text-green-700 underline"
+                onClick={() => {
+                  if (onForgotPassword) {
+                    onForgotPassword();
+                  } else {
+                    // Fallback to alert
+                    const phone = formData.phone;
+                    if (phone) {
+                      alert(`Password reset link will be sent to ${phone}. Please check your phone for OTP.`);
+                    } else {
+                      alert('Please enter your phone number first to reset password.');
+                    }
+                  }
+                }}
+                className="text-xs sm:text-sm text-green-600 hover:text-green-700 underline cursor-pointer hover:text-green-800 transition-colors"
               >
                 {t('forgotPassword')}?
               </button>
@@ -163,7 +177,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
               <button
                 type="button"
                 onClick={onSignupClick}
-                className="text-green-600 hover:text-green-700 font-medium underline"
+                className="text-green-600 hover:text-green-700 font-medium underline cursor-pointer hover:text-green-800 transition-colors"
               >
                 {t('signup')}
               </button>

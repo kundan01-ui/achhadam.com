@@ -1,8 +1,16 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import UserProfileDropdown from '../../components/ui/UserProfileDropdown';
+import LanguageSelector from '../../components/ui/LanguageSelector';
 import { TrendingUp, Package, Users, Star, Truck, Calendar } from 'lucide-react';
 
-const BuyerDashboard: React.FC = () => {
+interface BuyerDashboardProps {
+  user: any;
+  onLogout: () => void;
+}
+
+const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   const stats = [
     {
       title: 'Total Spent',
@@ -106,14 +114,36 @@ const BuyerDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-text-dark">Buyer Dashboard</h1>
-        <div className="flex items-center space-x-4">
-          <span className="text-text-light">Welcome back,</span>
-          <span className="font-semibold text-primary-green">John Buyer</span>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Users className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-xl font-bold text-gray-900">Buyer Dashboard</h1>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <LanguageSelector />
+              <UserProfileDropdown
+                user={user}
+                onLogout={onLogout}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </header>
+
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-text-dark">Welcome back, {user?.firstName || 'Buyer'}! 🏪</h2>
+          <div className="flex items-center space-x-4">
+            <span className="text-text-light">Manage your purchases and suppliers</span>
+          </div>
+        </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -228,6 +258,7 @@ const BuyerDashboard: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

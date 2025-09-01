@@ -8,7 +8,12 @@ import FarmerSignupPage from '../auth/FarmerSignupPage';
 import BuyerSignupPage from '../auth/BuyerSignupPage';
 import TransporterSignupPage from '../auth/TransporterSignupPage';
 import FarmerDashboard from '../dashboard/FarmerDashboard';
+import BuyerDashboard from '../dashboard/BuyerDashboard';
 import TransporterDashboard from '../dashboard/TransporterDashboard';
+import ForgotPasswordPage from '../auth/ForgotPasswordPage';
+import AboutPage from './AboutPage';
+import ContactPage from './ContactPage';
+import UserTypeSelector from '../../components/ui/UserTypeSelector';
 
 // Import images
 import agri1Image from '../../assets/agri1.jpg - Copy.jpg';
@@ -158,7 +163,7 @@ const benefits = [
   }
 ];
 
-type AuthPage = 'home' | 'login' | 'farmer-signup' | 'buyer-signup' | 'transporter-signup' | 'farmer-dashboard' | 'buyer-dashboard' | 'transporter-dashboard';
+type AuthPage = 'home' | 'login' | 'user-type-selection' | 'farmer-signup' | 'buyer-signup' | 'transporter-signup' | 'farmer-dashboard' | 'buyer-dashboard' | 'transporter-dashboard';
 
 const HomePage: React.FC = () => {
   const { t } = useLanguage();
@@ -194,7 +199,9 @@ const HomePage: React.FC = () => {
   };
 
   const handleSignupClick = () => {
-    setCurrentPage(`${selectedUserType}-signup` as AuthPage);
+    setCurrentPage('user-type-selection');
+    // Also scroll to top to ensure smooth transition
+    window.scrollTo(0, 0);
   };
 
   const handleSwitchUserType = (userType: 'farmer' | 'buyer' | 'transporter') => {
@@ -202,6 +209,11 @@ const HomePage: React.FC = () => {
     if (currentPage !== 'home') {
       setCurrentPage(`${userType}-signup` as AuthPage);
     }
+  };
+
+  const handleUserTypeContinue = (userType: 'farmer' | 'buyer' | 'transporter') => {
+    setSelectedUserType(userType);
+    setCurrentPage(`${userType}-signup` as AuthPage);
   };
 
   const handleLoginSuccess = (userType: string, user: any) => {
@@ -218,13 +230,39 @@ const HomePage: React.FC = () => {
             onBackToHome={handleBackToHome}
             onSwitchUserType={handleSwitchUserType}
             onUserTypeSelect={handleLoginSuccess}
+            onSignupClick={() => setCurrentPage('user-type-selection')}
+            onForgotPassword={() => setCurrentPage('forgot-password')}
           />
+        );
+      case 'user-type-selection':
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-green-100 via-emerald-50 to-teal-100 flex items-center justify-center p-4">
+            <div className="w-full max-w-4xl">
+              <div className="bg-white rounded-2xl shadow-2xl p-8">
+                <UserTypeSelector
+                  selectedType={selectedUserType}
+                  onTypeChange={setSelectedUserType}
+                  onContinue={handleUserTypeContinue}
+                />
+                <div className="text-center mt-6">
+                  <button
+                    onClick={handleBackToHome}
+                    className="text-gray-500 hover:text-gray-700 underline"
+                  >
+                    Back to Home
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         );
       case 'farmer-signup':
         return (
           <FarmerSignupPage
             onBackToLogin={() => setCurrentPage('login')}
             onSwitchUserType={handleSwitchUserType}
+            onBackToHome={handleBackToHome}
+            onBackToUserTypeSelection={() => setCurrentPage('user-type-selection')}
           />
         );
       case 'buyer-signup':
@@ -232,6 +270,8 @@ const HomePage: React.FC = () => {
           <BuyerSignupPage
             onBackToLogin={() => setCurrentPage('login')}
             onSwitchUserType={handleSwitchUserType}
+            onBackToHome={handleBackToHome}
+            onBackToUserTypeSelection={() => setCurrentPage('user-type-selection')}
           />
         );
       case 'transporter-signup':
@@ -239,11 +279,38 @@ const HomePage: React.FC = () => {
           <TransporterSignupPage
             onBackToLogin={() => setCurrentPage('login')}
             onSwitchUserType={handleSwitchUserType}
+            onBackToHome={handleBackToHome}
+            onBackToUserTypeSelection={() => setCurrentPage('user-type-selection')}
+          />
+        );
+      case 'forgot-password':
+        return (
+          <ForgotPasswordPage
+            onBackToLogin={() => setCurrentPage('login')}
+          />
+        );
+      case 'about':
+        return (
+          <AboutPage
+            onBackToHome={handleBackToHome}
+          />
+        );
+      case 'contact':
+        return (
+          <ContactPage
+            onBackToHome={handleBackToHome}
           />
         );
       case 'farmer-dashboard':
         return (
           <FarmerDashboard
+            user={userData}
+            onLogout={handleBackToHome}
+          />
+        );
+      case 'buyer-dashboard':
+        return (
+          <BuyerDashboard
             user={userData}
             onLogout={handleBackToHome}
           />
@@ -285,12 +352,18 @@ const HomePage: React.FC = () => {
                      <a href="#features" className="nav-link text-gray-700 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105">
                        Features
                      </a>
-                     <a href="#about" className="nav-link text-gray-700 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105">
+                     <button
+                       onClick={() => setCurrentPage('about')}
+                       className="nav-link text-gray-700 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
+                     >
                        About
-                     </a>
-                     <a href="#contact" className="nav-link text-gray-700 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105">
+                     </button>
+                     <button
+                       onClick={() => setCurrentPage('contact')}
+                       className="nav-link text-gray-700 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
+                     >
                        Contact
-                     </a>
+                     </button>
                    </nav>
 
                    {/* Right Side */}

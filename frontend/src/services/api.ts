@@ -91,6 +91,13 @@ class ApiService {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        
+        // Handle rate limiting specifically
+        if (response.status === 429) {
+          const retryAfter = errorData.retryAfter || 60;
+          throw new Error(`Too many requests. Please wait ${retryAfter} seconds before trying again.`);
+        }
+        
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
       
@@ -99,6 +106,28 @@ class ApiService {
       console.error('API request failed:', error);
       throw error;
     }
+  }
+
+  // OTP Methods
+  async sendOTP(phone: string): Promise<any> {
+    return this.request<any>('/auth/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone })
+    });
+  }
+
+  async verifyOTP(phone: string, otp: string): Promise<any> {
+    return this.request<any>('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone, otp })
+    });
+  }
+
+  async resendOTP(phone: string): Promise<any> {
+    return this.request<any>('/auth/resend-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone })
+    });
   }
 
   // User Authentication
@@ -151,3 +180,4 @@ class ApiService {
 
 export const apiService = new ApiService();
 export default apiService;
+

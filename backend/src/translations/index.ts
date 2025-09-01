@@ -565,3 +565,4 @@ export const getTranslation = (language: Language, key: string): string => {
 export const getTranslations = (language: Language) => {
   return translations[language] || translations[DEFAULT_LANGUAGE];
 };
+

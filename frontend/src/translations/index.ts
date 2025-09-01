@@ -85,6 +85,8 @@ export const translations = {
     // Actions
     next: 'आगे जाएं',
     back: 'पीछे जाएं',
+    backToHome: 'होम पर वापस जाएं',
+    backToLogin: 'लॉगिन पर वापस जाएं',
     submit: 'जमा करें',
     save: 'सहेजें',
     cancel: 'रद्द करें',
@@ -375,6 +377,8 @@ export const translations = {
     // Actions
     next: 'Next',
     back: 'Back',
+    backToHome: 'Back to Home',
+    backToLogin: 'Back to Login',
     submit: 'Submit',
     save: 'Save',
     cancel: 'Cancel',
@@ -665,6 +669,8 @@ export const translations = {
     // Actions
     next: 'पुढे जा',
     back: 'मागे जा',
+    backToHome: 'मुख्यपृष्ठावर परत जा',
+    backToLogin: 'लॉगिनवर परत जा',
     submit: 'सबमिट करा',
     save: 'जतन करा',
     cancel: 'रद्द करा',

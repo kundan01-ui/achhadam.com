@@ -7,21 +7,31 @@ const mongoose = require('mongoose');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const config = require('./config/database');
+const crypto = require('crypto');
 
 const app = express();
-const PORT = config.server.port;
+const PORT = process.env.PORT || 3001;
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 1000 // limit each IP to 1000 requests per windowMs (increased for development)
+});
+
+// OTP specific rate limiting (more lenient)
+const otpLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 10, // limit each IP to 10 OTP requests per minute
+  message: {
+    error: 'Too many OTP requests. Please wait 1 minute before trying again.',
+    retryAfter: 60
+  }
 });
 
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: config.server.corsOrigin,
+  origin: 'http://localhost:5173',
   credentials: true
 }));
 app.use(limiter);
@@ -36,7 +46,8 @@ let postgresConnection = null;
 // MongoDB Connection
 async function connectMongoDB() {
   try {
-    mongoConnection = await mongoose.connect(config.mongodb.uri, config.mongodb.options);
+    const mongoURI = 'mongodb+srv://kamleshthink:Kamlesh%40%232005@cluster0.u1vgt.mongodb.net/krishi?retryWrites=true&w=majority&appName=Cluster0';
+    mongoConnection = await mongoose.connect(mongoURI);
     console.log('✅ MongoDB connected successfully!');
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error.message);
@@ -46,9 +57,10 @@ async function connectMongoDB() {
 // PostgreSQL Connection
 async function connectPostgreSQL() {
   try {
+    const postgresURI = 'postgresql://neondb_owner:npg_Ozpa3sFKwS0d@ep-jolly-mode-a156f3rx-pooler.ap-southeast-1.aws.neon.tech/krishi1?sslmode=require&channel_binding=require';
     postgresConnection = new Pool({
-      connectionString: config.postgresql.uri,
-      ssl: config.postgresql.options.ssl
+      connectionString: postgresURI,
+      ssl: { rejectUnauthorized: false }
     });
     
     // Test connection
@@ -91,6 +103,149 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+// OTP Service
+class OTPService {
+  constructor() {
+    this.otpStore = new Map();
+    this.otpExpiry = 5 * 60 * 1000; // 5 minutes
+    this.maxAttempts = 3;
+  }
+
+  generateOTP() {
+    return crypto.randomInt(100000, 999999).toString();
+  }
+
+  storeOTP(phone, otp) {
+    const otpData = {
+      otp: otp,
+      createdAt: Date.now(),
+      attempts: 0,
+      verified: false
+    };
+    
+    this.otpStore.set(phone, otpData);
+    
+    // Auto-cleanup after expiry
+    setTimeout(() => {
+      this.otpStore.delete(phone);
+    }, this.otpExpiry);
+    
+    return otpData;
+  }
+
+  verifyOTP(phone, inputOTP) {
+    const otpData = this.otpStore.get(phone);
+    
+    if (!otpData) {
+      return { success: false, message: 'OTP expired or not found' };
+    }
+    
+    if (Date.now() - otpData.createdAt > this.otpExpiry) {
+      this.otpStore.delete(phone);
+      return { success: false, message: 'OTP has expired' };
+    }
+    
+    if (otpData.attempts >= this.maxAttempts) {
+      this.otpStore.delete(phone);
+      return { success: false, message: 'Maximum attempts exceeded' };
+    }
+    
+    otpData.attempts++;
+    
+    if (otpData.otp === inputOTP) {
+      otpData.verified = true;
+      this.otpStore.delete(phone);
+      return { success: true, message: 'OTP verified successfully' };
+    } else {
+      return { success: false, message: 'Invalid OTP' };
+    }
+  }
+
+  async sendOTP(phone, otp) {
+    try {
+      console.log(`📱 Mock SMS sent to ${phone}: Your ACHHADAM OTP is ${otp}. Valid for 5 minutes.`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return {
+        success: true,
+        message: 'OTP sent successfully',
+        provider: 'Mock SMS Service'
+      };
+    } catch (error) {
+      console.error('SMS sending failed:', error);
+      return {
+        success: false,
+        message: 'Failed to send SMS',
+        error: error.message
+      };
+    }
+  }
+
+  async sendInitialOTP(phone) {
+    try {
+      const newOTP = this.generateOTP();
+      this.storeOTP(phone, newOTP);
+      const smsResult = await this.sendOTP(phone, newOTP);
+      
+      if (smsResult.success) {
+        return {
+          success: true,
+          message: 'OTP sent successfully',
+          otp: newOTP // Remove this in production
+        };
+      } else {
+        return smsResult;
+      }
+    } catch (error) {
+      console.error('Send initial OTP failed:', error);
+      return {
+        success: false,
+        message: 'Failed to send OTP',
+        error: error.message
+      };
+    }
+  }
+
+  async resendOTP(phone) {
+    try {
+      const existingOTP = this.otpStore.get(phone);
+      if (existingOTP) {
+        const timeSinceLastOTP = Date.now() - existingOTP.createdAt;
+        if (timeSinceLastOTP < 60000) { // 1 minute cooldown
+          const remainingTime = Math.ceil((60000 - timeSinceLastOTP) / 1000);
+          return {
+            success: false,
+            message: `Please wait ${remainingTime} seconds before requesting a new OTP`
+          };
+        }
+      }
+      
+      const newOTP = this.generateOTP();
+      this.storeOTP(phone, newOTP);
+      const smsResult = await this.sendOTP(phone, newOTP);
+      
+      if (smsResult.success) {
+        return {
+          success: true,
+          message: 'New OTP sent successfully',
+          otp: newOTP // Remove this in production
+        };
+      } else {
+        return smsResult;
+      }
+    } catch (error) {
+      console.error('Resend OTP failed:', error);
+      return {
+        success: false,
+        message: 'Failed to resend OTP',
+        error: error.message
+      };
+    }
+  }
+}
+
+// Initialize OTP Service
+const otpService = new OTPService();
+
 // Health Check Endpoint
 app.get('/health', async (req, res) => {
   try {
@@ -131,6 +286,129 @@ app.get('/', (req, res) => {
       users: 'GET /api/users'
     }
   });
+});
+
+// OTP Routes
+app.post('/api/auth/send-otp', otpLimiter, async (req, res) => {
+  try {
+    const { phone } = req.body;
+    
+    if (!phone || phone.length !== 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid 10-digit phone number'
+      });
+    }
+    
+    // Generate OTP
+    const otp = otpService.generateOTP();
+    
+    // Store OTP
+    otpService.storeOTP(phone, otp);
+    
+    // Send OTP via SMS
+    const smsResult = await otpService.sendOTP(phone, otp);
+    
+    if (smsResult.success) {
+      res.json({
+        success: true,
+        message: 'OTP sent successfully',
+        phone: phone,
+        // In development, show OTP in console and response
+        otp: process.env.NODE_ENV === 'development' ? otp : undefined
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to send OTP',
+        error: smsResult.message
+      });
+    }
+    
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+app.post('/api/auth/verify-otp', otpLimiter, async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+    
+    if (!phone || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide both phone number and OTP'
+      });
+    }
+    
+    // Verify OTP
+    const verificationResult = otpService.verifyOTP(phone, otp);
+    
+    if (verificationResult.success) {
+      res.json({
+        success: true,
+        message: 'OTP verified successfully',
+        phone: phone
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: verificationResult.message
+      });
+    }
+    
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+app.post('/api/auth/resend-otp', otpLimiter, async (req, res) => {
+  try {
+    const { phone } = req.body;
+    
+    if (!phone || phone.length !== 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid 10-digit phone number'
+      });
+    }
+    
+    // Resend OTP
+    const resendResult = await otpService.resendOTP(phone);
+    
+    if (resendResult.success) {
+      res.json({
+        success: true,
+        message: 'New OTP sent successfully',
+        phone: phone,
+        // In development, show OTP in console and response
+        otp: process.env.NODE_ENV === 'development' ? resendResult.otp : undefined
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: resendResult.message
+      });
+    }
+    
+  } catch (error) {
+    console.error('Resend OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
 });
 
 // Authentication Routes
@@ -220,8 +498,8 @@ app.post('/api/auth/login', async (req, res) => {
         userType: user.userType,
         phone: user.phone 
       },
-      config.server.jwtSecret,
-      { expiresIn: config.server.jwtExpiresIn }
+      'your-secret-key-change-in-production',
+      { expiresIn: '24h' }
     );
 
     // Remove password from response
@@ -252,7 +530,7 @@ const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ error: 'Access token required' });
     }
 
-    const decoded = jwt.verify(token, config.server.jwtSecret);
+    const decoded = jwt.verify(token, 'your-secret-key-change-in-production');
     const user = await User.findById(decoded.userId);
     
     if (!user) {
