@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -8,6 +8,14 @@ import FarmerSignupPage from '../auth/FarmerSignupPage';
 import BuyerSignupPage from '../auth/BuyerSignupPage';
 import TransporterSignupPage from '../auth/TransporterSignupPage';
 import FarmerDashboard from '../dashboard/FarmerDashboard';
+import TransporterDashboard from '../dashboard/TransporterDashboard';
+
+// Import images
+import agri1Image from '../../assets/agri1.jpg - Copy.jpg';
+import jamesImage from '../../assets/james-baltz-jAt6cN6zl8M-unsplash.jpg';
+import nicolasImage from '../../assets/pexels-nicolasveithen-1719669.jpg';
+import quangImage from '../../assets/pexels-quang-nguyen-vinh-222549-2132171.jpg';
+
 import { 
   Leaf, 
   Users, 
@@ -19,58 +27,134 @@ import {
   Mail,
   ArrowRight,
   Star,
-  CheckCircle
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Award,
+  Zap,
+  Heart
 } from 'lucide-react';
+
+// Hero slides data - will be populated dynamically based on language
+const getHeroSlides = (t: (key: string) => string) => [
+  {
+    image: agri1Image,
+    title: t('heroSlide1Title'),
+    subtitle: t('heroSlide1Subtitle'),
+    description: t('heroSlide1Description'),
+    cta: t('heroSlide1Cta'),
+    color: "from-green-600 to-green-800"
+  },
+  {
+    image: jamesImage,
+    title: t('heroSlide2Title'),
+    subtitle: t('heroSlide2Subtitle'),
+    description: t('heroSlide2Description'),
+    cta: t('heroSlide2Cta'),
+    color: "from-blue-600 to-blue-800"
+  },
+  {
+    image: nicolasImage,
+    title: t('heroSlide3Title'),
+    subtitle: t('heroSlide3Subtitle'),
+    description: t('heroSlide3Description'),
+    cta: t('heroSlide3Cta'),
+    color: "from-orange-600 to-orange-800"
+  },
+  {
+    image: quangImage,
+    title: t('heroSlide4Title'),
+    subtitle: t('heroSlide4Subtitle'),
+    description: t('heroSlide4Description'),
+    cta: t('heroSlide4Cta'),
+    color: "from-purple-600 to-purple-800"
+  }
+];
 
 // Data arrays
 const stats = [
-  { value: '10,000+', label: 'Farmers' },
-  { value: '5,000+', label: 'Buyers' },
-  { value: '2,000+', label: 'Transporters' },
-  { value: '₹50Cr+', label: 'Trade Volume' }
+  { value: '10,000+', label: 'Farmers', icon: Leaf, color: 'text-green-600' },
+  { value: '5,000+', label: 'Buyers', icon: Users, color: 'text-blue-600' },
+  { value: '2,000+', label: 'Transporters', icon: Truck, color: 'text-orange-600' },
+  { value: '₹50Cr+', label: 'Trade Volume', icon: TrendingUp, color: 'text-purple-600' }
 ];
 
 const features = [
   {
     icon: Leaf,
-    title: 'Smart Farming',
-    description: 'AI-powered insights and weather updates for better crop management'
+    titleKey: 'smartFarming',
+    descriptionKey: 'smartFarmingDesc',
+    color: 'bg-green-50 text-green-600',
+    bgColor: 'bg-green-100'
   },
   {
     icon: Users,
-    title: 'Direct Trading',
-    description: 'Connect directly with buyers and eliminate middlemen'
+    titleKey: 'directTrading',
+    descriptionKey: 'directTradingDesc',
+    color: 'bg-blue-50 text-blue-600',
+    bgColor: 'bg-blue-100'
   },
   {
     icon: Truck,
-    title: 'Logistics',
-    description: 'Efficient transportation and delivery solutions'
+    titleKey: 'logistics',
+    descriptionKey: 'logisticsDesc',
+    color: 'bg-orange-50 text-orange-600',
+    bgColor: 'bg-orange-100'
   },
   {
     icon: TrendingUp,
-    title: 'Market Intelligence',
-    description: 'Real-time prices and market trends'
+    titleKey: 'marketIntelligence',
+    descriptionKey: 'marketIntelligenceDesc',
+    color: 'bg-purple-50 text-purple-600',
+    bgColor: 'bg-purple-100'
   }
 ];
 
 const testimonials = [
   {
     rating: 5,
-    content: 'ACHHADAM helped me increase my crop sales by 40% in just 3 months!',
+    content: 'ACHHADAM helped me increase my crop sales by 40% in just 3 months! The direct buyer connection is amazing.',
     name: 'Rajesh Kumar',
-    role: 'Farmer, Maharashtra'
+    role: 'Farmer, Maharashtra',
+    avatar: '🌾'
   },
   {
     rating: 5,
-    content: 'Best platform for sourcing quality crops directly from farmers.',
+    content: 'Best platform for sourcing quality crops directly from farmers. Fresh produce and fair prices guaranteed.',
     name: 'Priya Sharma',
-    role: 'Buyer, Delhi'
+    role: 'Buyer, Delhi',
+    avatar: '🏪'
   },
   {
     rating: 5,
-    content: 'Great earning opportunities and flexible working hours.',
+    content: 'Great earning opportunities and flexible working hours. The app makes everything so easy!',
     name: 'Amit Patel',
-    role: 'Transporter, Gujarat'
+    role: 'Transporter, Gujarat',
+    avatar: '🚛'
+  }
+];
+
+const benefits = [
+  {
+    icon: Zap,
+    titleKey: 'quickSetup',
+    descriptionKey: 'quickSetupDesc'
+  },
+  {
+    icon: Shield,
+    titleKey: 'securePlatform',
+    descriptionKey: 'securePlatformDesc'
+  },
+  {
+    icon: Globe,
+    titleKey: 'wideNetwork',
+    descriptionKey: 'wideNetworkDesc'
+  },
+  {
+    icon: Award,
+    titleKey: 'qualityAssured',
+    descriptionKey: 'qualityAssuredDesc'
   }
 ];
 
@@ -82,6 +166,26 @@ const HomePage: React.FC = () => {
   const [selectedUserType, setSelectedUserType] = useState<'farmer' | 'buyer' | 'transporter'>('farmer');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userData, setUserData] = useState<any>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Get hero slides based on current language
+  const heroSlides = getHeroSlides(t);
+
+  // Auto-slide functionality
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [heroSlides.length]);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+  };
 
   const handleBackToHome = () => {
     setCurrentPage('home');
@@ -111,9 +215,9 @@ const HomePage: React.FC = () => {
       case 'login':
         return (
           <LoginPage
-            onSignupClick={handleSignupClick}
-            onUserTypeSelect={handleLoginSuccess}
             onBackToHome={handleBackToHome}
+            onSwitchUserType={handleSwitchUserType}
+            onUserTypeSelect={handleLoginSuccess}
           />
         );
       case 'farmer-signup':
@@ -121,7 +225,6 @@ const HomePage: React.FC = () => {
           <FarmerSignupPage
             onBackToLogin={() => setCurrentPage('login')}
             onSwitchUserType={handleSwitchUserType}
-            onBackToHome={handleBackToHome}
           />
         );
       case 'buyer-signup':
@@ -129,7 +232,6 @@ const HomePage: React.FC = () => {
           <BuyerSignupPage
             onBackToLogin={() => setCurrentPage('login')}
             onSwitchUserType={handleSwitchUserType}
-            onBackToHome={handleBackToHome}
           />
         );
       case 'transporter-signup':
@@ -137,7 +239,6 @@ const HomePage: React.FC = () => {
           <TransporterSignupPage
             onBackToLogin={() => setCurrentPage('login')}
             onSwitchUserType={handleSwitchUserType}
-            onBackToHome={handleBackToHome}
           />
         );
       case 'farmer-dashboard':
@@ -147,93 +248,12 @@ const HomePage: React.FC = () => {
             onLogout={handleBackToHome}
           />
         );
-      case 'buyer-dashboard':
-        return (
-          <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-            <header className="bg-white shadow-sm border-b">
-              <div className="container mx-auto px-4 py-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xl font-bold">A</span>
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-800">ACHHADAM</h1>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <LanguageSelector />
-                    <span className="text-gray-600">Welcome, {userData?.firstName}!</span>
-                    <Button onClick={handleBackToHome} variant="outline">
-                      Logout
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </header>
-            <div className="container mx-auto px-4 py-8">
-              <Card className="p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Buyer Dashboard</h2>
-                <p className="text-gray-600">Welcome to your buyer dashboard! Here you can browse available crops, place orders, and manage your purchases.</p>
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card className="p-4 bg-green-50">
-                    <h3 className="font-semibold text-green-800">Available Crops</h3>
-                    <p className="text-sm text-green-600">Browse farmer listings</p>
-                  </Card>
-                  <Card className="p-4 bg-blue-50">
-                    <h3 className="font-semibold text-blue-800">My Orders</h3>
-                    <p className="text-sm text-blue-600">Track your orders</p>
-                  </Card>
-                  <Card className="p-4 bg-yellow-50">
-                    <h3 className="font-semibold text-yellow-800">Favorites</h3>
-                    <p className="text-sm text-yellow-600">Save favorite farmers</p>
-                  </Card>
-                </div>
-              </Card>
-            </div>
-          </div>
-        );
       case 'transporter-dashboard':
         return (
-          <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-            <header className="bg-white shadow-sm border-b">
-              <div className="container mx-auto px-4 py-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xl font-bold">A</span>
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-800">ACHHADAM</h1>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <LanguageSelector />
-                    <span className="text-gray-600">Welcome, {userData?.firstName}!</span>
-                    <Button onClick={handleBackToHome} variant="outline">
-                      Logout
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </header>
-            <div className="container mx-auto px-4 py-8">
-              <Card className="p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Transporter Dashboard</h2>
-                <p className="text-gray-600">Welcome to your transporter dashboard! Here you can view delivery requests, manage your routes, and track shipments.</p>
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card className="p-4 bg-green-50">
-                    <h3 className="font-semibold text-green-800">Delivery Requests</h3>
-                    <p className="text-sm text-green-600">View new requests</p>
-                  </Card>
-                  <Card className="p-4 bg-blue-50">
-                    <h3 className="font-semibold text-blue-800">Active Deliveries</h3>
-                    <p className="text-sm text-blue-600">Track current shipments</p>
-                  </Card>
-                  <Card className="p-4 bg-yellow-50">
-                    <h3 className="font-semibold text-yellow-800">Earnings</h3>
-                    <p className="text-sm text-yellow-600">View your earnings</p>
-                  </Card>
-                </div>
-              </Card>
-            </div>
-          </div>
+          <TransporterDashboard
+            user={userData}
+            onLogout={handleBackToHome}
+          />
         );
       default:
         return null;
@@ -241,290 +261,351 @@ const HomePage: React.FC = () => {
   };
 
   if (currentPage !== 'home') {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
-          {renderAuthContent()}
-        </div>
-      </div>
-    );
+    return renderAuthContent();
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-orange-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-green-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <div className="flex items-center space-x-1 sm:space-x-2">
-                <Leaf className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
-                <span className="text-lg sm:text-2xl font-bold text-green-800">ACHHADAM</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setCurrentPage('login')}
-                className="text-xs sm:text-sm px-2 sm:px-3"
-              >
-                <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Login</span>
-                <span className="sm:hidden">Login</span>
-              </Button>
-              <Button 
-                size="sm"
-                className="text-xs sm:text-sm px-2 sm:px-3"
-              >
-                <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Get Started</span>
-                <span className="sm:hidden">Start</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-white">
+                   {/* Professional Navbar Section */}
+             <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg">
+               <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                 <div className="flex items-center justify-between h-16 sm:h-18">
+                   {/* Logo */}
+                   <div className="flex items-center space-x-3 animate-fade-in-left">
+                     <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-green-800 rounded-lg flex items-center justify-center hover-scale animate-glow shadow-md">
+                       <Leaf className="w-6 h-6 text-white" />
+                     </div>
+                     <h1 className="text-xl sm:text-2xl font-bold gradient-text">
+                       ACHHADAM
+                     </h1>
+                   </div>
 
-      {/* Hero Section */}
-      <section className="relative py-12 sm:py-20 bg-gradient-to-r from-green-600 to-green-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
-            Digital Farming Platform
-          </h1>
-          <p className="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 text-green-100 max-w-3xl mx-auto px-4">
-            Empowering farmers, connecting buyers, and optimizing logistics for a sustainable agricultural future.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
-            <Button 
-              size="xl" 
-              className="bg-white text-green-600 hover:bg-gray-100 px-4 sm:px-8 py-3 sm:py-4 text-base sm:text-lg w-full sm:w-auto"
-              onClick={() => {
-                setSelectedUserType('farmer');
-                setCurrentPage('farmer-signup');
-              }}
-            >
-              <Leaf className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-              Join as Farmer
-            </Button>
-            <Button 
-              size="xl" 
-              variant="outline" 
-              className="border-white text-white hover:bg-white hover:text-green-600 px-4 sm:px-8 py-3 sm:py-4 text-base sm:text-lg w-full sm:w-auto"
-              onClick={() => {
-                setSelectedUserType('buyer');
-                setCurrentPage('buyer-signup');
-              }}
-            >
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-              Join as Buyer
-            </Button>
-            <Button 
-              size="xl" 
-              variant="outline" 
-              className="border-white text-white hover:bg-white hover:text-green-600 px-4 sm:px-8 py-3 sm:py-4 text-base sm:text-lg w-full sm:w-auto"
-              onClick={() => {
-                setSelectedUserType('transporter');
-                setCurrentPage('transporter-signup');
-              }}
-            >
-              <Truck className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-              Join as Transporter
-            </Button>
-          </div>
-          
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 max-w-4xl mx-auto px-4">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-green-300 mb-1 sm:mb-2">{stat.value}</div>
-                <div className="text-sm sm:text-base text-green-100">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+                   {/* Navigation */}
+                   <nav className="hidden md:flex items-center space-x-8">
+                     <a href="#features" className="nav-link text-gray-700 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105">
+                       Features
+                     </a>
+                     <a href="#about" className="nav-link text-gray-700 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105">
+                       About
+                     </a>
+                     <a href="#contact" className="nav-link text-gray-700 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105">
+                       Contact
+                     </a>
+                   </nav>
+
+                   {/* Right Side */}
+                   <div className="flex items-center space-x-4 animate-fade-in-right">
+                     <LanguageSelector />
+                     <Button
+                       onClick={() => setCurrentPage('login')}
+                       className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium hover-lift animate-fade-in-right hover-glow btn-pulse shadow-md"
+                     >
+                       Login
+                     </Button>
+                   </div>
+                 </div>
+               </div>
+             </header>
+
+                   {/* Enhanced Hero Section */}
+             <section className="relative h-[85vh] sm:h-[80vh] flex items-center justify-center overflow-hidden hero-gradient">
+               {/* Background Images */}
+               {heroSlides.map((slide, index) => (
+                 <div
+                   key={index}
+                   className={`absolute inset-0 transition-opacity duration-1000 ${
+                     index === currentSlide ? 'opacity-100' : 'opacity-0'
+                   }`}
+                 >
+                   <div className="absolute inset-0 bg-black/50 z-10"></div>
+                   <img
+                     src={slide.image}
+                     alt={slide.title}
+                     className="w-full h-full object-cover image-hover"
+                   />
+                 </div>
+               ))}
+
+               {/* Hero Content */}
+               <div className="relative z-20 text-center text-white px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+                 <div className="animate-fade-in-up">
+                   <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight hero-text-shadow animate-float">
+                     {heroSlides[currentSlide].title}
+                   </h1>
+                   <p className="text-xl sm:text-2xl font-semibold mb-4 text-green-200 animate-slide-up stagger-1">
+                     {heroSlides[currentSlide].subtitle}
+                   </p>
+                   <p className="text-lg sm:text-xl mb-8 text-gray-200 max-w-2xl mx-auto animate-slide-up stagger-2">
+                     {heroSlides[currentSlide].description}
+                   </p>
+                   <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up stagger-3">
+                     <Button
+                       onClick={handleSignupClick}
+                       className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg font-semibold hover-lift btn-pulse shadow-lg"
+                     >
+                       {heroSlides[currentSlide].cta}
+                     </Button>
+                     <Button
+                       variant="outline"
+                       className="border-white text-white hover:bg-white hover:text-green-600 px-8 py-3 text-lg font-semibold hover-lift shadow-lg"
+                     >
+                       <Play className="w-5 h-5 mr-2" />
+                       {t('watchDemo')}
+                     </Button>
+                   </div>
+                 </div>
+               </div>
+
+               {/* Slide Navigation */}
+               <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30 flex items-center space-x-4 animate-fade-in-up">
+                 <button
+                   onClick={prevSlide}
+                   className="w-12 h-12 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-all duration-300 hover-scale hover-glow"
+                 >
+                   <ChevronLeft className="w-6 h-6 text-white" />
+                 </button>
+
+                 <div className="flex space-x-3">
+                   {heroSlides.map((_, index) => (
+                     <button
+                       key={index}
+                       onClick={() => setCurrentSlide(index)}
+                       className={`w-4 h-4 rounded-full transition-all duration-300 hover-scale ${
+                         index === currentSlide ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/70'
+                       }`}
+                     />
+                   ))}
+                 </div>
+
+                 <button
+                   onClick={nextSlide}
+                   className="w-12 h-12 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-all duration-300 hover-scale hover-glow"
+                 >
+                   <ChevronRight className="w-6 h-6 text-white" />
+                 </button>
+               </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-12 sm:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-              Why Choose ACHHADAM?
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4">
-              Our platform offers comprehensive solutions for all stakeholders in the agricultural ecosystem.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {features.map((feature, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                    <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                  <p className="text-sm sm:text-base text-gray-600">{feature.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+                   {/* Mobile Responsive Stats Section */}
+             <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 relative overflow-hidden">
+               {/* Background Pattern */}
+               <div className="absolute inset-0 opacity-5">
+                 <div className="absolute top-10 left-10 w-20 h-20 bg-green-500 rounded-full"></div>
+                 <div className="absolute top-32 right-20 w-16 h-16 bg-blue-500 rounded-full"></div>
+                 <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-purple-500 rounded-full"></div>
+               </div>
+               
+               <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                 <div className="text-center mb-12 sm:mb-16 animate-fade-in-up">
+                   <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-800 mb-4 sm:mb-6 gradient-text">
+                     Our Impact in Numbers
+                   </h2>
+                   <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+                     Real results from real farmers, buyers, and transporters across India
+                   </p>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+                   {stats.map((stat, index) => (
+                     <div key={index} className={`text-center stat-card animate-fade-in-up stagger-${index + 1} bg-white/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-white/20`}>
+                       <div className={`w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 ${stat.color} bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 hover-scale animate-float`}>
+                         <stat.icon className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 ${stat.color}`} />
+                       </div>
+                       <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-800 mb-2 sm:mb-3 gradient-text">{stat.value}</div>
+                       <div className="text-gray-600 font-semibold text-sm sm:text-base lg:text-lg">{stat.label}</div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             </section>
 
-      {/* How It Works Section */}
-      <section className="py-12 sm:py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-              How It Works
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600">
-              Simple steps to get started with ACHHADAM
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-            <div className="text-center">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 text-white text-lg sm:text-2xl font-bold">
-                1
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Register</h3>
-              <p className="text-sm sm:text-base text-gray-600">Create your account and complete your profile</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 text-white text-lg sm:text-2xl font-bold">
-                2
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Connect</h3>
-              <p className="text-sm sm:text-base text-gray-600">Connect with other users and start trading</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 text-white text-lg sm:text-2xl font-bold">
-                3
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Grow</h3>
-              <p className="text-sm sm:text-base text-gray-600">Scale your business with our platform</p>
-            </div>
-          </div>
-        </div>
-      </section>
+                   {/* Features Section */}
+             <section id="features" className="py-20 sm:py-24 bg-white relative">
+               {/* Background Elements */}
+               <div className="absolute inset-0 bg-gradient-to-br from-green-50/30 via-transparent to-blue-50/30"></div>
+               
+               <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                 <div className="text-center mb-20 animate-fade-in-up">
+                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-800 mb-6 gradient-text">
+                     {t('whyChooseAchhadam')}
+                   </h2>
+                   <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                     {t('whyChooseDesc')}
+                   </p>
+                 </div>
 
-      {/* Testimonials Section */}
-      <section className="py-12 sm:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-              What Our Users Say
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600">
-              Real stories from our community members
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center mb-3 sm:mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">"{testimonial.content}"</p>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm sm:text-base">{testimonial.name}</p>
-                    <p className="text-xs sm:text-sm text-gray-500">{testimonial.role}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                   {features.map((feature, index) => (
+                     <Card key={index} className={`text-center card-hover animate-fade-in-up stagger-${index + 1} bg-white/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-500`}>
+                       <CardContent className="p-8 sm:p-10">
+                         <div className={`w-24 h-24 ${feature.bgColor} rounded-full flex items-center justify-center mx-auto mb-8 hover-scale animate-glow shadow-lg`}>
+                           <feature.icon className={`w-12 h-12 ${feature.color.split(' ')[1]}`} />
+                         </div>
+                         <h3 className="text-2xl font-bold text-gray-800 mb-6 gradient-text">{t(feature.titleKey)}</h3>
+                         <p className="text-gray-600 leading-relaxed text-lg">{t(feature.descriptionKey)}</p>
+                       </CardContent>
+                     </Card>
+                   ))}
+                 </div>
+               </div>
+             </section>
 
-      {/* CTA Section */}
-      <section className="py-12 sm:py-20 bg-gradient-to-r from-green-600 to-green-800 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
-            Ready to Transform Your Agricultural Business?
-          </h2>
-          <p className="text-base sm:text-lg md:text-xl text-green-100 mb-6 sm:mb-8">
-            Join thousands of farmers, buyers, and transporters who are already benefiting from ACHHADAM.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <Button 
-              size="xl" 
-              className="bg-white text-green-600 hover:bg-gray-100 px-4 sm:px-8 py-3 sm:py-4 text-base sm:text-lg w-full sm:w-auto"
-              onClick={() => {
-                setSelectedUserType('farmer');
-                setCurrentPage('farmer-signup');
-              }}
-            >
-              <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-              Get Started Today
-            </Button>
-            <Button 
-              size="xl" 
-              variant="outline" 
-              className="border-white text-white hover:bg-white hover:text-green-600 px-4 sm:px-8 py-3 sm:py-4 text-base sm:text-lg w-full sm:w-auto"
-              onClick={() => setCurrentPage('login')}
-            >
-              <Phone className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-              Login
-            </Button>
-          </div>
-        </div>
-      </section>
+                   {/* Benefits Section */}
+             <section className="py-20 sm:py-24 bg-gradient-to-br from-gray-50 to-green-50 relative overflow-hidden">
+               {/* Background Pattern */}
+               <div className="absolute inset-0 opacity-10">
+                 <div className="absolute top-20 right-10 w-32 h-32 bg-green-200 rounded-full blur-3xl"></div>
+                 <div className="absolute bottom-20 left-10 w-24 h-24 bg-blue-200 rounded-full blur-3xl"></div>
+               </div>
+               
+               <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                 <div className="text-center mb-20 animate-fade-in-up">
+                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-800 mb-6 gradient-text">
+                     {t('platformBenefits')}
+                   </h2>
+                   <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                     {t('platformBenefitsDesc')}
+                   </p>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                   {benefits.map((benefit, index) => (
+                     <div key={index} className={`text-center stat-card animate-fade-in-up stagger-${index + 1} bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-500`}>
+                       <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto mb-8 hover-scale animate-float shadow-lg">
+                         <benefit.icon className="w-12 h-12 text-green-600" />
+                       </div>
+                       <h3 className="text-2xl font-bold text-gray-800 mb-6 gradient-text">{t(benefit.titleKey)}</h3>
+                       <p className="text-gray-600 leading-relaxed text-lg">{t(benefit.descriptionKey)}</p>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             </section>
+
+                   {/* Testimonials Section */}
+             <section className="py-20 sm:py-24 bg-white relative">
+               {/* Background Elements */}
+               <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/20 via-transparent to-orange-50/20"></div>
+               
+               <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                 <div className="text-center mb-20 animate-fade-in-up">
+                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-800 mb-6 gradient-text">
+                     {t('whatUsersSay')}
+                   </h2>
+                   <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                     {t('whatUsersSayDesc')}
+                   </p>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                   {testimonials.map((testimonial, index) => (
+                     <Card key={index} className={`p-8 sm:p-10 testimonial-card animate-fade-in-up stagger-${index + 1} bg-white/90 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-500`}>
+                       <CardContent className="p-0">
+                         <div className="flex items-center mb-6">
+                           <div className="text-5xl mr-6 animate-float">{testimonial.avatar}</div>
+                           <div>
+                             <div className="flex items-center mb-2">
+                               {[...Array(testimonial.rating)].map((_, i) => (
+                                 <Star key={i} className="w-6 h-6 text-yellow-400 fill-current" />
+                               ))}
+                             </div>
+                             <h4 className="font-bold text-gray-800 text-lg">{testimonial.name}</h4>
+                             <p className="text-gray-600 font-medium">{testimonial.role}</p>
+                           </div>
+                         </div>
+                         <p className="text-gray-700 italic text-lg leading-relaxed">"{testimonial.content}"</p>
+                       </CardContent>
+                     </Card>
+                   ))}
+                 </div>
+               </div>
+             </section>
+
+                   {/* CTA Section */}
+             <section className="py-20 sm:py-24 bg-gradient-to-br from-green-600 via-green-700 to-green-800 text-white relative overflow-hidden">
+               {/* Background Pattern */}
+               <div className="absolute inset-0 opacity-20">
+                 <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-3xl"></div>
+                 <div className="absolute bottom-10 right-10 w-24 h-24 bg-green-300 rounded-full blur-3xl"></div>
+                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-green-400 rounded-full blur-3xl"></div>
+               </div>
+               
+               <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+                 <div className="animate-fade-in-up">
+                   <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-8 text-white drop-shadow-2xl">
+                     {t('readyToTransform')}
+                   </h2>
+                   <p className="text-xl sm:text-2xl mb-10 text-green-100 max-w-4xl mx-auto leading-relaxed drop-shadow-lg">
+                     {t('readyToTransformDesc')}
+                   </p>
+                   <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                     <Button
+                       onClick={handleSignupClick}
+                       className="bg-white text-green-600 hover:bg-gray-100 px-10 py-4 text-xl font-bold hover-lift btn-pulse shadow-2xl"
+                     >
+                       {t('getStartedToday')}
+                     </Button>
+                     <Button
+                       variant="outline"
+                       className="border-2 border-white text-white hover:bg-white hover:text-green-600 px-10 py-4 text-xl font-bold hover-lift shadow-2xl"
+                     >
+                       {t('learnMore')}
+                     </Button>
+                   </div>
+                 </div>
+               </div>
+             </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8 sm:py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-3 sm:mb-4">
-                <Leaf className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" />
-                <span className="text-xl sm:text-2xl font-bold">ACHHADAM</span>
+      <footer className="bg-gray-900 text-white py-12 sm:py-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Company Info */}
+            <div className="lg:col-span-2 animate-fade-in-left">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-green-800 rounded-lg flex items-center justify-center hover-scale animate-glow">
+                  <Leaf className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold gradient-text">ACHHADAM</h3>
               </div>
-              <p className="text-sm sm:text-base text-gray-400">
-                Empowering agriculture through digital innovation and community building.
+              <p className="text-gray-400 mb-6 max-w-md">
+                {t('revolutionizingAgriculture')}
               </p>
+              <div className="flex space-x-4">
+                <a href="#" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale">
+                  <Phone className="w-5 h-5" />
+                </a>
+                <a href="#" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale">
+                  <Mail className="w-5 h-5" />
+                </a>
+              </div>
             </div>
-            
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Platform</h3>
-              <ul className="space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-400">
-                <li><a href="#" className="hover:text-white">For Farmers</a></li>
-                <li><a href="#" className="hover:text-white">For Buyers</a></li>
-                <li><a href="#" className="hover:text-white">For Transporters</a></li>
-                <li><a href="#" className="hover:text-white">Pricing</a></li>
+
+            {/* For Farmers */}
+            <div className="animate-fade-in-up stagger-1">
+              <h4 className="text-lg font-semibold mb-4">{t('forFarmers')}</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="footer-link text-gray-400">{t('smartFarmingFooter')}</a></li>
+                <li><a href="#" className="footer-link text-gray-400">{t('marketAccess')}</a></li>
+                <li><a href="#" className="footer-link text-gray-400">{t('cropAdvisory')}</a></li>
+                <li><a href="#" className="footer-link text-gray-400">{t('weatherUpdates')}</a></li>
               </ul>
             </div>
-            
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Company</h3>
-              <ul className="space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-400">
-                <li><a href="#" className="hover:text-white">About Us</a></li>
-                <li><a href="#" className="hover:text-white">Careers</a></li>
-                <li><a href="#" className="hover:text-white">Press</a></li>
-                <li><a href="#" className="hover:text-white">Blog</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Support</h3>
-              <ul className="space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-400">
-                <li><a href="#" className="hover:text-white">Help Center</a></li>
-                <li><a href="#" className="hover:text-white">Contact Us</a></li>
-                <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white">Terms of Service</a></li>
+
+            {/* For Buyers */}
+            <div className="animate-fade-in-up stagger-2">
+              <h4 className="text-lg font-semibold mb-4">{t('forBuyers')}</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="footer-link text-gray-400">{t('qualityProduce')}</a></li>
+                <li><a href="#" className="footer-link text-gray-400">{t('directSourcing')}</a></li>
+                <li><a href="#" className="footer-link text-gray-400">{t('marketIntelligenceFooter')}</a></li>
+                <li><a href="#" className="footer-link text-gray-400">{t('logisticsSupport')}</a></li>
               </ul>
             </div>
           </div>
-          
-          <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-sm sm:text-base text-gray-400">
-            <p>&copy; 2024 ACHHADAM. All rights reserved.</p>
+
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center animate-fade-in-up">
+            <p className="text-gray-400">{t('madeWithLove')}</p>
           </div>
         </div>
       </footer>

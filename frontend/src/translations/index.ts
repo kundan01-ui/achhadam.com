@@ -98,6 +98,79 @@ export const translations = {
     warning: 'चेतावनी!',
     info: 'जानकारी',
     
+    // Hero Section
+    heroSlide1Title: 'डिजिटल कृषि क्रांति',
+    heroSlide1Subtitle: 'किसानों को बेहतर उपज और मुनाफे के लिए तकनीक-संचालित समाधान',
+    heroSlide1Description: 'ACHHADAM के नवीन डिजिटल प्लेटफॉर्म के साथ अपनी कृषि पद्धतियों को बदल चुके हजारों किसानों में शामिल हों।',
+    heroSlide1Cta: 'अपनी यात्रा शुरू करें',
+    
+    heroSlide2Title: 'सीधा बाजार पहुंच',
+    heroSlide2Subtitle: 'अधिकतम लाभ के लिए सीधे खरीदारों से जुड़ें और बिचौलियों को हटाएं',
+    heroSlide2Description: 'पूरे भारत में सत्यापित खरीदारों से सीधे जुड़कर अपनी उपज के लिए उचित मूल्य प्राप्त करें।',
+    heroSlide2Cta: 'बाजार देखें',
+    
+    heroSlide3Title: 'स्मार्ट लॉजिस्टिक्स',
+    heroSlide3Subtitle: 'निर्बाध फसल वितरण के लिए कुशल परिवहन समाधान',
+    heroSlide3Description: 'हमारे विश्वसनीय ट्रांसपोर्टरों का नेटवर्क सुनिश्चित करता है कि आपकी उपज सुरक्षित रूप से और समय पर बाजार तक पहुंचे।',
+    heroSlide3Cta: 'परिवहन खोजें',
+    
+    heroSlide4Title: 'कृषि का भविष्य',
+    heroSlide4Subtitle: 'टिकाऊ कृषि के लिए तकनीक और परंपरा का मिलन',
+    heroSlide4Description: 'AI-संचालित अंतर्दृष्टि और आधुनिक कृषि तकनीकों के साथ कृषि के भविष्य को अपनाएं।',
+    heroSlide4Cta: 'और जानें',
+    
+    // Homepage Sections
+    whyChooseAchhadam: 'ACHHADAM क्यों चुनें?',
+    whyChooseDesc: 'हम किसानों, खरीदारों और ट्रांसपोर्टरों को हमारे नवीन डिजिटल प्लेटफॉर्म के माध्यम से जोड़कर कृषि में क्रांति ला रहे हैं।',
+    platformBenefits: 'प्लेटफॉर्म लाभ',
+    platformBenefitsDesc: 'हमारे व्यापक डिजिटल कृषि पारिस्थितिकी तंत्र के लाभों का अनुभव करें।',
+    whatUsersSay: 'हमारे उपयोगकर्ता क्या कहते हैं',
+    whatUsersSayDesc: 'ACHHADAM पर भरोसा करने वाले हजारों संतुष्ट किसानों, खरीदारों और ट्रांसपोर्टरों में शामिल हों।',
+    readyToTransform: 'अपने कृषि व्यवसाय को बदलने के लिए तैयार हैं?',
+    readyToTransformDesc: 'डिजिटल कृषि क्रांति में शामिल हों और अपने कृषि व्यवसाय को अगले स्तर तक ले जाएं।',
+    getStartedToday: 'आज ही शुरू करें',
+    learnMore: 'और जानें',
+    watchDemo: 'डेमो देखें',
+    
+    // Features
+    smartFarming: 'स्मार्ट कृषि',
+    smartFarmingDesc: 'बेहतर फसल प्रबंधन के लिए AI-संचालित अंतर्दृष्टि और मौसम अपडेट',
+    directTrading: 'सीधा व्यापार',
+    directTradingDesc: 'सीधे खरीदारों से जुड़ें और बिचौलियों को हटाएं',
+    logistics: 'लॉजिस्टिक्स',
+    logisticsDesc: 'कुशल परिवहन और वितरण समाधान',
+    marketIntelligence: 'बाजार खुफिया',
+    marketIntelligenceDesc: 'वास्तविक समय के मूल्य और बाजार रुझान',
+    
+    // Benefits
+    quickSetup: 'त्वरित सेटअप',
+    quickSetupDesc: 'हमारी सरल पंजीकरण प्रक्रिया के साथ मिनटों में शुरू करें',
+    securePlatform: 'सुरक्षित प्लेटफॉर्म',
+    securePlatformDesc: 'आपके डेटा और लेनदेन की सुरक्षा के लिए बैंक-ग्रेड सुरक्षा',
+    wideNetwork: 'व्यापक नेटवर्क',
+    wideNetworkDesc: 'पूरे भारत में किसानों, खरीदारों और ट्रांसपोर्टरों से जुड़ें',
+    qualityAssured: 'गुणवत्ता की गारंटी',
+    qualityAssuredDesc: 'सत्यापित उपयोगकर्ता और गुणवत्ता-जांची गई उपज',
+    
+    // Footer
+    revolutionizingAgriculture: 'डिजिटल नवाचार और सीधे बाजार पहुंच के माध्यम से कृषि में क्रांति ला रहे हैं।',
+    forFarmers: 'किसानों के लिए',
+    forBuyers: 'खरीदारों के लिए',
+    forTransporters: 'ट्रांसपोर्टरों के लिए',
+    smartFarmingFooter: 'स्मार्ट कृषि',
+    marketAccess: 'बाजार पहुंच',
+    cropAdvisory: 'फसल सलाह',
+    weatherUpdates: 'मौसम अपडेट',
+    qualityProduce: 'गुणवत्तापूर्ण उपज',
+    directSourcing: 'सीधा सोर्सिंग',
+    marketIntelligenceFooter: 'बाजार खुफिया',
+    logisticsSupport: 'लॉजिस्टिक्स सहायता',
+    deliveryRequests: 'वितरण अनुरोध',
+    routeOptimization: 'रूट अनुकूलन',
+    earningsTracking: 'कमाई ट्रैकिंग',
+    vehicleManagement: 'वाहन प्रबंधन',
+    madeWithLove: 'भारतीय कृषि के लिए प्यार से बनाया गया',
+    
     // Dashboard
     dashboard: 'डैशबोर्ड',
     profile: 'प्रोफाइल',
@@ -315,6 +388,79 @@ export const translations = {
     warning: 'Warning!',
     info: 'Information',
     
+    // Hero Section
+    heroSlide1Title: 'Digital Farming Revolution',
+    heroSlide1Subtitle: 'Empowering farmers with technology-driven solutions for better yields and profits',
+    heroSlide1Description: 'Join thousands of farmers who have transformed their agricultural practices with ACHHADAM\'s innovative digital platform.',
+    heroSlide1Cta: 'Start Your Journey',
+    
+    heroSlide2Title: 'Direct Market Access',
+    heroSlide2Subtitle: 'Connect directly with buyers and eliminate middlemen for maximum profits',
+    heroSlide2Description: 'Get fair prices for your produce by connecting directly with verified buyers across India.',
+    heroSlide2Cta: 'Explore Markets',
+    
+    heroSlide3Title: 'Smart Logistics',
+    heroSlide3Subtitle: 'Efficient transportation solutions for seamless crop delivery',
+    heroSlide3Description: 'Our network of trusted transporters ensures your produce reaches markets safely and on time.',
+    heroSlide3Cta: 'Find Transport',
+    
+    heroSlide4Title: 'Future of Agriculture',
+    heroSlide4Subtitle: 'Technology meets tradition for sustainable farming',
+    heroSlide4Description: 'Embrace the future of agriculture with AI-powered insights and modern farming techniques.',
+    heroSlide4Cta: 'Learn More',
+    
+    // Homepage Sections
+    whyChooseAchhadam: 'Why Choose ACHHADAM?',
+    whyChooseDesc: 'We\'re revolutionizing agriculture by connecting farmers, buyers, and transporters through our innovative digital platform.',
+    platformBenefits: 'Platform Benefits',
+    platformBenefitsDesc: 'Experience the advantages of our comprehensive digital farming ecosystem.',
+    whatUsersSay: 'What Our Users Say',
+    whatUsersSayDesc: 'Join thousands of satisfied farmers, buyers, and transporters who trust ACHHADAM.',
+    readyToTransform: 'Ready to Transform Your Agriculture Business?',
+    readyToTransformDesc: 'Join the digital farming revolution and take your agricultural business to the next level.',
+    getStartedToday: 'Get Started Today',
+    learnMore: 'Learn More',
+    watchDemo: 'Watch Demo',
+    
+    // Features
+    smartFarming: 'Smart Farming',
+    smartFarmingDesc: 'AI-powered insights and weather updates for better crop management',
+    directTrading: 'Direct Trading',
+    directTradingDesc: 'Connect directly with buyers and eliminate middlemen',
+    logistics: 'Logistics',
+    logisticsDesc: 'Efficient transportation and delivery solutions',
+    marketIntelligence: 'Market Intelligence',
+    marketIntelligenceDesc: 'Real-time prices and market trends',
+    
+    // Benefits
+    quickSetup: 'Quick Setup',
+    quickSetupDesc: 'Get started in minutes with our simple registration process',
+    securePlatform: 'Secure Platform',
+    securePlatformDesc: 'Bank-grade security to protect your data and transactions',
+    wideNetwork: 'Wide Network',
+    wideNetworkDesc: 'Connect with farmers, buyers, and transporters across India',
+    qualityAssured: 'Quality Assured',
+    qualityAssuredDesc: 'Verified users and quality-checked produce',
+    
+    // Footer
+    revolutionizingAgriculture: 'Revolutionizing agriculture through digital innovation and direct market access.',
+    forFarmers: 'For Farmers',
+    forBuyers: 'For Buyers',
+    forTransporters: 'For Transporters',
+    smartFarmingFooter: 'Smart Farming',
+    marketAccess: 'Market Access',
+    cropAdvisory: 'Crop Advisory',
+    weatherUpdates: 'Weather Updates',
+    qualityProduce: 'Quality Produce',
+    directSourcing: 'Direct Sourcing',
+    marketIntelligenceFooter: 'Market Intelligence',
+    logisticsSupport: 'Logistics Support',
+    deliveryRequests: 'Delivery Requests',
+    routeOptimization: 'Route Optimization',
+    earningsTracking: 'Earnings Tracking',
+    vehicleManagement: 'Vehicle Management',
+    madeWithLove: 'Made with love for Indian Agriculture',
+    
     // Dashboard
     dashboard: 'Dashboard',
     profile: 'Profile',
@@ -531,6 +677,79 @@ export const translations = {
     error: 'त्रुटी!',
     warning: 'चेतावणी!',
     info: 'माहिती',
+    
+    // Hero Section
+    heroSlide1Title: 'डिजिटल शेती क्रांती',
+    heroSlide1Subtitle: 'शेतकऱ्यांना चांगल्या उत्पादन आणि नफ्यासाठी तंत्रज्ञान-चालित उपाय',
+    heroSlide1Description: 'ACHHADAM च्या नाविन्यपूर्ण डिजिटल प्लॅटफॉर्मसह त्यांच्या शेती पद्धती बदललेल्या हजारो शेतकऱ्यांमध्ये सामील व्हा.',
+    heroSlide1Cta: 'तुमचा प्रवास सुरू करा',
+    
+    heroSlide2Title: 'थेट बाजार प्रवेश',
+    heroSlide2Subtitle: 'जास्तीत जास्त नफ्यासाठी थेट खरेदीदारांशी जोडा आणि मध्यस्थांना काढून टाका',
+    heroSlide2Description: 'संपूर्ण भारतातील प्रमाणित खरेदीदारांशी थेट जोडून तुमच्या उत्पादनासाठी योग्य किंमत मिळवा.',
+    heroSlide2Cta: 'बाजार पहा',
+    
+    heroSlide3Title: 'स्मार्ट लॉजिस्टिक्स',
+    heroSlide3Subtitle: 'निर्बाध पीक वितरणासाठी कार्यक्षम वाहतूक उपाय',
+    heroSlide3Description: 'आमच्या विश्वसनीय वाहतूकदारांचे नेटवर्क सुनिश्चित करते की तुमचे उत्पादन सुरक्षितपणे आणि वेळेवर बाजारात पोहोचेल.',
+    heroSlide3Cta: 'वाहतूक शोधा',
+    
+    heroSlide4Title: 'शेतीचे भविष्य',
+    heroSlide4Subtitle: 'शाश्वत शेतीसाठी तंत्रज्ञान आणि परंपरा भेटतात',
+    heroSlide4Description: 'AI-चालित अंतर्दृष्टी आणि आधुनिक शेती तंत्रज्ञानासह शेतीचे भविष्य स्वीकारा.',
+    heroSlide4Cta: 'अधिक जाणून घ्या',
+    
+    // Homepage Sections
+    whyChooseAchhadam: 'ACHHADAM का निवडा?',
+    whyChooseDesc: 'आम्ही आमच्या नाविन्यपूर्ण डिजिटल प्लॅटफॉर्मद्वारे शेतकरी, खरेदीदार आणि वाहतूकदारांना जोडून शेतीत क्रांती आणत आहोत.',
+    platformBenefits: 'प्लॅटफॉर्म फायदे',
+    platformBenefitsDesc: 'आमच्या व्यापक डिजिटल शेती इकोसिस्टमचे फायदे अनुभवा.',
+    whatUsersSay: 'आमचे वापरकर्ते काय म्हणतात',
+    whatUsersSayDesc: 'ACHHADAM वर विश्वास ठेवणाऱ्या हजारो समाधानी शेतकरी, खरेदीदार आणि वाहतूकदारांमध्ये सामील व्हा.',
+    readyToTransform: 'तुमचा शेती व्यवसाय बदलण्यास तयार आहात?',
+    readyToTransformDesc: 'डिजिटल शेती क्रांतीमध्ये सामील व्हा आणि तुमचा शेती व्यवसाय पुढील पातळीवर नेता.',
+    getStartedToday: 'आजच सुरू करा',
+    learnMore: 'अधिक जाणून घ्या',
+    watchDemo: 'डेमो पहा',
+    
+    // Features
+    smartFarming: 'स्मार्ट शेती',
+    smartFarmingDesc: 'चांगल्या पीक व्यवस्थापनासाठी AI-चालित अंतर्दृष्टी आणि हवामान अपडेट्स',
+    directTrading: 'थेट व्यापार',
+    directTradingDesc: 'थेट खरेदीदारांशी जोडा आणि मध्यस्थांना काढून टाका',
+    logistics: 'लॉजिस्टिक्स',
+    logisticsDesc: 'कार्यक्षम वाहतूक आणि वितरण उपाय',
+    marketIntelligence: 'बाजार बुद्धिमत्ता',
+    marketIntelligenceDesc: 'रीअल-टाइम किंमती आणि बाजार रुझाने',
+    
+    // Benefits
+    quickSetup: 'त्वरित सेटअप',
+    quickSetupDesc: 'आमच्या सोप्या नोंदणी प्रक्रियेसह मिनिटांमध्ये सुरू करा',
+    securePlatform: 'सुरक्षित प्लॅटफॉर्म',
+    securePlatformDesc: 'तुमचा डेटा आणि व्यवहार संरक्षित करण्यासाठी बँक-ग्रेड सुरक्षा',
+    wideNetwork: 'व्यापक नेटवर्क',
+    wideNetworkDesc: 'संपूर्ण भारतातील शेतकरी, खरेदीदार आणि वाहतूकदारांशी जोडा',
+    qualityAssured: 'गुणवत्ता हमी',
+    qualityAssuredDesc: 'प्रमाणित वापरकर्ते आणि गुणवत्ता-तपासलेले उत्पादन',
+    
+    // Footer
+    revolutionizingAgriculture: 'डिजिटल नाविन्य आणि थेट बाजार प्रवेशाद्वारे शेतीत क्रांती आणत आहोत.',
+    forFarmers: 'शेतकऱ्यांसाठी',
+    forBuyers: 'खरेदीदारांसाठी',
+    forTransporters: 'वाहतूकदारांसाठी',
+    smartFarmingFooter: 'स्मार्ट शेती',
+    marketAccess: 'बाजार प्रवेश',
+    cropAdvisory: 'पीक सल्ला',
+    weatherUpdates: 'हवामान अपडेट्स',
+    qualityProduce: 'गुणवत्तापूर्ण उत्पादन',
+    directSourcing: 'थेट सोर्सिंग',
+    marketIntelligenceFooter: 'बाजार बुद्धिमत्ता',
+    logisticsSupport: 'लॉजिस्टिक्स समर्थन',
+    deliveryRequests: 'वितरण विनंती',
+    routeOptimization: 'मार्ग अनुकूलन',
+    earningsTracking: 'कमाई ट्रॅकिंग',
+    vehicleManagement: 'वाहन व्यवस्थापन',
+    madeWithLove: 'भारतीय शेतीसाठी प्रेमाने बनवले',
     
     // Dashboard
     dashboard: 'डॅशबोर्ड',

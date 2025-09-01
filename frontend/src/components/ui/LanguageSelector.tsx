@@ -30,13 +30,13 @@ const LanguageSelector: React.FC = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+        className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors shadow-sm"
         aria-label={t('selectLanguage')}
       >
-        <span className="text-base sm:text-lg">{currentLang?.flag}</span>
-        <span className="hidden sm:inline">{currentLang?.nativeName}</span>
+        <span className="text-base">{currentLang?.flag}</span>
+        <span className="hidden sm:inline text-sm">{currentLang?.nativeName}</span>
         <svg
-          className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -46,23 +46,23 @@ const LanguageSelector: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-40 sm:w-48 bg-white border border-gray-300 rounded-md shadow-lg z-50">
+        <div className="absolute right-0 mt-2 w-40 sm:w-44 bg-white border border-gray-300 rounded-md shadow-lg z-50">
           <div className="py-1">
             {supportedLanguages.map((language) => (
               <button
                 key={language.code}
                 onClick={() => handleLanguageSelect(language.code)}
-                className={`w-full flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 text-xs sm:text-sm text-left hover:bg-gray-100 transition-colors ${
+                className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-left hover:bg-gray-100 transition-colors ${
                   currentLanguage === language.code ? 'bg-green-50 text-green-700' : 'text-gray-700'
                 }`}
               >
-                <span className="text-base sm:text-lg">{language.flag}</span>
+                <span className="text-base">{language.flag}</span>
                 <div className="flex flex-col">
-                  <span className="font-medium text-xs sm:text-sm">{language.nativeName}</span>
+                  <span className="font-medium text-sm">{language.nativeName}</span>
                   <span className="text-xs text-gray-500 hidden sm:block">{language.name}</span>
                 </div>
                 {currentLanguage === language.code && (
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4 ml-auto text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 ml-auto text-green-600" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 )}

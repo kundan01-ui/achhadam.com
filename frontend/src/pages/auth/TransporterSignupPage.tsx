@@ -4,6 +4,7 @@ import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import LanguageSelector from '../../components/ui/LanguageSelector';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { apiService } from '../../services/api';
 
 interface TransporterSignupPageProps {
   onBackToLogin: () => void;
@@ -47,15 +48,60 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
     e.preventDefault();
     setIsLoading(true);
     
-    // TODO: Implement signup logic
-    console.log('Transporter signup:', formData);
-    
-    setTimeout(() => {
-      setIsLoading(false);
-      if (step < 3) {
-        setStep(step + 1);
+    try {
+      // Validate required fields
+      if (!formData.firstName || !formData.lastName || !formData.phone || !formData.email || !formData.password) {
+        alert('Please fill in all required fields');
+        setIsLoading(false);
+        return;
       }
-    }, 2000);
+
+      // Validate password match
+      if (formData.password !== formData.confirmPassword) {
+        alert('Passwords do not match');
+        setIsLoading(false);
+        return;
+      }
+
+      // Prepare signup data
+      const signupData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        email: formData.email,
+        password: formData.password,
+        userType: 'transporter',
+        vehicleType: formData.vehicleType,
+        vehicleNumber: formData.vehicleNumber,
+        vehicleCapacity: formData.vehicleCapacity,
+        vehicleCapacityUnit: formData.vehicleCapacityUnit,
+        licenseNumber: formData.licenseNumber,
+        businessName: formData.businessName,
+        city: formData.city,
+        state: formData.state,
+        district: formData.district,
+        preferredRoutes: formData.preferredRoutes
+      };
+
+      console.log('Transporter signup:', signupData);
+      
+      // Call API service
+      const response = await apiService.signup(signupData);
+      
+      console.log('Signup successful:', response);
+      
+      // Show success message
+      alert('Account created successfully! Please login.');
+      
+      // Redirect to login
+      onBackToLogin();
+      
+    } catch (error) {
+      console.error('Signup failed:', error);
+      alert(`Signup failed: ${error instanceof Error ? error.message : 'Something went wrong'}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderStep1 = () => (
@@ -354,20 +400,20 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-green-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-green-50 flex items-center justify-center p-2 sm:p-4">
       {/* Language Selector */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
         <LanguageSelector />
       </div>
       
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-800">
+      <Card className="w-full max-w-sm sm:max-w-md mx-2">
+        <CardHeader className="text-center p-4 sm:p-6">
+          <CardTitle className="text-xl sm:text-2xl font-bold text-gray-800">
             {t('transporter')} {t('signup')}
           </CardTitle>
         </CardHeader>
         
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           {renderStepIndicator()}
           
           <form onSubmit={handleSubmit} className="space-y-4">
