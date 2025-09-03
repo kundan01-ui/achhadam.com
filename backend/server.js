@@ -11,7 +11,7 @@ const crypto = require('crypto');
 const admin = require('firebase-admin');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;
 
 // Rate limiting
 const limiter = rateLimit({
@@ -32,7 +32,7 @@ const otpLimiter = rateLimit({
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: true, // Allow all origins for development
+  origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'http://localhost:5174', 'https://achhadam-frontend.onrender.com'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']

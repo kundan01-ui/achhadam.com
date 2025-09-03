@@ -1,0 +1,53 @@
+services:
+  # Backend Service
+  - type: web
+    name: achhadam-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromDatabase:
+          name: achhadam-mongodb
+          property: connectionString
+      - key: POSTGRES_URL
+        fromDatabase:
+          name: achhadam-postgres
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FIREBASE_PROJECT_ID
+        value: your-firebase-project-id
+      - key: FIREBASE_PRIVATE_KEY
+        value: your-firebase-private-key
+      - key: FIREBASE_CLIENT_EMAIL
+        value: your-firebase-client-email
+
+  # Frontend Service
+  - type: web
+    name: achhadam-frontend
+    env: static
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://achhadam-backend.onrender.com
+
+databases:
+  # MongoDB Database
+  - name: achhadam-mongodb
+    databaseName: achhadam
+    user: achhadam_user
+    plan: free
+
+  # PostgreSQL Database
+  - name: achhadam-postgres
+    databaseName: achhadam_db
+    user: achhadam_user
+    plan: free

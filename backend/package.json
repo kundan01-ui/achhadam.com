@@ -1,52 +1,41 @@
 {
   "name": "achhadam-backend",
   "version": "1.0.0",
-  "description": "ACHHADAM Digital Farming Platform Backend",
+  "description": "Backend API for ACHHADAM Digital Farming Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "tsc",
-    "test": "jest"
-  },
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.21.2",
-    "express-rate-limit": "^7.5.1",
-    "express-validator": "^7.0.1",
-    "firebase-admin": "^13.5.0",
-    "helmet": "^7.2.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.0",
-    "morgan": "^1.10.1",
-    "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.7",
-    "pg": "^8.16.3",
-    "sharp": "^0.33.0",
-    "twilio": "^4.19.0"
-  },
-  "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/jsonwebtoken": "^9.0.5",
-    "@types/multer": "^1.4.11",
-    "@types/node": "^20.10.0",
-    "@types/nodemailer": "^6.4.14",
-    "nodemon": "^3.0.2",
-    "typescript": "^5.3.2"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "farming",
     "agriculture",
-    "digital-platform",
-    "nodejs",
-    "express",
-    "mongodb",
-    "postgresql"
+    "farming",
+    "digital",
+    "platform",
+    "api"
   ],
   "author": "ACHHADAM Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0",
+    "pg": "^8.11.3",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "express-rate-limit": "^6.10.0",
+    "dotenv": "^16.3.1",
+    "firebase-admin": "^11.10.1",
+    "multer": "^1.4.5-lts.1",
+    "crypto": "^1.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
 }
