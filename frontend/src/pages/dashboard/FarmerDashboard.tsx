@@ -71,71 +71,134 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   ];
 
   const renderOverview = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Stats Grid - Mobile Optimized */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Crops</p>
-              <p className="text-2xl font-bold text-gray-900">12</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Crops</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">12</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <Leaf className="h-6 w-6 text-green-600" />
+            <div className="p-2 sm:p-3 bg-green-100 rounded-lg flex-shrink-0">
+              <Leaf className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        
+        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Crops</p>
-              <p className="text-2xl font-bold text-blue-600">8</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Active Crops</p>
+              <p className="text-lg sm:text-2xl font-bold text-blue-600">8</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Sprout className="h-6 w-6 text-blue-600" />
+            <div className="p-2 sm:p-3 bg-blue-100 rounded-lg flex-shrink-0">
+              <Sprout className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        
+        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Harvested</p>
-              <p className="text-2xl font-bold text-purple-600">4</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Harvested</p>
+              <p className="text-lg sm:text-2xl font-bold text-purple-600">4</p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <Package className="h-6 w-6 text-purple-600" />
+            <div className="p-2 sm:p-3 bg-purple-100 rounded-lg flex-shrink-0">
+              <Package className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        
+        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Earnings</p>
-              <p className="text-2xl font-bold text-gray-900">₹12.5L</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Earnings</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">₹12.5L</p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <TrendingUp className="h-6 w-6 text-yellow-600" />
+            <div className="p-2 sm:p-3 bg-yellow-100 rounded-lg flex-shrink-0">
+              <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        
+        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Land</p>
-              <p className="text-2xl font-bold text-indigo-600">25 acres</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Land</p>
+              <p className="text-lg sm:text-2xl font-bold text-indigo-600">25 acres</p>
             </div>
-            <div className="p-3 bg-indigo-100 rounded-lg">
-              <MapPin className="h-6 w-6 text-indigo-600" />
+            <div className="p-2 sm:p-3 bg-indigo-100 rounded-lg flex-shrink-0">
+              <MapPin className="h-4 w-4 sm:h-6 sm:w-6 text-indigo-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        
+        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Orders</p>
-              <p className="text-2xl font-bold text-orange-600">6</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pending Orders</p>
+              <p className="text-lg sm:text-2xl font-bold text-orange-600">6</p>
             </div>
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <Clock className="h-6 w-6 text-orange-600" />
+            <div className="p-2 sm:p-3 bg-orange-100 rounded-lg flex-shrink-0">
+              <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions - Mobile Optimized */}
+      <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <button className="flex flex-col items-center p-3 sm:p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+            <Plus className="h-6 w-6 text-green-600 mb-2" />
+            <span className="text-sm font-medium text-green-700">Add Crop</span>
+          </button>
+          <button className="flex flex-col items-center p-3 sm:p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+            <Eye className="h-6 w-6 text-blue-600 mb-2" />
+            <span className="text-sm font-medium text-blue-700">View Orders</span>
+          </button>
+          <button className="flex flex-col items-center p-3 sm:p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
+            <Sun className="h-6 w-6 text-purple-600 mb-2" />
+            <span className="text-sm font-medium text-purple-700">Weather</span>
+          </button>
+          <button className="flex flex-col items-center p-3 sm:p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors">
+            <TrendingUp className="h-6 w-6 text-orange-600 mb-2" />
+            <span className="text-sm font-medium text-orange-700">Analytics</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Recent Activity - Mobile Optimized */}
+      <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Leaf className="h-4 w-4 text-green-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900">Wheat crop planted</p>
+              <p className="text-xs text-gray-500">2 hours ago</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Package className="h-4 w-4 text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900">New order received</p>
+              <p className="text-xs text-gray-500">4 hours ago</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <div className="p-2 bg-yellow-100 rounded-lg">
+              <Sun className="h-4 w-4 text-yellow-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900">Weather alert: Rain expected</p>
+              <p className="text-xs text-gray-500">6 hours ago</p>
             </div>
           </div>
         </div>
@@ -176,50 +239,75 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="px-6 py-4">
+      {/* Mobile Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div className="px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              {/* Mobile Menu Button */}
               <button
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <Menu className="h-5 w-5 text-gray-600" />
               </button>
-              <h1 className="text-xl font-semibold text-gray-900">Farmer Dashboard</h1>
+              
+              {/* Desktop Sidebar Toggle */}
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="hidden lg:block p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <Menu className="h-5 w-5 text-gray-600" />
+              </button>
+              
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Farmer Dashboard</h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="relative">
+            
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Search - Hidden on mobile */}
+              <div className="hidden sm:block relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
                 />
               </div>
+              
+              {/* Notifications */}
               <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
                 <Bell className="h-5 w-5 text-gray-600" />
                 <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
               </button>
-              <div className="flex items-center space-x-3">
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{userProfile.name}</p>
-                  <p className="text-xs text-gray-500">{userProfile.email}</p>
+              
+              {/* User Profile - Mobile Optimized */}
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                {/* User Info - Hidden on mobile */}
+                <div className="hidden sm:block text-right">
+                  <p className="text-sm font-medium text-gray-900 truncate max-w-32">{userProfile.name}</p>
+                  <p className="text-xs text-gray-500 truncate max-w-32">{userProfile.email}</p>
                   <p className="text-xs text-green-600 font-medium">FARMER</p>
                 </div>
+                
+                {/* User Avatar & Menu */}
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors"
                   >
                     <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
                       <span className="text-white font-semibold text-sm">F</span>
                     </div>
-                    <ChevronDown className="h-4 w-4 text-gray-600" />
+                    <ChevronDown className="h-4 w-4 text-gray-600 hidden sm:block" />
                   </button>
                   
                   {showUserMenu && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      <div className="px-4 py-2 border-b border-gray-100 sm:hidden">
+                        <p className="text-sm font-medium text-gray-900">{userProfile.name}</p>
+                        <p className="text-xs text-gray-500">{userProfile.email}</p>
+                        <p className="text-xs text-green-600 font-medium">FARMER</p>
+                      </div>
                       <button
                         onClick={() => {
                           setShowProfileModal(true);
@@ -262,7 +350,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       </header>
 
       <div className="flex">
-        <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-sm border-r border-gray-200 transition-all duration-300`}>
+        {/* Desktop Sidebar */}
+        <aside className={`hidden lg:block ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-sm border-r border-gray-200 transition-all duration-300`}>
           <nav className="p-4">
             <ul className="space-y-2">
               {navigationItems.map((item) => {
@@ -287,7 +376,51 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           </nav>
         </aside>
 
-        <main className="flex-1 p-6">
+        {/* Mobile Sidebar Overlay */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden fixed inset-0 z-50 flex">
+            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setMobileMenuOpen(false)}></div>
+            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-600" />
+                </button>
+              </div>
+              <nav className="flex-1 p-4">
+                <ul className="space-y-2">
+                  {navigationItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <li key={item.id}>
+                        <button
+                          onClick={() => {
+                            setActiveTab(item.id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors ${
+                            activeTab === item.id
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          }`}
+                        >
+                          <Icon className="h-5 w-5" />
+                          <span className="font-medium">{item.label}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </nav>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-6">
           {renderContent()}
         </main>
       </div>
