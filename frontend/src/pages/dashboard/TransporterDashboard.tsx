@@ -333,104 +333,105 @@ const TransporterDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({
   };
 
   const renderOverview = () => (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Stats Cards - Mobile Optimized */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Deliveries</p>
-              <p className="text-lg sm:text-2xl font-bold text-gray-900">{stats.totalDeliveries}</p>
+    <div className="space-y-4">
+      {/* Stats Cards - Perfect Mobile Design */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {/* Total Deliveries */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+              <Package className="h-6 w-6 text-blue-600" />
             </div>
-            <div className="p-2 sm:p-3 bg-blue-100 rounded-lg flex-shrink-0">
-              <Package className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
-            </div>
+            <p className="text-xs font-medium text-gray-600 mb-1">Total Deliveries</p>
+            <p className="text-2xl font-bold text-gray-900">{stats.totalDeliveries}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Active Deliveries</p>
-              <p className="text-lg sm:text-2xl font-bold text-orange-600">{stats.activeDeliveries}</p>
+        {/* Active Deliveries */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-3">
+              <Clock className="h-6 w-6 text-orange-600" />
             </div>
-            <div className="p-2 sm:p-3 bg-orange-100 rounded-lg flex-shrink-0">
-              <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
-            </div>
+            <p className="text-xs font-medium text-gray-600 mb-1">Active Deliveries</p>
+            <p className="text-2xl font-bold text-orange-600">{stats.activeDeliveries}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Completed</p>
-              <p className="text-lg sm:text-2xl font-bold text-green-600">{stats.completedDeliveries}</p>
+        {/* Completed Deliveries */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
+              <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
-            <div className="p-2 sm:p-3 bg-green-100 rounded-lg flex-shrink-0">
-              <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
-            </div>
+            <p className="text-xs font-medium text-gray-600 mb-1">Completed</p>
+            <p className="text-2xl font-bold text-green-600">{stats.completedDeliveries}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Earnings</p>
-              <p className="text-lg sm:text-2xl font-bold text-gray-900">{formatCurrency(stats.totalEarnings)}</p>
+        {/* Total Earnings */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+              <TrendingUp className="h-6 w-6 text-purple-600" />
             </div>
-            <div className="p-2 sm:p-3 bg-purple-100 rounded-lg flex-shrink-0">
-              <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
-            </div>
+            <p className="text-xs font-medium text-gray-600 mb-1">Total Earnings</p>
+            <p className="text-lg font-bold text-gray-900">{formatCurrency(stats.totalEarnings)}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Active Vehicles</p>
-              <p className="text-lg sm:text-2xl font-bold text-indigo-600">{stats.activeVehicles}</p>
+        {/* Active Vehicles */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
+              <Truck className="h-6 w-6 text-indigo-600" />
             </div>
-            <div className="p-2 sm:p-3 bg-indigo-100 rounded-lg flex-shrink-0">
-              <Truck className="h-4 w-4 sm:h-6 sm:w-6 text-indigo-600" />
-            </div>
+            <p className="text-xs font-medium text-gray-600 mb-1">Active Vehicles</p>
+            <p className="text-2xl font-bold text-indigo-600">{stats.activeVehicles}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pending Requests</p>
-              <p className="text-lg sm:text-2xl font-bold text-red-600">{stats.pendingRequests}</p>
+        {/* Pending Requests */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-3">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
-            <div className="p-2 sm:p-3 bg-red-100 rounded-lg flex-shrink-0">
-              <AlertTriangle className="h-4 w-4 sm:h-6 sm:w-6 text-red-600" />
-            </div>
+            <p className="text-xs font-medium text-gray-600 mb-1">Pending Requests</p>
+            <p className="text-2xl font-bold text-red-600">{stats.pendingRequests}</p>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions - Mobile Optimized */}
-      <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
+      {/* Quick Actions - Perfect Mobile Design */}
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <button className="flex flex-col items-center p-3 sm:p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
-            <Plus className="h-6 w-6 text-blue-600 mb-2" />
-            <span className="text-sm font-medium text-blue-700">New Delivery</span>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <button className="flex flex-col items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors min-h-[100px]">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+              <Plus className="h-5 w-5 text-blue-600" />
+            </div>
+            <span className="text-sm font-medium text-blue-700 text-center">New Delivery</span>
           </button>
-          <button className="flex flex-col items-center p-3 sm:p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
-            <Eye className="h-6 w-6 text-green-600 mb-2" />
-            <span className="text-sm font-medium text-green-700">Track Route</span>
+          <button className="flex flex-col items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors min-h-[100px]">
+            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-3">
+              <Eye className="h-5 w-5 text-green-600" />
+            </div>
+            <span className="text-sm font-medium text-green-700 text-center">Track Route</span>
           </button>
-          <button className="flex flex-col items-center p-3 sm:p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
-            <Truck className="h-6 w-6 text-purple-600 mb-2" />
-            <span className="text-sm font-medium text-purple-700">Manage Fleet</span>
+          <button className="flex flex-col items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors min-h-[100px]">
+            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+              <Truck className="h-5 w-5 text-purple-600" />
+            </div>
+            <span className="text-sm font-medium text-purple-700 text-center">Manage Fleet</span>
           </button>
-          <button className="flex flex-col items-center p-3 sm:p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors">
-            <BarChart3 className="h-6 w-6 text-orange-600 mb-2" />
-            <span className="text-sm font-medium text-orange-700">Analytics</span>
+          <button className="flex flex-col items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors min-h-[100px]">
+            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mb-3">
+              <BarChart3 className="h-5 w-5 text-orange-600" />
+            </div>
+            <span className="text-sm font-medium text-orange-700 text-center">Analytics</span>
           </button>
         </div>
-      </div>
       </div>
 
       {/* Recent Deliveries */}

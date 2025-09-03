@@ -71,111 +71,113 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   ];
 
   const renderOverview = () => (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Stats Grid - Mobile Optimized */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Crops</p>
-              <p className="text-lg sm:text-2xl font-bold text-gray-900">12</p>
+    <div className="space-y-4">
+      {/* Stats Grid - Perfect Mobile Design */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {/* Total Crops */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
+              <Leaf className="h-6 w-6 text-green-600" />
             </div>
-            <div className="p-2 sm:p-3 bg-green-100 rounded-lg flex-shrink-0">
-              <Leaf className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
-            </div>
+            <p className="text-xs font-medium text-gray-600 mb-1">Total Crops</p>
+            <p className="text-2xl font-bold text-gray-900">12</p>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Active Crops</p>
-              <p className="text-lg sm:text-2xl font-bold text-blue-600">8</p>
+        {/* Active Crops */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+              <Sprout className="h-6 w-6 text-blue-600" />
             </div>
-            <div className="p-2 sm:p-3 bg-blue-100 rounded-lg flex-shrink-0">
-              <Sprout className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
-            </div>
+            <p className="text-xs font-medium text-gray-600 mb-1">Active Crops</p>
+            <p className="text-2xl font-bold text-blue-600">8</p>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Harvested</p>
-              <p className="text-lg sm:text-2xl font-bold text-purple-600">4</p>
+        {/* Harvested */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+              <Package className="h-6 w-6 text-purple-600" />
             </div>
-            <div className="p-2 sm:p-3 bg-purple-100 rounded-lg flex-shrink-0">
-              <Package className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
-            </div>
+            <p className="text-xs font-medium text-gray-600 mb-1">Harvested</p>
+            <p className="text-2xl font-bold text-purple-600">4</p>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Earnings</p>
-              <p className="text-lg sm:text-2xl font-bold text-gray-900">₹12.5L</p>
+        {/* Total Earnings */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mb-3">
+              <TrendingUp className="h-6 w-6 text-yellow-600" />
             </div>
-            <div className="p-2 sm:p-3 bg-yellow-100 rounded-lg flex-shrink-0">
-              <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-600" />
-            </div>
+            <p className="text-xs font-medium text-gray-600 mb-1">Total Earnings</p>
+            <p className="text-lg font-bold text-gray-900">₹12.5L</p>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Land</p>
-              <p className="text-lg sm:text-2xl font-bold text-indigo-600">25 acres</p>
+        {/* Total Land */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
+              <MapPin className="h-6 w-6 text-indigo-600" />
             </div>
-            <div className="p-2 sm:p-3 bg-indigo-100 rounded-lg flex-shrink-0">
-              <MapPin className="h-4 w-4 sm:h-6 sm:w-6 text-indigo-600" />
-            </div>
+            <p className="text-xs font-medium text-gray-600 mb-1">Total Land</p>
+            <p className="text-lg font-bold text-indigo-600">25 acres</p>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pending Orders</p>
-              <p className="text-lg sm:text-2xl font-bold text-orange-600">6</p>
+        {/* Pending Orders */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-3">
+              <Clock className="h-6 w-6 text-orange-600" />
             </div>
-            <div className="p-2 sm:p-3 bg-orange-100 rounded-lg flex-shrink-0">
-              <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
-            </div>
+            <p className="text-xs font-medium text-gray-600 mb-1">Pending Orders</p>
+            <p className="text-2xl font-bold text-orange-600">6</p>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions - Mobile Optimized */}
-      <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
+      {/* Quick Actions - Perfect Mobile Design */}
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <button className="flex flex-col items-center p-3 sm:p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
-            <Plus className="h-6 w-6 text-green-600 mb-2" />
-            <span className="text-sm font-medium text-green-700">Add Crop</span>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <button className="flex flex-col items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors min-h-[100px]">
+            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-3">
+              <Plus className="h-5 w-5 text-green-600" />
+            </div>
+            <span className="text-sm font-medium text-green-700 text-center">Add Crop</span>
           </button>
-          <button className="flex flex-col items-center p-3 sm:p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
-            <Eye className="h-6 w-6 text-blue-600 mb-2" />
-            <span className="text-sm font-medium text-blue-700">View Orders</span>
+          <button className="flex flex-col items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors min-h-[100px]">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+              <Eye className="h-5 w-5 text-blue-600" />
+            </div>
+            <span className="text-sm font-medium text-blue-700 text-center">View Orders</span>
           </button>
-          <button className="flex flex-col items-center p-3 sm:p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
-            <Sun className="h-6 w-6 text-purple-600 mb-2" />
-            <span className="text-sm font-medium text-purple-700">Weather</span>
+          <button className="flex flex-col items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors min-h-[100px]">
+            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+              <Sun className="h-5 w-5 text-purple-600" />
+            </div>
+            <span className="text-sm font-medium text-purple-700 text-center">Weather</span>
           </button>
-          <button className="flex flex-col items-center p-3 sm:p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors">
-            <TrendingUp className="h-6 w-6 text-orange-600 mb-2" />
-            <span className="text-sm font-medium text-orange-700">Analytics</span>
+          <button className="flex flex-col items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors min-h-[100px]">
+            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mb-3">
+              <TrendingUp className="h-5 w-5 text-orange-600" />
+            </div>
+            <span className="text-sm font-medium text-orange-700 text-center">Analytics</span>
           </button>
         </div>
       </div>
 
       {/* Recent Activity - Mobile Optimized */}
-      <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-        <div className="space-y-3">
+      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+        <h3 className="text-base font-semibold text-gray-900 mb-3">Recent Activity</h3>
+        <div className="space-y-2">
           <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div className="p-2 bg-green-100 rounded-lg">
+            <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
               <Leaf className="h-4 w-4 text-green-600" />
             </div>
             <div className="flex-1 min-w-0">
@@ -184,7 +186,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             </div>
           </div>
           <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div className="p-2 bg-blue-100 rounded-lg">
+            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
               <Package className="h-4 w-4 text-blue-600" />
             </div>
             <div className="flex-1 min-w-0">
@@ -193,7 +195,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             </div>
           </div>
           <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div className="p-2 bg-yellow-100 rounded-lg">
+            <div className="p-2 bg-yellow-100 rounded-lg flex-shrink-0">
               <Sun className="h-4 w-4 text-yellow-600" />
             </div>
             <div className="flex-1 min-w-0">

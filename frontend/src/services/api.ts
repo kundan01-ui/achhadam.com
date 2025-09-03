@@ -1,5 +1,5 @@
 // API service for authentication and user management
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
 
 export interface User {
   id: string;

@@ -162,3 +162,4 @@ curl -X POST https://achhadam-backend.onrender.com/auth/login \
 ---
 
 **CORS issue has been fixed! Redeploy backend to apply changes.** 🚀
+
