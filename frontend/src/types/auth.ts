@@ -31,3 +31,4 @@ export interface SignupRequest {
   // Additional fields based on user type
   [key: string]: any;
 }
+

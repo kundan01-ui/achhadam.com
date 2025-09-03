@@ -235,3 +235,4 @@ Once deployed, your ACHHADAM Digital Farming Platform will be live at:
 - **Backend API:** `https://achhadam-backend.onrender.com`
 
 Your platform is now ready for users! 🚀
+

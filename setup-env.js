@@ -222,3 +222,4 @@ console.log('- Keep .env file secure and private');
 console.log('- Use strong, unique secrets');
 console.log('- Rotate secrets regularly');
 console.log('\n🚀 Ready to start development!');
+

@@ -23,7 +23,9 @@ import {
   Apple,
   MapPin,
   User,
-  ChevronDown
+  ChevronDown,
+  X,
+  Home
 } from 'lucide-react';
 import ProfileModal from '../../components/ui/ProfileModal';
 
@@ -32,6 +34,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Mock user profile data
   const [userProfile, setUserProfile] = useState({
