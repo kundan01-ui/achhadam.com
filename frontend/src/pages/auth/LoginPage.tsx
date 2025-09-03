@@ -3,8 +3,11 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import LanguageSelector from '../../components/ui/LanguageSelector';
+import GoogleSignInButton from '../../components/ui/GoogleSignInButton';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { apiService, type LoginRequest } from '../../services/api';
+import { googleAuthService } from '../../services/googleAuth';
+import type { GoogleUserData } from '../../types/auth';
 
 interface LoginPageProps {
   onSignupClick: () => void;
@@ -20,9 +23,37 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
     password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleGoogleSignIn = async (user: GoogleUserData) => {
+    setGoogleLoading(true);
+    try {
+      console.log('🔄 Processing Google Sign-in:', user);
+      
+      // Here you can either:
+      // 1. Create a new user account with Google data
+      // 2. Link Google account to existing user
+      // 3. Directly login the user
+      
+      // For now, we'll directly login the user
+      onUserTypeSelect('farmer', user); // Default to farmer, you can modify this logic
+      
+    } catch (error: any) {
+      console.error('❌ Google Sign-in processing failed:', error);
+      alert('Google Sign-in failed: ' + error.message);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleSignInError = (error: string) => {
+    console.error('❌ Google Sign-in error:', error);
+    alert('Google Sign-in failed: ' + error);
+    setGoogleLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -171,6 +202,27 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
           </form>
 
           {/* Signup Link */}
+          {/* Google Sign-in Button */}
+          <div className="mt-4 sm:mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <GoogleSignInButton
+                onSuccess={handleGoogleSignIn}
+                onError={handleGoogleSignInError}
+                disabled={isLoading || googleLoading}
+                className="w-full"
+              />
+            </div>
+          </div>
+
           <div className="text-center mt-4 sm:mt-6">
             <p className="text-xs sm:text-sm text-gray-600">
               {t('dontHaveAccount')}{' '}

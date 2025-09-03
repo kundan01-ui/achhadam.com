@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import LanguageSelector from '../../components/ui/LanguageSelector';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { apiService, type SignupRequest } from '../../services/api';
+import { firebaseOTPService } from '../../services/firebaseOTP';
 import OTPInput from '../../components/ui/OTPInput';
-import { MessageCircle, CheckCircle } from 'lucide-react';
+import { MessageCircle, CheckCircle, Bug } from 'lucide-react';
+import FirebaseDebugger from '../../components/debug/FirebaseDebugger';
 
 interface TransporterSignupPageProps {
   onBackToLogin: () => void;
@@ -18,6 +20,13 @@ interface TransporterSignupPageProps {
 const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToLogin, onSwitchUserType, onBackToHome, onBackToUserTypeSelection }) => {
   const { t } = useLanguage();
   const [step, setStep] = useState(1);
+
+  // Cleanup Firebase OTP service on component unmount
+  useEffect(() => {
+    return () => {
+      firebaseOTPService.cleanup();
+    };
+  }, []);
   const [formData, setFormData] = useState({
     // Step 1: Basic Info (Required)
     firstName: '',
@@ -49,6 +58,7 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
   const [otpLoading, setOtpLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [otpError, setOtpError] = useState('');
+  const [showDebugger, setShowDebugger] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -78,19 +88,52 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
     setOtpError('');
 
     try {
-      const response = await apiService.sendOTP(formData.phone);
-      
-      if (response.success) {
-        setOtpSent(true);
-        setShowOTP(true);
-        startResendTimer();
+      // Check if Firebase is configured
+      if (firebaseOTPService.isFirebaseConfigured()) {
+        console.log('🔥 Using Firebase OTP');
         
-        // Show OTP in console for development
-        if (response.otp) {
-          console.log(`📱 OTP for ${formData.phone}: ${response.otp}`);
+        // Initialize Recaptcha
+        const recaptchaInitialized = await firebaseOTPService.initializeRecaptcha();
+        if (!recaptchaInitialized) {
+          throw new Error('Failed to initialize Recaptcha');
+        }
+        
+        // Send OTP using Firebase
+        const firebaseResult = await firebaseOTPService.sendOTPToPhone(formData.phone);
+        
+        if (firebaseResult.success) {
+          // Store confirmation result in backend
+          const backendResponse = await apiService.sendOTP(formData.phone, firebaseResult.confirmationResult);
+          
+          if (backendResponse.success) {
+            setOtpSent(true);
+            setShowOTP(true);
+            startResendTimer();
+            console.log('✅ Firebase OTP sent successfully');
+          } else {
+            setOtpError(backendResponse.message || 'Failed to store OTP session');
+          }
+        } else {
+          setOtpError(firebaseResult.message || 'Failed to send OTP');
         }
       } else {
-        setOtpError(response.message || 'Failed to send OTP');
+        console.log('📱 Using Mock OTP (Firebase not configured)');
+        
+        // Fallback to mock OTP
+        const response = await apiService.sendOTP(formData.phone);
+        
+        if (response.success) {
+          setOtpSent(true);
+          setShowOTP(true);
+          startResendTimer();
+          
+          // Show OTP in console for development
+          if (response.otp) {
+            console.log(`📱 Mock OTP for ${formData.phone}: ${response.otp}`);
+          }
+        } else {
+          setOtpError(response.message || 'Failed to send OTP');
+        }
       }
     } catch (error: any) {
       console.error('Send OTP error:', error);
@@ -110,21 +153,47 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
     setOtpError('');
 
     try {
-      const response = await apiService.verifyOTP(formData.phone, otp);
-      
-      if (response.success) {
-        console.log('✅ OTP verified successfully!', response);
-        setOtpVerified(true);
-        setOtpError('');
+      // Check if Firebase is configured
+      if (firebaseOTPService.isFirebaseConfigured()) {
+        console.log('🔥 Verifying OTP with Firebase');
         
-        // Auto-proceed to next step after successful OTP verification
-        setTimeout(() => {
-          console.log('🚀 Auto-proceeding to next step');
-          setStep(step + 1);
-        }, 1000); // 1 second delay to show success message
+        // Verify OTP using Firebase
+        const firebaseResult = await firebaseOTPService.verifyOTPCode(otp);
+        
+        if (firebaseResult.success) {
+          console.log('✅ Firebase OTP verified successfully!', firebaseResult);
+          setOtpVerified(true);
+          setOtpError('');
+          
+          // Auto-proceed to next step after successful OTP verification
+          setTimeout(() => {
+            console.log('🚀 Auto-proceeding to next step');
+            setStep(step + 1);
+          }, 1000); // 1 second delay to show success message
+        } else {
+          console.log('❌ Firebase OTP verification failed:', firebaseResult);
+          setOtpError(firebaseResult.message || 'Invalid OTP');
+        }
       } else {
-        console.log('❌ OTP verification failed:', response);
-        setOtpError(response.message || 'Invalid OTP');
+        console.log('📱 Verifying OTP with backend (Mock)');
+        
+        // Fallback to backend verification
+        const response = await apiService.verifyOTP(formData.phone, otp);
+        
+        if (response.success) {
+          console.log('✅ OTP verified successfully!', response);
+          setOtpVerified(true);
+          setOtpError('');
+          
+          // Auto-proceed to next step after successful OTP verification
+          setTimeout(() => {
+            console.log('🚀 Auto-proceeding to next step');
+            setStep(step + 1);
+          }, 1000); // 1 second delay to show success message
+        } else {
+          console.log('❌ OTP verification failed:', response);
+          setOtpError(response.message || 'Invalid OTP');
+        }
       }
     } catch (error: any) {
       console.error('Verify OTP error:', error);
@@ -643,8 +712,18 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-100 via-amber-50 to-yellow-100 flex items-center justify-center p-2 sm:p-4">
-      {/* Language Selector */}
-      <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
+      {/* reCAPTCHA Container - Hidden but required for Firebase */}
+      <div id="recaptcha-container" className="hidden"></div>
+      
+      {/* Language Selector and Debug Button */}
+      <div className="absolute top-2 sm:top-4 right-2 sm:right-4 flex items-center space-x-2">
+        <button
+          onClick={() => setShowDebugger(true)}
+          className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors"
+          title="Firebase Debug"
+        >
+          <Bug className="w-4 h-4" />
+        </button>
         <LanguageSelector />
       </div>
       
@@ -757,6 +836,15 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
           </div>
         </CardContent>
       </Card>
+      
+      {/* Firebase Recaptcha Container */}
+      <div id="recaptcha-container" className="hidden"></div>
+      
+      {/* Firebase Debugger */}
+      <FirebaseDebugger 
+        isVisible={showDebugger} 
+        onClose={() => setShowDebugger(false)} 
+      />
     </div>
   );
 };

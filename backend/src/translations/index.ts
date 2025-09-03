@@ -566,3 +566,5 @@ export const getTranslations = (language: Language) => {
   return translations[language] || translations[DEFAULT_LANGUAGE];
 };
 
+
+

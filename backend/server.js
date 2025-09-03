@@ -8,6 +8,7 @@ const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const admin = require('firebase-admin');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -31,13 +32,37 @@ const otpLimiter = rateLimit({
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true
+  origin: true, // Allow all origins for development
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(limiter);
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Firebase Admin Initialization
+// आपको अपना Firebase service account key यहाँ add करना होगा
+const serviceAccount = {
+  // Firebase service account key object यहाँ paste करें
+  // या process.env.FIREBASE_SERVICE_ACCOUNT_KEY का उपयोग करें
+  type: "service_account",
+  project_id: "digital-farming-platform",
+  // Add your service account key here
+};
+
+try {
+  // For now, we'll use application default credentials
+  // In production, add your service account key
+  admin.initializeApp({
+    projectId: "digital-farming-platform"
+  });
+  console.log('✅ Firebase Admin initialized successfully!');
+} catch (error) {
+  console.error('❌ Firebase Admin initialization failed:', error.message);
+  console.log('📝 Please add your Firebase service account key to server.js');
+}
 
 // Database Connections
 let mongoConnection = null;
@@ -104,20 +129,22 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 // OTP Service
-class OTPService {
+class FirebaseOTPService {
   constructor() {
-    this.otpStore = new Map();
+    this.otpStore = new Map(); // Store session data
     this.otpExpiry = 5 * 60 * 1000; // 5 minutes
     this.maxAttempts = 3;
   }
 
+  // Generate custom OTP for verification (Firebase handles SMS sending)
   generateOTP() {
     return crypto.randomInt(100000, 999999).toString();
   }
 
-  storeOTP(phone, otp) {
+  // Store OTP session data
+  storeOTPSession(phone, sessionData) {
     const otpData = {
-      otp: otp,
+      ...sessionData,
       createdAt: Date.now(),
       attempts: 0,
       verified: false
@@ -133,16 +160,17 @@ class OTPService {
     return otpData;
   }
 
-  verifyOTP(phone, inputOTP) {
+  // Verify OTP using Firebase
+  async verifyOTP(phone, inputOTP) {
     const otpData = this.otpStore.get(phone);
     
     if (!otpData) {
-      return { success: false, message: 'OTP expired or not found' };
+      return { success: false, message: 'OTP session expired or not found' };
     }
     
     if (Date.now() - otpData.createdAt > this.otpExpiry) {
       this.otpStore.delete(phone);
-      return { success: false, message: 'OTP has expired' };
+      return { success: false, message: 'OTP session has expired' };
     }
     
     if (otpData.attempts >= this.maxAttempts) {
@@ -152,54 +180,71 @@ class OTPService {
     
     otpData.attempts++;
     
-    if (otpData.otp === inputOTP) {
-      otpData.verified = true;
-      this.otpStore.delete(phone);
-      return { success: true, message: 'OTP verified successfully' };
-    } else {
-      return { success: false, message: 'Invalid OTP' };
+    try {
+      // Verify OTP with Firebase
+      const result = await otpData.confirmationResult.confirm(inputOTP);
+      
+      if (result.user) {
+        otpData.verified = true;
+        this.otpStore.delete(phone);
+        return { 
+          success: true, 
+          message: 'OTP verified successfully',
+          user: result.user
+        };
+      } else {
+        return { success: false, message: 'Invalid OTP' };
+      }
+    } catch (error) {
+      console.error('Firebase OTP verification failed:', error);
+      return { 
+        success: false, 
+        message: error.message || 'Invalid OTP' 
+      };
     }
   }
 
-  async sendOTP(phone, otp) {
+  // Send OTP using Firebase (this will be called from frontend)
+  async sendOTP(phone) {
     try {
-      console.log(`📱 Mock SMS sent to ${phone}: Your ACHHADAM OTP is ${otp}. Valid for 5 minutes.`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // This method will be called from frontend
+      // Backend just stores the session data
+      console.log(`📱 Firebase OTP request for ${phone}`);
+      
       return {
         success: true,
-        message: 'OTP sent successfully',
-        provider: 'Mock SMS Service'
+        message: 'OTP request processed',
+        provider: 'Firebase Authentication'
       };
     } catch (error) {
-      console.error('SMS sending failed:', error);
+      console.error('Firebase OTP request failed:', error);
       return {
         success: false,
-        message: 'Failed to send SMS',
+        message: 'Failed to process OTP request',
         error: error.message
       };
     }
   }
 
-  async sendInitialOTP(phone) {
+  // Store Firebase confirmation result
+  async storeConfirmationResult(phone, confirmationResult) {
     try {
-      const newOTP = this.generateOTP();
-      this.storeOTP(phone, newOTP);
-      const smsResult = await this.sendOTP(phone, newOTP);
+      const sessionData = {
+        confirmationResult: confirmationResult,
+        phone: phone
+      };
       
-      if (smsResult.success) {
-        return {
-          success: true,
-          message: 'OTP sent successfully',
-          otp: newOTP // Remove this in production
-        };
-      } else {
-        return smsResult;
-      }
+      this.storeOTPSession(phone, sessionData);
+      
+      return {
+        success: true,
+        message: 'OTP session stored successfully'
+      };
     } catch (error) {
-      console.error('Send initial OTP failed:', error);
+      console.error('Store confirmation result failed:', error);
       return {
         success: false,
-        message: 'Failed to send OTP',
+        message: 'Failed to store OTP session',
         error: error.message
       };
     }
@@ -244,7 +289,7 @@ class OTPService {
 }
 
 // Initialize OTP Service
-const otpService = new OTPService();
+const otpService = new FirebaseOTPService();
 
 // Health Check Endpoint
 app.get('/health', async (req, res) => {
@@ -300,29 +345,46 @@ app.post('/api/auth/send-otp', otpLimiter, async (req, res) => {
       });
     }
     
-    // Generate OTP
-    const otp = otpService.generateOTP();
+    const { confirmationResult } = req.body;
     
-    // Store OTP
-    otpService.storeOTP(phone, otp);
-    
-    // Send OTP via SMS
-    const smsResult = await otpService.sendOTP(phone, otp);
-    
-    if (smsResult.success) {
-      res.json({
-        success: true,
-        message: 'OTP sent successfully',
-        phone: phone,
-        // In development, show OTP in console and response
-        otp: process.env.NODE_ENV === 'development' ? otp : undefined
-      });
+    // Store Firebase confirmation result for verification
+    if (confirmationResult) {
+      const storeResult = await otpService.storeConfirmationResult(phone, confirmationResult);
+      
+      if (storeResult.success) {
+        res.json({
+          success: true,
+          message: 'OTP session stored successfully',
+          phone: phone,
+          provider: 'Firebase Authentication'
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: storeResult.message || 'Failed to store OTP session',
+          error: storeResult.error
+        });
+      }
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'Failed to send OTP',
-        error: smsResult.message
-      });
+      // Fallback to mock OTP for development
+      const otp = otpService.generateOTP();
+      const smsResult = await otpService.sendOTP(phone);
+      
+      if (smsResult.success) {
+        res.json({
+          success: true,
+          message: 'OTP sent successfully (Mock)',
+          phone: phone,
+          otp: process.env.NODE_ENV === 'development' ? otp : undefined,
+          provider: 'Mock SMS Service'
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: smsResult.message || 'Failed to send OTP',
+          error: smsResult.error
+        });
+      }
     }
     
   } catch (error) {
@@ -346,8 +408,8 @@ app.post('/api/auth/verify-otp', otpLimiter, async (req, res) => {
       });
     }
     
-    // Verify OTP
-    const verificationResult = otpService.verifyOTP(phone, otp);
+    // Verify OTP using Firebase
+    const verificationResult = await otpService.verifyOTP(phone, otp);
     
     if (verificationResult.success) {
       res.json({

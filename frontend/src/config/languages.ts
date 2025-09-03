@@ -30,3 +30,5 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
 
 export const DEFAULT_LANGUAGE: Language = 'hi';
 
+
+

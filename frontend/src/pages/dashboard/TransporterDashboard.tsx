@@ -1,560 +1,980 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import UserProfileDropdown from '../../components/ui/UserProfileDropdown';
-import LanguageSelector from '../../components/ui/LanguageSelector';
+import React, { useState, useEffect } from 'react';
+import ProfileModal from '../../components/ui/ProfileModal';
 import { 
+  LayoutDashboard, 
   Truck, 
-  MapPin, 
-  Clock, 
-  DollarSign, 
-  Home, 
-  Menu, 
-  X,
+  Package, 
+  TrendingUp, 
+  Users, 
+  Settings, 
+  Bell, 
+  Search,
+  Filter,
+  Plus,
+  Eye,
+  Edit,
+  Trash2,
+  Download,
+  Upload,
   BarChart3,
+  PieChart,
   Calendar,
-  Users,
-  Package,
-  Route,
-  TrendingUp,
-  AlertTriangle
+  MapPin,
+  Phone,
+  Mail,
+  Star,
+  Heart,
+  Share2,
+  MoreVertical,
+  Menu,
+  Clock,
+  CheckCircle,
+  Navigation,
+  Fuel,
+  Wrench,
+  AlertTriangle,
+  CheckSquare,
+  XCircle,
+  Play,
+  Pause,
+  RotateCcw,
+  User,
+  ChevronDown
 } from 'lucide-react';
 
-type DashboardPage = 'home' | 'deliveries' | 'earnings' | 'routes';
-
-interface TransporterDashboardProps {
-  user: any;
-  onLogout: () => void;
+interface TransporterStats {
+  totalDeliveries: number;
+  activeDeliveries: number;
+  completedDeliveries: number;
+  totalEarnings: number;
+  activeVehicles: number;
+  pendingRequests: number;
 }
 
-const TransporterDashboard: React.FC<TransporterDashboardProps> = ({ user, onLogout }) => {
-  const [currentPage, setCurrentPage] = useState<DashboardPage>('home');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+interface Delivery {
+  id: string;
+  orderId: string;
+  customer: string;
+  pickupLocation: string;
+  deliveryLocation: string;
+  product: string;
+  quantity: number;
+  status: 'pending' | 'assigned' | 'picked_up' | 'in_transit' | 'delivered' | 'cancelled';
+  assignedVehicle: string;
+  driver: string;
+  pickupDate: string;
+  deliveryDate: string;
+  distance: number;
+  fare: number;
+  priority: 'low' | 'medium' | 'high';
+}
 
-  const navigationItems = [
+interface Vehicle {
+  id: string;
+  vehicleNumber: string;
+  type: 'truck' | 'van' | 'pickup' | 'tractor';
+  capacity: number;
+  status: 'available' | 'busy' | 'maintenance' | 'offline';
+  driver: string;
+  location: string;
+  fuelLevel: number;
+  lastService: string;
+  nextService: string;
+  totalDeliveries: number;
+  rating: number;
+}
+
+interface Driver {
+  id: string;
+  name: string;
+  phone: string;
+  licenseNumber: string;
+  experience: number;
+  rating: number;
+  status: 'available' | 'busy' | 'offline';
+  currentLocation: string;
+  totalDeliveries: number;
+  vehicle: string;
+}
+
+const TransporterDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user, onLogout }) => {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Mock user profile data
+  const [userProfile, setUserProfile] = useState({
+    id: '1',
+    name: user?.name || 'Vikram Singh',
+    email: user?.email || 'vikram@transporter.com',
+    phone: '+91 9876543210',
+    userType: 'transporter' as const,
+    address: 'Transport Hub, Industrial Area, Delhi',
+    city: 'Delhi',
+    state: 'Delhi',
+    pincode: '110001',
+    dateOfBirth: '1982-11-10',
+    profileImage: '',
+    businessName: 'Singh Transport Services',
+    businessType: 'partnership',
+    licenseNumber: 'DL-1234567890',
+    experience: 15,
+    kycStatus: 'verified' as const,
+    aadharNumber: '4567-8901-2345',
+    panNumber: 'PQRST5678D',
+    bankAccountNumber: '4567890123456789',
+    ifscCode: 'ICIC0001234',
+    bankName: 'ICICI Bank',
+    createdAt: '2024-01-01',
+    lastLogin: new Date().toISOString()
+  });
+
+  // Mock data - replace with real API calls
+  const [stats] = useState<TransporterStats>({
+    totalDeliveries: 1247,
+    activeDeliveries: 23,
+    completedDeliveries: 1224,
+    totalEarnings: 1850000,
+    activeVehicles: 8,
+    pendingRequests: 5
+  });
+
+  const [deliveries] = useState<Delivery[]>([
     {
-      id: 'home',
-      label: 'Dashboard',
-      icon: Home,
-      description: 'Overview and quick actions'
+      id: 'DEL-001',
+      orderId: 'ORD-001',
+      customer: 'Golden Grains Ltd.',
+      pickupLocation: 'Punjab, India',
+      deliveryLocation: 'Mumbai, Maharashtra',
+      product: 'Wheat (500 kg)',
+      quantity: 500,
+      status: 'in_transit',
+      assignedVehicle: 'MH-12-AB-1234',
+      driver: 'Rajesh Kumar',
+      pickupDate: '2024-01-15',
+      deliveryDate: '2024-01-17',
+      distance: 1200,
+      fare: 15000,
+      priority: 'high'
     },
     {
-      id: 'deliveries',
-      label: 'Deliveries',
-      icon: Package,
-      description: 'Manage delivery requests'
+      id: 'DEL-002',
+      orderId: 'ORD-002',
+      customer: 'Fresh Harvest Co.',
+      pickupLocation: 'Haryana, India',
+      deliveryLocation: 'Delhi, India',
+      product: 'Vegetables (200 kg)',
+      quantity: 200,
+      status: 'assigned',
+      assignedVehicle: 'DL-01-CD-5678',
+      driver: 'Amit Singh',
+      pickupDate: '2024-01-16',
+      deliveryDate: '2024-01-16',
+      distance: 150,
+      fare: 3500,
+      priority: 'medium'
     },
     {
-      id: 'earnings',
-      label: 'Earnings',
-      icon: DollarSign,
-      description: 'Track your earnings'
-    },
-    {
-      id: 'routes',
-      label: 'Routes',
-      icon: Route,
-      description: 'Optimize your routes'
+      id: 'DEL-003',
+      orderId: 'ORD-003',
+      customer: 'Green Valley Farms',
+      pickupLocation: 'Uttar Pradesh, India',
+      deliveryLocation: 'Bangalore, Karnataka',
+      product: 'Organic Rice (300 kg)',
+      quantity: 300,
+      status: 'delivered',
+      assignedVehicle: 'KA-05-EF-9012',
+      driver: 'Suresh Patel',
+      pickupDate: '2024-01-14',
+      deliveryDate: '2024-01-16',
+      distance: 1800,
+      fare: 22000,
+      priority: 'low'
     }
-  ];
+  ]);
 
-  const quickStats = [
-    {
-      label: 'Active Deliveries',
-      value: '5',
-      icon: Package,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    {
-      label: 'Today\'s Earnings',
-      value: '₹2,500',
-      icon: DollarSign,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
-    },
-    {
-      label: 'Total Distance',
-      value: '150 km',
-      icon: Route,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
-    },
-    {
-      label: 'Rating',
-      value: '4.8★',
-      icon: TrendingUp,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100'
-    }
-  ];
-
-  const recentDeliveries = [
+  const [vehicles] = useState<Vehicle[]>([
     {
       id: '1',
-      pickup: 'Mumbai, Maharashtra',
-      delivery: 'Pune, Maharashtra',
-      status: 'In Transit',
-      earnings: '₹800',
-      time: '2 hours ago',
-      icon: Package
+      vehicleNumber: 'MH-12-AB-1234',
+      type: 'truck',
+      capacity: 1000,
+      status: 'busy',
+      driver: 'Rajesh Kumar',
+      location: 'Mumbai, Maharashtra',
+      fuelLevel: 75,
+      lastService: '2024-01-01',
+      nextService: '2024-02-01',
+      totalDeliveries: 156,
+      rating: 4.8
     },
     {
       id: '2',
-      pickup: 'Nashik, Maharashtra',
-      delivery: 'Aurangabad, Maharashtra',
-      status: 'Completed',
-      earnings: '₹1,200',
-      time: '5 hours ago',
-      icon: Package
+      vehicleNumber: 'DL-01-CD-5678',
+      type: 'van',
+      capacity: 500,
+      status: 'available',
+      driver: 'Amit Singh',
+      location: 'Delhi, India',
+      fuelLevel: 90,
+      lastService: '2024-01-10',
+      nextService: '2024-02-10',
+      totalDeliveries: 89,
+      rating: 4.6
     },
     {
       id: '3',
-      pickup: 'Nagpur, Maharashtra',
-      delivery: 'Amravati, Maharashtra',
-      status: 'Scheduled',
-      earnings: '₹600',
-      time: 'Tomorrow',
-      icon: Clock
+      vehicleNumber: 'KA-05-EF-9012',
+      type: 'truck',
+      capacity: 800,
+      status: 'maintenance',
+      driver: 'Suresh Patel',
+      location: 'Bangalore, Karnataka',
+      fuelLevel: 45,
+      lastService: '2024-01-15',
+      nextService: '2024-02-15',
+      totalDeliveries: 234,
+      rating: 4.9
     }
+  ]);
+
+  const [drivers] = useState<Driver[]>([
+    {
+      id: '1',
+      name: 'Rajesh Kumar',
+      phone: '+91 9876543210',
+      licenseNumber: 'DL-1234567890',
+      experience: 8,
+      rating: 4.8,
+      status: 'busy',
+      currentLocation: 'Mumbai, Maharashtra',
+      totalDeliveries: 156,
+      vehicle: 'MH-12-AB-1234'
+    },
+    {
+      id: '2',
+      name: 'Amit Singh',
+      phone: '+91 9876543211',
+      licenseNumber: 'DL-1234567891',
+      experience: 5,
+      rating: 4.6,
+      status: 'available',
+      currentLocation: 'Delhi, India',
+      totalDeliveries: 89,
+      vehicle: 'DL-01-CD-5678'
+    },
+    {
+      id: '3',
+      name: 'Suresh Patel',
+      phone: '+91 9876543212',
+      licenseNumber: 'DL-1234567892',
+      experience: 12,
+      rating: 4.9,
+      status: 'offline',
+      currentLocation: 'Bangalore, Karnataka',
+      totalDeliveries: 234,
+      vehicle: 'KA-05-EF-9012'
+    }
+  ]);
+
+  const navigationItems = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard, color: 'text-blue-600' },
+    { id: 'deliveries', label: 'Deliveries', icon: Package, color: 'text-green-600' },
+    { id: 'vehicles', label: 'Vehicles', icon: Truck, color: 'text-purple-600' },
+    { id: 'drivers', label: 'Drivers', icon: Users, color: 'text-orange-600' },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp, color: 'text-indigo-600' },
+    { id: 'routes', label: 'Routes', icon: Navigation, color: 'text-red-600' },
+    { id: 'maintenance', label: 'Maintenance', icon: Wrench, color: 'text-yellow-600' },
+    { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-600' }
   ];
 
-  const renderPageContent = () => {
-    switch (currentPage) {
-      case 'home':
-        return (
-          <div className="p-4 sm:p-6 space-y-6">
-            {/* Welcome Section */}
-            <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-4 sm:p-6">
-              <h1 className="text-xl sm:text-2xl font-bold mb-2">
-                Welcome back, {user?.firstName || 'Transporter'}! 🚛
-              </h1>
-              <p className="text-orange-100">
-                Ready to hit the road? You have 5 active deliveries today.
-              </p>
-            </div>
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'assigned': return 'bg-blue-100 text-blue-800';
+      case 'picked_up': return 'bg-purple-100 text-purple-800';
+      case 'in_transit': return 'bg-orange-100 text-orange-800';
+      case 'delivered': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {quickStats.map((stat, index) => (
-                <Card key={index} className="text-center">
-                  <CardContent className="p-4">
-                    <div className={`w-12 h-12 ${stat.bgColor} rounded-full flex items-center justify-center mx-auto mb-3`}>
-                      <stat.icon className={`w-6 h-6 ${stat.color}`} />
+  const getVehicleStatusColor = (status: string) => {
+    switch (status) {
+      case 'available': return 'bg-green-100 text-green-800';
+      case 'busy': return 'bg-blue-100 text-blue-800';
+      case 'maintenance': return 'bg-yellow-100 text-yellow-800';
+      case 'offline': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const renderOverview = () => (
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Deliveries</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalDeliveries}</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Package className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active Deliveries</p>
+              <p className="text-2xl font-bold text-orange-600">{stats.activeDeliveries}</p>
+            </div>
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <Clock className="h-6 w-6 text-orange-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Completed</p>
+              <p className="text-2xl font-bold text-green-600">{stats.completedDeliveries}</p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Earnings</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalEarnings)}</p>
+            </div>
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-purple-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active Vehicles</p>
+              <p className="text-2xl font-bold text-indigo-600">{stats.activeVehicles}</p>
+            </div>
+            <div className="p-3 bg-indigo-100 rounded-lg">
+              <Truck className="h-6 w-6 text-indigo-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Pending Requests</p>
+              <p className="text-2xl font-bold text-red-600">{stats.pendingRequests}</p>
+            </div>
+            <div className="p-3 bg-red-100 rounded-lg">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Deliveries */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="p-6 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">Recent Deliveries</h3>
+            <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+              View All
+            </button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Delivery ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Route
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Vehicle
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Fare
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {deliveries.map((delivery) => (
+                <tr key={delivery.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {delivery.id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {delivery.customer}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div>
+                      <div className="text-xs text-gray-500">From: {delivery.pickupLocation}</div>
+                      <div className="text-xs text-gray-500">To: {delivery.deliveryLocation}</div>
                     </div>
-                    <div className="text-2xl font-bold text-gray-800 mb-1">{stat.value}</div>
-                    <div className="text-sm text-gray-600">{stat.label}</div>
-                  </CardContent>
-                </Card>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {delivery.assignedVehicle}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(delivery.status)}`}>
+                      {delivery.status.replace('_', ' ').toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {formatCurrency(delivery.fare)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex space-x-2">
+                      <button className="text-blue-600 hover:text-blue-700">
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button className="text-green-600 hover:text-green-700">
+                        <Edit className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Vehicle Status */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="p-6 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Vehicle Status</h3>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {vehicles.map((vehicle) => (
+              <div key={vehicle.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-gray-900">{vehicle.vehicleNumber}</h4>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getVehicleStatusColor(vehicle.status)}`}>
+                    {vehicle.status.toUpperCase()}
+                  </span>
+                </div>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center justify-between">
+                    <span>Type:</span>
+                    <span className="font-medium">{vehicle.type.toUpperCase()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Capacity:</span>
+                    <span className="font-medium">{vehicle.capacity} kg</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Driver:</span>
+                    <span className="font-medium">{vehicle.driver}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Fuel:</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full ${vehicle.fuelLevel > 50 ? 'bg-green-500' : vehicle.fuelLevel > 25 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                          style={{ width: `${vehicle.fuelLevel}%` }}
+                        ></div>
+                      </div>
+                      <span className="font-medium">{vehicle.fuelLevel}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderDeliveries = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900">Deliveries</h2>
+        <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <Plus className="h-4 w-4" />
+          <span>New Delivery</span>
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex-1 min-w-64">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search deliveries..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <Filter className="h-4 w-4" />
+            <span>Filter</span>
+          </button>
+          <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <Download className="h-4 w-4" />
+            <span>Export</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Deliveries Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {deliveries.map((delivery) => (
+          <div key={delivery.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 text-lg">{delivery.id}</h3>
+                  <p className="text-sm text-gray-600">{delivery.customer}</p>
+                </div>
+                <div className="flex flex-col items-end space-y-1">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(delivery.status)}`}>
+                    {delivery.status.replace('_', ' ').toUpperCase()}
+                  </span>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(delivery.priority)}`}>
+                    {delivery.priority.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-center space-x-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>{delivery.pickupLocation} → {delivery.deliveryLocation}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Package className="h-4 w-4" />
+                  <span>{delivery.product}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Truck className="h-4 w-4" />
+                  <span>{delivery.assignedVehicle}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Users className="h-4 w-4" />
+                  <span>{delivery.driver}</span>
+                </div>
+              </div>
             </div>
 
-            {/* Recent Deliveries */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Package className="w-5 h-5 text-orange-600" />
-                  <span>Recent Deliveries</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentDeliveries.map((delivery) => (
-                    <div key={delivery.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50">
-                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                        <delivery.icon className="w-4 h-4 text-orange-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-sm font-medium text-gray-800">
-                              {delivery.pickup} → {delivery.delivery}
-                            </p>
-                            <p className="text-xs text-gray-600">{delivery.time}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-semibold text-green-600">{delivery.earnings}</p>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              delivery.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                              delivery.status === 'In Transit' ? 'bg-blue-100 text-blue-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {delivery.status}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+            <div className="p-6 border-b border-gray-100">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">{delivery.distance} km</div>
+                  <div className="text-sm text-gray-500">Distance</div>
                 </div>
-                <div className="mt-4 text-center">
-                  <Button
-                    onClick={() => setCurrentPage('deliveries')}
-                    variant="outline"
-                    className="bg-orange-600 text-white hover:bg-orange-700 border-orange-600"
-                  >
-                    View All Deliveries
-                  </Button>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">{formatCurrency(delivery.fare)}</div>
+                  <div className="text-sm text-gray-500">Fare</div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* Earnings Overview */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BarChart3 className="w-5 h-5 text-orange-600" />
-                  <span>Earnings Overview</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="text-center p-4 border rounded-lg">
-                    <h3 className="font-semibold text-gray-800 mb-2">Today</h3>
-                    <p className="text-2xl font-bold text-green-600">₹2,500</p>
-                    <p className="text-sm text-green-600">+₹300 (+13.6%)</p>
-                  </div>
-                  <div className="text-center p-4 border rounded-lg">
-                    <h3 className="font-semibold text-gray-800 mb-2">This Week</h3>
-                    <p className="text-2xl font-bold text-blue-600">₹12,800</p>
-                    <p className="text-sm text-blue-600">+₹1,200 (+10.3%)</p>
-                  </div>
-                  <div className="text-center p-4 border rounded-lg">
-                    <h3 className="font-semibold text-gray-800 mb-2">This Month</h3>
-                    <p className="text-2xl font-bold text-purple-600">₹45,200</p>
-                    <p className="text-sm text-purple-600">+₹5,800 (+14.7%)</p>
-                  </div>
-                </div>
-                <div className="mt-6 text-center">
-                  <Button
-                    onClick={() => setCurrentPage('earnings')}
-                    variant="outline"
-                    className="bg-orange-600 text-white hover:bg-orange-700 border-orange-600"
-                  >
-                    View Detailed Earnings
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="p-6">
+              <div className="flex space-x-2">
+                <button className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Eye className="h-4 w-4" />
+                  <span>Track</span>
+                </button>
+                <button className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  <Edit className="h-4 w-4" />
+                  <span>Update</span>
+                </button>
+              </div>
+            </div>
           </div>
-        );
-      
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderVehicles = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900">Vehicles</h2>
+        <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <Plus className="h-4 w-4" />
+          <span>Add Vehicle</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {vehicles.map((vehicle) => (
+          <div key={vehicle.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 text-lg">{vehicle.vehicleNumber}</h3>
+                  <p className="text-sm text-gray-600">{vehicle.type.toUpperCase()} • {vehicle.capacity} kg</p>
+                </div>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getVehicleStatusColor(vehicle.status)}`}>
+                  {vehicle.status.toUpperCase()}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Driver:</span>
+                  <span className="font-medium">{vehicle.driver}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Location:</span>
+                  <span className="font-medium">{vehicle.location}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Total Deliveries:</span>
+                  <span className="font-medium">{vehicle.totalDeliveries}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Rating:</span>
+                  <div className="flex items-center space-x-1">
+                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                    <span className="font-medium">{vehicle.rating}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-b border-gray-100">
+              <div className="space-y-3">
+                <div>
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span className="text-gray-600">Fuel Level</span>
+                    <span className="font-medium">{vehicle.fuelLevel}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full ${vehicle.fuelLevel > 50 ? 'bg-green-500' : vehicle.fuelLevel > 25 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                      style={{ width: `${vehicle.fuelLevel}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Last Service:</span>
+                    <div className="font-medium">{new Date(vehicle.lastService).toLocaleDateString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Next Service:</span>
+                    <div className="font-medium">{new Date(vehicle.nextService).toLocaleDateString()}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="flex space-x-2">
+                <button className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Eye className="h-4 w-4" />
+                  <span>View</span>
+                </button>
+                <button className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  <Wrench className="h-4 w-4" />
+                  <span>Service</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderDrivers = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900">Drivers</h2>
+        <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <Plus className="h-4 w-4" />
+          <span>Add Driver</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {drivers.map((driver) => (
+          <div key={driver.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 text-lg">{driver.name}</h3>
+                  <p className="text-sm text-gray-600">License: {driver.licenseNumber}</p>
+                </div>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getVehicleStatusColor(driver.status)}`}>
+                  {driver.status.toUpperCase()}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Experience:</span>
+                  <span className="font-medium">{driver.experience} years</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Phone:</span>
+                  <span className="font-medium">{driver.phone}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Vehicle:</span>
+                  <span className="font-medium">{driver.vehicle}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Total Deliveries:</span>
+                  <span className="font-medium">{driver.totalDeliveries}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Rating:</span>
+                  <div className="flex items-center space-x-1">
+                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                    <span className="font-medium">{driver.rating}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Location:</span>
+                  <span className="font-medium">{driver.currentLocation}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="flex space-x-2">
+                <button className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Eye className="h-4 w-4" />
+                  <span>View</span>
+                </button>
+                <button className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  <Phone className="h-4 w-4" />
+                  <span>Call</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const handleUpdateProfile = (updatedProfile: any) => {
+    setUserProfile(updatedProfile);
+    // Here you would typically make an API call to update the profile
+    console.log('Profile updated:', updatedProfile);
+  };
+
+  const handleDeleteAccount = () => {
+    // Here you would typically make an API call to delete the account
+    console.log('Account deletion requested');
+    alert('Account deletion feature will be implemented with backend integration');
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return renderOverview();
       case 'deliveries':
-        return (
-          <div className="p-4 sm:p-6">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Deliveries</h1>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Active Deliveries */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Package className="w-5 h-5 text-blue-600" />
-                    <span>Active Deliveries</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {recentDeliveries.filter(d => d.status === 'In Transit').map((delivery) => (
-                      <div key={delivery.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold">Delivery #{delivery.id}</h3>
-                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                            {delivery.status}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-2">
-                          {delivery.pickup} → {delivery.delivery}
-                        </p>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-500">{delivery.time}</span>
-                          <span className="font-semibold text-green-600">{delivery.earnings}</span>
-                        </div>
-                        <div className="mt-3 flex space-x-2">
-                          <Button size="sm" variant="outline">Track</Button>
-                          <Button size="sm" variant="outline">Contact</Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* New Requests */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <AlertTriangle className="w-5 h-5 text-orange-600" />
-                    <span>New Requests</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-semibold">Request #001</h3>
-                        <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
-                          New
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        Mumbai → Bangalore
-                      </p>
-                      <p className="text-sm text-gray-500 mb-3">Agricultural products, 5 tons</p>
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-green-600">₹3,500</span>
-                        <div className="flex space-x-2">
-                          <Button size="sm">Accept</Button>
-                          <Button size="sm" variant="outline">Decline</Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        );
-
-      case 'earnings':
-        return (
-          <div className="p-4 sm:p-6">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Earnings</h1>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Earnings Summary */}
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>Earnings Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <p className="text-2xl font-bold text-green-600">₹2,500</p>
-                        <p className="text-sm text-gray-600">Today</p>
-                      </div>
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <p className="text-2xl font-bold text-blue-600">₹12,800</p>
-                        <p className="text-sm text-gray-600">This Week</p>
-                      </div>
-                      <div className="text-center p-4 bg-purple-50 rounded-lg">
-                        <p className="text-2xl font-bold text-purple-600">₹45,200</p>
-                        <p className="text-sm text-gray-600">This Month</p>
-                      </div>
-                      <div className="text-center p-4 bg-orange-50 rounded-lg">
-                        <p className="text-2xl font-bold text-orange-600">₹180,500</p>
-                        <p className="text-sm text-gray-600">This Year</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Recent Transactions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Transactions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-2 bg-green-50 rounded">
-                      <div>
-                        <p className="font-medium text-sm">Delivery #123</p>
-                        <p className="text-xs text-gray-500">Mumbai → Pune</p>
-                      </div>
-                      <span className="font-semibold text-green-600">+₹800</span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-green-50 rounded">
-                      <div>
-                        <p className="font-medium text-sm">Delivery #122</p>
-                        <p className="text-xs text-gray-500">Nashik → Aurangabad</p>
-                      </div>
-                      <span className="font-semibold text-green-600">+₹1,200</span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-green-50 rounded">
-                      <div>
-                        <p className="font-medium text-sm">Delivery #121</p>
-                        <p className="text-xs text-gray-500">Nagpur → Amravati</p>
-                      </div>
-                      <span className="font-semibold text-green-600">+₹600</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        );
-
+        return renderDeliveries();
+      case 'vehicles':
+        return renderVehicles();
+      case 'drivers':
+        return renderDrivers();
+      case 'analytics':
+        return <div className="text-center py-12"><h3 className="text-lg font-semibold text-gray-900">Analytics Page - Coming Soon</h3></div>;
       case 'routes':
-        return (
-          <div className="p-4 sm:p-6">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Routes</h1>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Current Route */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Route className="w-5 h-5 text-blue-600" />
-                    <span>Current Route</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="border rounded-lg p-4">
-                      <h3 className="font-semibold mb-2">Mumbai → Pune → Nashik</h3>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Total Distance:</span>
-                          <span className="font-medium">450 km</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Estimated Time:</span>
-                          <span className="font-medium">8 hours</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Fuel Cost:</span>
-                          <span className="font-medium">₹2,250</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Expected Earnings:</span>
-                          <span className="font-medium text-green-600">₹3,500</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Route Optimization */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <TrendingUp className="w-5 h-5 text-green-600" />
-                    <span>Route Optimization</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-green-800 mb-2">Optimized Route Found!</h3>
-                      <p className="text-sm text-green-700 mb-3">
-                        We found a better route that can save you 45 minutes and ₹200 in fuel costs.
-                      </p>
-                      <Button className="w-full bg-green-600 hover:bg-green-700">
-                        Apply Optimization
-                      </Button>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h4 className="font-medium">Traffic Alerts</h4>
-                      <div className="text-sm space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                          <span>Heavy traffic on Mumbai-Pune Expressway</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                          <span>Construction work near Nashik</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        );
-
+        return <div className="text-center py-12"><h3 className="text-lg font-semibold text-gray-900">Routes Page - Coming Soon</h3></div>;
+      case 'maintenance':
+        return <div className="text-center py-12"><h3 className="text-lg font-semibold text-gray-900">Maintenance Page - Coming Soon</h3></div>;
+      case 'settings':
+        return <div className="text-center py-12"><h3 className="text-lg font-semibold text-gray-900">Settings Page - Coming Soon</h3></div>;
       default:
-        return null;
+        return renderOverview();
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
-        <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3">
-          {/* Logo and Brand */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="lg:hidden p-1 sm:p-2"
-            >
-              {isSidebarOpen ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
-            </Button>
-            <div className="flex items-center space-x-1 sm:space-x-2">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs sm:text-sm font-bold">A</span>
-              </div>
-              <h1 className="text-lg sm:text-xl font-bold text-gray-800">ACHHADAM</h1>
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <Menu className="h-5 w-5 text-gray-600" />
+              </button>
+              <h1 className="text-xl font-semibold text-gray-900">Transporter Dashboard</h1>
             </div>
-          </div>
-
-          {/* Right Side - Language and Profile */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <LanguageSelector />
-            <UserProfileDropdown
-              user={user}
-              onLogout={onLogout}
-              onProfileEdit={() => {
-                // Handle profile edit
-                console.log('Edit profile clicked');
-              }}
-            />
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
+                <Bell className="h-5 w-5 text-gray-600" />
+                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
+              </button>
+              <div className="flex items-center space-x-3">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">{userProfile.name}</p>
+                  <p className="text-xs text-gray-500">{userProfile.email}</p>
+                  <p className="text-xs text-purple-600 font-medium">TRANSPORTER</p>
+                </div>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold text-sm">T</span>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-gray-600" />
+                  </button>
+                  
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      <button
+                        onClick={() => {
+                          setShowProfileModal(true);
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                      >
+                        <User className="h-4 w-4" />
+                        <span>View Profile</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowProfileModal(true);
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span>Edit Profile</span>
+                      </button>
+                      <hr className="my-2" />
+                      {onLogout && (
+                        <button
+                          onClick={() => {
+                            onLogout();
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                        >
+                          <span>Logout</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className={`
-          fixed inset-y-0 left-0 z-30 w-64 sm:w-72 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}>
-          <div className="p-3 sm:p-4">
-            <div className="mb-4 sm:mb-6">
-              <h2 className="text-base sm:text-lg font-semibold text-gray-800">Navigation</h2>
-            </div>
-            <nav className="space-y-1 sm:space-y-2">
-              {navigationItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setCurrentPage(item.id as DashboardPage);
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-3 text-left rounded-lg transition-colors ${
-                    currentPage === item.id
-                      ? 'bg-orange-100 text-orange-700 border-r-2 border-orange-600'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm sm:text-base">{item.label}</p>
-                    <p className="text-xs text-gray-500 hidden sm:block">{item.description}</p>
-                  </div>
-                </button>
-              ))}
-            </nav>
-          </div>
+        <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-sm border-r border-gray-200 transition-all duration-300`}>
+          <nav className="p-4">
+            <ul className="space-y-2">
+              {navigationItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <li key={item.id}>
+                    <button
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                        activeTab === item.id
+                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                    >
+                      <Icon className={`h-5 w-5 ${sidebarCollapsed ? 'mx-auto' : ''}`} />
+                      {!sidebarCollapsed && <span className="font-medium">{item.label}</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 lg:ml-0">
-          {renderPageContent()}
+        <main className="flex-1 p-6">
+          {renderContent()}
         </main>
       </div>
 
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      {/* Profile Modal */}
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        user={userProfile}
+        onUpdate={handleUpdateProfile}
+        onDeleteAccount={handleDeleteAccount}
+        onLogout={() => {
+          setShowProfileModal(false);
+          if (onLogout) onLogout();
+        }}
+      />
     </div>
   );
 };

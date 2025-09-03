@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import LanguageSelector from '../../components/ui/LanguageSelector';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { apiService, type SignupRequest } from '../../services/api';
+import { firebaseOTPService } from '../../services/firebaseOTP';
 import OTPInput from '../../components/ui/OTPInput';
 import { MessageCircle, CheckCircle } from 'lucide-react';
+import OTPDebugger from '../../components/debug/OTPDebugger';
 
 interface FarmerSignupPageProps {
   onBackToLogin: () => void;
@@ -18,6 +20,13 @@ interface FarmerSignupPageProps {
 const FarmerSignupPage: React.FC<FarmerSignupPageProps> = ({ onBackToLogin, onSwitchUserType, onBackToHome, onBackToUserTypeSelection }) => {
   const { t } = useLanguage();
   const [step, setStep] = useState(1);
+
+  // Cleanup Firebase OTP service on component unmount
+  useEffect(() => {
+    return () => {
+      firebaseOTPService.cleanup();
+    };
+  }, []);
   const [formData, setFormData] = useState({
     // Step 1: Basic Info (Required)
     firstName: '',
@@ -75,19 +84,47 @@ const FarmerSignupPage: React.FC<FarmerSignupPageProps> = ({ onBackToLogin, onSw
     setOtpError('');
 
     try {
-      const response = await apiService.sendOTP(formData.phone);
-      
-      if (response.success) {
+      // Check if Firebase is configured
+      if (firebaseOTPService.isFirebaseConfigured()) {
+        console.log('🔥 Using Firebase OTP');
+        
+        // Initialize Recaptcha
+        const recaptchaInitialized = await firebaseOTPService.initializeRecaptcha();
+        if (!recaptchaInitialized) {
+          throw new Error('Failed to initialize Recaptcha');
+        }
+        
+        // Send OTP using Firebase
+        const firebaseResult = await firebaseOTPService.sendOTPToPhone(formData.phone);
+        
+        if (firebaseResult.success) {
+          console.log('🎯 OTP sent successfully, showing OTP section');
+          setOtpSent(true);
+          setShowOTP(true);
+          startResendTimer();
+          console.log('✅ Firebase OTP sent successfully');
+          
+          // Try to store in backend (optional for mock OTP)
+          try {
+            const backendResponse = await apiService.sendOTP(formData.phone, firebaseResult.confirmationResult);
+            if (!backendResponse.success) {
+              console.warn('⚠️ Backend OTP storage failed, but continuing with frontend flow');
+            }
+          } catch (backendError) {
+            console.warn('⚠️ Backend OTP storage failed, but continuing with frontend flow:', backendError);
+          }
+        } else {
+          setOtpError(firebaseResult.message || 'Failed to send OTP');
+        }
+      } else {
+        console.log('📱 Using Mock OTP (Firebase not configured)');
+        
+        // Fallback to mock OTP
+        console.log('🎯 Using Mock OTP, showing OTP section');
         setOtpSent(true);
         setShowOTP(true);
         startResendTimer();
-        
-        // Show OTP in console for development
-        if (response.otp) {
-          console.log(`📱 OTP for ${formData.phone}: ${response.otp}`);
-        }
-      } else {
-        setOtpError(response.message || 'Failed to send OTP');
+        console.log('✅ Mock OTP sent successfully');
       }
     } catch (error: any) {
       console.error('Send OTP error:', error);
@@ -107,21 +144,47 @@ const FarmerSignupPage: React.FC<FarmerSignupPageProps> = ({ onBackToLogin, onSw
     setOtpError('');
 
     try {
-      const response = await apiService.verifyOTP(formData.phone, otp);
-      
-      if (response.success) {
-        console.log('✅ OTP verified successfully!', response);
-        setOtpVerified(true);
-        setOtpError('');
+      // Check if Firebase is configured
+      if (firebaseOTPService.isFirebaseConfigured()) {
+        console.log('🔥 Verifying OTP with Firebase');
         
-        // Auto-proceed to next step after successful OTP verification
-        setTimeout(() => {
-          console.log('🚀 Auto-proceeding to next step');
-          setStep(step + 1);
-        }, 1000); // 1 second delay to show success message
+        // Verify OTP using Firebase
+        const firebaseResult = await firebaseOTPService.verifyOTPCode(otp);
+        
+        if (firebaseResult.success) {
+          console.log('✅ Firebase OTP verified successfully!', firebaseResult);
+          setOtpVerified(true);
+          setOtpError('');
+          
+          // Auto-proceed to next step after successful OTP verification
+          setTimeout(() => {
+            console.log('🚀 Auto-proceeding to next step');
+            setStep(step + 1);
+          }, 1000); // 1 second delay to show success message
+        } else {
+          console.log('❌ Firebase OTP verification failed:', firebaseResult);
+          setOtpError(firebaseResult.message || 'Invalid OTP');
+        }
       } else {
-        console.log('❌ OTP verification failed:', response);
-        setOtpError(response.message || 'Invalid OTP');
+        console.log('📱 Verifying OTP with backend (Mock)');
+        
+        // Fallback to backend verification
+        const response = await apiService.verifyOTP(formData.phone, otp);
+        
+        if (response.success) {
+          console.log('✅ OTP verified successfully!', response);
+          setOtpVerified(true);
+          setOtpError('');
+          
+          // Auto-proceed to next step after successful OTP verification
+          setTimeout(() => {
+            console.log('🚀 Auto-proceeding to next step');
+            setStep(step + 1);
+          }, 1000); // 1 second delay to show success message
+        } else {
+          console.log('❌ OTP verification failed:', response);
+          setOtpError(response.message || 'Invalid OTP');
+        }
       }
     } catch (error: any) {
       console.error('Verify OTP error:', error);
@@ -342,6 +405,7 @@ const FarmerSignupPage: React.FC<FarmerSignupPageProps> = ({ onBackToLogin, onSw
 
       {/* OTP Section */}
       {showOTP && (
+        console.log('🎯 Rendering OTP Section, showOTP:', showOTP),
         <div className="border-t pt-6 mt-6">
           <div className="text-center mb-4">
             <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
@@ -354,8 +418,8 @@ const FarmerSignupPage: React.FC<FarmerSignupPageProps> = ({ onBackToLogin, onSw
               We've sent a 6-digit OTP to <span className="font-semibold">{formData.phone}</span>
             </p>
             {process.env.NODE_ENV === 'development' && (
-              <p className="text-blue-600 text-xs mt-1">
-                💡 Check console for OTP (development mode)
+              <p className="text-orange-600 text-xs mt-1">
+                💡 Development Mode: Use OTP = <strong>123456</strong>
               </p>
             )}
           </div>
@@ -584,6 +648,9 @@ const FarmerSignupPage: React.FC<FarmerSignupPageProps> = ({ onBackToLogin, onSw
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-100 via-emerald-50 to-teal-100 flex items-center justify-center p-4">
+      {/* reCAPTCHA Container - Hidden but required for Firebase */}
+      <div id="recaptcha-container" className="hidden"></div>
+      
       {/* Language Selector */}
       <div className="absolute top-4 right-4">
         <LanguageSelector />
@@ -695,6 +762,19 @@ const FarmerSignupPage: React.FC<FarmerSignupPageProps> = ({ onBackToLogin, onSw
           </div>
         </CardContent>
       </Card>
+      
+      {/* Firebase Recaptcha Container */}
+      <div id="recaptcha-container" className="hidden"></div>
+      
+      {/* OTP Debugger */}
+      <OTPDebugger
+        showOTP={showOTP}
+        otpSent={otpSent}
+        otpVerified={otpVerified}
+        otpLoading={otpLoading}
+        otpError={otpError}
+        phone={formData.phone}
+      />
     </div>
   );
 };

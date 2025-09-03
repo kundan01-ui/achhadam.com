@@ -109,10 +109,13 @@ class ApiService {
   }
 
   // OTP Methods
-  async sendOTP(phone: string): Promise<any> {
+  async sendOTP(phone: string, confirmationResult?: any): Promise<any> {
     return this.request<any>('/auth/send-otp', {
       method: 'POST',
-      body: JSON.stringify({ phone })
+      body: JSON.stringify({ 
+        phone,
+        confirmationResult: confirmationResult || null
+      })
     });
   }
 

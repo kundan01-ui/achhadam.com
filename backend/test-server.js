@@ -25,3 +25,5 @@ app.listen(PORT, () => {
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
   console.log(`🔗 OTP endpoint: http://localhost:${PORT}/api/auth/send-otp`);
 });
+
+
