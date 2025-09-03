@@ -234,7 +234,6 @@ export const translations = {
     enterCrops: 'जैसे: गेहूं, धान, मक्का (कॉमा से अलग करें)',
     enterBusinessName: 'कंपनी या दुकान का नाम',
     enterGST: 'GST नंबर',
-    enterPreferredCrops: 'जैसे: गेहूं, धान, मक्का (कॉमा से अलग करें)',
     enterServiceAreas: 'जैसे: दिल्ली, मुंबई, बैंगलोर (कॉमा से अलग करें)',
     enterLicenses: 'ड्राइविंग लाइसेंस नंबर',
     enterPolicyNumber: 'पॉलिसी नंबर',
