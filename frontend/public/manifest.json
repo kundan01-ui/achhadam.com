@@ -1,0 +1,41 @@
+{
+  "name": "Achhadam - Smart Agriculture Platform",
+  "short_name": "Achhadam",
+  "description": "Direct farmer-to-consumer platform eliminating middlemen in agriculture",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["agriculture", "business", "productivity"],
+  "lang": "hi",
+  "dir": "ltr",
+  "scope": "/",
+  "id": "achhadam-app"
+}

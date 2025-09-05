@@ -110,7 +110,7 @@ class ApiService {
 
   // OTP Methods
   async sendOTP(phone: string, confirmationResult?: any): Promise<any> {
-    return this.request<any>('/auth/send-otp', {
+    return this.request<any>('/api/auth/send-otp', {
       method: 'POST',
       body: JSON.stringify({ 
         phone: phone.replace('+91', ''), // Remove +91 prefix for backend
@@ -120,7 +120,7 @@ class ApiService {
   }
 
   async verifyOTP(phone: string, otp: string): Promise<any> {
-    return this.request<any>('/auth/verify-otp', {
+    return this.request<any>('/api/auth/verify-otp', {
       method: 'POST',
       body: JSON.stringify({ 
         phone: phone.replace('+91', ''), // Remove +91 prefix for backend
@@ -130,7 +130,7 @@ class ApiService {
   }
 
   async resendOTP(phone: string): Promise<any> {
-    return this.request<any>('/auth/resend-otp', {
+    return this.request<any>('/api/auth/resend-otp', {
       method: 'POST',
       body: JSON.stringify({ 
         phone: phone.replace('+91', '') // Remove +91 prefix for backend
@@ -140,21 +140,21 @@ class ApiService {
 
   // User Authentication
   async signup(data: SignupRequest): Promise<SignupResponse> {
-    return this.request<SignupResponse>('/auth/signup', {
+    return this.request<SignupResponse>('/api/auth/signup', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async login(data: LoginRequest): Promise<LoginResponse> {
-    return this.request<LoginResponse>('/auth/login', {
+    return this.request<LoginResponse>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async getCurrentUser(token: string): Promise<User> {
-    return this.request<User>('/auth/me', {
+    return this.request<User>('/api/auth/me', {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -163,7 +163,7 @@ class ApiService {
 
   // User Profile Management
   async updateProfile(userId: string, data: Partial<User>, token: string): Promise<User> {
-    return this.request<User>(`/users/${userId}`, {
+    return this.request<User>(`/api/users/${userId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -173,7 +173,7 @@ class ApiService {
   }
 
   async getProfile(userId: string, token: string): Promise<User> {
-    return this.request<User>(`/users/${userId}`, {
+    return this.request<User>(`/api/users/${userId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -182,7 +182,7 @@ class ApiService {
 
   // Health Check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    return this.request<{ status: string; timestamp: string }>('/health');
+    return this.request<{ status: string; timestamp: string }>('/api/health');
   }
 }
 
