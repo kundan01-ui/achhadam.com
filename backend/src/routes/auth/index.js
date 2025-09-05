@@ -2,8 +2,8 @@ const express = require('express');
 const admin = require('firebase-admin');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { sendOTP, verifyOTP } = require('../../services/otpService');
-const User = require('../../models/User');
+const { sendOTP, verifyOTP } = require('../../../services/otpService');
+const User = require('../../../models/User');
 
 const router = express.Router();
 
