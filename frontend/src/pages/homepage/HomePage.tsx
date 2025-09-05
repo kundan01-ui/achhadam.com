@@ -48,7 +48,7 @@ import {
   Menu,
   X,
   Sprout,
-  Handshake,
+  Hand,
   Route,
   Target,
   Crop,
@@ -227,7 +227,7 @@ const features = [
     iconBg: 'bg-gradient-to-br from-green-100 to-emerald-100 group-hover:from-green-200 group-hover:to-emerald-200'
   },
   {
-    icon: Handshake,
+    icon: Hand,
     titleKey: 'directTrading',
     descriptionKey: 'directTradingDesc',
     color: 'text-blue-600 group-hover:text-blue-700',
