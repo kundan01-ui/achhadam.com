@@ -613,7 +613,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
             </div>
             
             <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Search - Hidden on mobile */}
+              {/* Search - Responsive */}
               <div className="hidden sm:block relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
@@ -622,6 +622,11 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
                 />
               </div>
+              
+              {/* Mobile Search Button */}
+              <button className="sm:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                <Search className="h-5 w-5 text-gray-600" />
+              </button>
               
               {/* Notifications */}
               <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
@@ -644,51 +649,60 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold text-sm">B</span>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold text-sm sm:text-base">B</span>
                     </div>
                     <ChevronDown className="h-4 w-4 text-gray-600 hidden sm:block" />
                   </button>
                   
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100 sm:hidden">
+                    <div className="absolute right-0 mt-2 w-56 sm:w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      {/* Mobile User Info */}
+                      <div className="px-4 py-3 border-b border-gray-100 sm:hidden">
                         <p className="text-sm font-medium text-gray-900">{userProfile.name}</p>
                         <p className="text-xs text-gray-500">{userProfile.email}</p>
                         <p className="text-xs text-blue-600 font-medium">BUYER</p>
                       </div>
-                      <button
-                        onClick={() => {
-                          setShowProfileModal(true);
-                          setShowUserMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                      >
-                        <User className="h-4 w-4" />
-                        <span>View Profile</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowProfileModal(true);
-                          setShowUserMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span>Edit Profile</span>
-                      </button>
-                      <hr className="my-2" />
-                      {onLogout && (
+                      
+                      {/* Menu Items */}
+                      <div className="py-1">
                         <button
                           onClick={() => {
-                            onLogout();
+                            setShowProfileModal(true);
                             setShowUserMenu(false);
                           }}
-                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3"
                         >
-                          <span>Logout</span>
+                          <User className="h-4 w-4" />
+                          <span>View Profile</span>
                         </button>
-                      )}
+                        <button
+                          onClick={() => {
+                            setShowProfileModal(true);
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3"
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span>Edit Profile</span>
+                        </button>
+                        <button className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3">
+                          <Settings className="h-4 w-4" />
+                          <span>Settings</span>
+                        </button>
+                        <hr className="my-2" />
+                        {onLogout && (
+                          <button
+                            onClick={() => {
+                              onLogout();
+                              setShowUserMenu(false);
+                            }}
+                            className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-3"
+                          >
+                            <span>Logout</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
