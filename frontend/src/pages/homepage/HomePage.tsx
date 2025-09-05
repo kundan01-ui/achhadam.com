@@ -13,6 +13,9 @@ import TransporterDashboard from '../dashboard/TransporterDashboard';
 import ForgotPasswordPage from '../auth/ForgotPasswordPage';
 import AboutPage from './AboutPage';
 import ContactPage from './ContactPage';
+import FeaturesPage from './FeaturesPage';
+import InvestorPage from './InvestorPage';
+import BlogPage from './BlogPage';
 import UserTypeSelector from '../../components/ui/UserTypeSelector';
 
 // Import images
@@ -20,6 +23,9 @@ import agri1Image from '../../assets/agri1.jpg - Copy.jpg';
 import jamesImage from '../../assets/james-baltz-jAt6cN6zl8M-unsplash.jpg';
 import nicolasImage from '../../assets/pexels-nicolasveithen-1719669.jpg';
 import quangImage from '../../assets/pexels-quang-nguyen-vinh-222549-2132171.jpg';
+import kisanStandingImage from '../../assets/kisan standing.jpeg';
+import layerImage from '../../assets/layer.jpeg';
+import operatingImage from '../../assets/seed-production-industry7bb7-768x384.jpg';
 
 import { 
   Leaf, 
@@ -33,12 +39,104 @@ import {
   ArrowRight,
   Star,
   CheckCircle,
-  ChevronLeft,
-  ChevronRight,
   Play,
   Award,
   Zap,
-  Heart
+  Heart,
+  Activity,
+  BarChart3,
+  Menu,
+  X,
+  Sprout,
+  Handshake,
+  Route,
+  Target,
+  Crop,
+  Tractor,
+  Wheat,
+  Apple,
+  Sun,
+  CloudRain,
+  Droplets,
+  Wind,
+  MapPin,
+  Clock,
+  DollarSign,
+  TrendingDown,
+  PieChart,
+  BarChart,
+  Database,
+  Cpu,
+  HardDrive,
+  Wifi,
+  Smartphone,
+  Monitor,
+  Laptop,
+  Tablet,
+  Camera,
+  Mic,
+  Headphones,
+  Settings,
+  Cog,
+  Wrench,
+  Hammer,
+  Package,
+  Box,
+  Archive,
+  Folder,
+  FileText,
+  File,
+  Image,
+  Video,
+  Music,
+  Download,
+  Upload,
+  Share,
+  Link,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  Lock,
+  Unlock,
+  ShieldCheck,
+  AlertTriangle,
+  AlertCircle,
+  Info,
+  HelpCircle,
+  XCircle,
+  Plus,
+  Minus,
+  Search,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowUpRight,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  RotateCw,
+  RefreshCw,
+  Move,
+  Maximize,
+  Minimize,
+  Square,
+  Circle,
+  Triangle,
+  Heart as HeartIcon,
+  Smile,
+  Frown,
+  Meh,
+  ThumbsUp,
+  ThumbsDown,
+  Star as StarIcon,
+  Bookmark,
+  Flag,
+  Tag,
+  Hash,
+  AtSign,
+  Percent
 } from 'lucide-react';
 
 // Hero slides data - will be populated dynamically based on language
@@ -79,40 +177,84 @@ const getHeroSlides = (t: (key: string) => string) => [
 
 // Data arrays
 const stats = [
-  { value: '10,000+', label: 'Farmers', icon: Leaf, color: 'text-green-600' },
-  { value: '5,000+', label: 'Buyers', icon: Users, color: 'text-blue-600' },
-  { value: '2,000+', label: 'Transporters', icon: Truck, color: 'text-orange-600' },
-  { value: '₹50Cr+', label: 'Trade Volume', icon: TrendingUp, color: 'text-purple-600' }
+  { 
+    value: '10,000+', 
+    label: 'Active Farmers', 
+    icon: Users, 
+    color: 'text-gray-600 group-hover:text-green-600',
+    bgColor: 'bg-green-50 group-hover:bg-green-100',
+    borderColor: 'border-green-200 group-hover:border-green-300',
+    cardBg: 'bg-green-50/80'
+  },
+  { 
+    value: '5,000+', 
+    label: 'Verified Buyers', 
+    icon: Shield, 
+    color: 'text-gray-600 group-hover:text-blue-600',
+    bgColor: 'bg-blue-50 group-hover:bg-blue-100',
+    borderColor: 'border-blue-200 group-hover:border-blue-300',
+    cardBg: 'bg-blue-50/80'
+  },
+  { 
+    value: '2,000+', 
+    label: 'Transport Partners', 
+    icon: Truck, 
+    color: 'text-gray-600 group-hover:text-orange-600',
+    bgColor: 'bg-orange-50 group-hover:bg-orange-100',
+    borderColor: 'border-orange-200 group-hover:border-orange-300',
+    cardBg: 'bg-orange-50/80'
+  },
+  { 
+    value: '₹50Cr+', 
+    label: 'Trade Volume', 
+    icon: TrendingUp, 
+    color: 'text-gray-600 group-hover:text-purple-600',
+    bgColor: 'bg-purple-50 group-hover:bg-purple-100',
+    borderColor: 'border-purple-200 group-hover:border-purple-300',
+    cardBg: 'bg-purple-50/80'
+  }
 ];
 
 const features = [
   {
-    icon: Leaf,
+    icon: Sprout,
     titleKey: 'smartFarming',
     descriptionKey: 'smartFarmingDesc',
-    color: 'bg-green-50 text-green-600',
-    bgColor: 'bg-green-100'
+    color: 'text-green-600 group-hover:text-green-700',
+    bgColor: 'bg-gradient-to-br from-green-50 to-emerald-50 group-hover:from-green-100 group-hover:to-emerald-100',
+    borderColor: 'border-green-200 group-hover:border-green-300',
+    cardBg: 'bg-gradient-to-br from-green-50/80 to-emerald-50/80 group-hover:from-green-100/90 group-hover:to-emerald-100/90',
+    iconBg: 'bg-gradient-to-br from-green-100 to-emerald-100 group-hover:from-green-200 group-hover:to-emerald-200'
   },
   {
-    icon: Users,
+    icon: Handshake,
     titleKey: 'directTrading',
     descriptionKey: 'directTradingDesc',
-    color: 'bg-blue-50 text-blue-600',
-    bgColor: 'bg-blue-100'
+    color: 'text-blue-600 group-hover:text-blue-700',
+    bgColor: 'bg-gradient-to-br from-blue-50 to-cyan-50 group-hover:from-blue-100 group-hover:to-cyan-100',
+    borderColor: 'border-blue-200 group-hover:border-blue-300',
+    cardBg: 'bg-gradient-to-br from-blue-50/80 to-cyan-50/80 group-hover:from-blue-100/90 group-hover:to-cyan-100/90',
+    iconBg: 'bg-gradient-to-br from-blue-100 to-cyan-100 group-hover:from-blue-200 group-hover:to-cyan-200'
   },
   {
-    icon: Truck,
+    icon: Route,
     titleKey: 'logistics',
     descriptionKey: 'logisticsDesc',
-    color: 'bg-orange-50 text-orange-600',
-    bgColor: 'bg-orange-100'
+    color: 'text-orange-600 group-hover:text-orange-700',
+    bgColor: 'bg-gradient-to-br from-orange-50 to-amber-50 group-hover:from-orange-100 group-hover:to-amber-100',
+    borderColor: 'border-orange-200 group-hover:border-orange-300',
+    cardBg: 'bg-gradient-to-br from-orange-50/80 to-amber-50/80 group-hover:from-orange-100/90 group-hover:to-amber-100/90',
+    iconBg: 'bg-gradient-to-br from-orange-100 to-amber-100 group-hover:from-orange-200 group-hover:to-amber-200'
   },
   {
-    icon: TrendingUp,
+    icon: Target,
     titleKey: 'marketIntelligence',
     descriptionKey: 'marketIntelligenceDesc',
-    color: 'bg-purple-50 text-purple-600',
-    bgColor: 'bg-purple-100'
+    color: 'text-purple-600 group-hover:text-purple-700',
+    bgColor: 'bg-gradient-to-br from-purple-50 to-violet-50 group-hover:from-purple-100 group-hover:to-violet-100',
+    borderColor: 'border-purple-200 group-hover:border-purple-300',
+    cardBg: 'bg-gradient-to-br from-purple-50/80 to-violet-50/80 group-hover:from-purple-100/90 group-hover:to-violet-100/90',
+    iconBg: 'bg-gradient-to-br from-purple-100 to-violet-100 group-hover:from-purple-200 group-hover:to-violet-200'
   }
 ];
 
@@ -144,22 +286,42 @@ const benefits = [
   {
     icon: Zap,
     titleKey: 'quickSetup',
-    descriptionKey: 'quickSetupDesc'
+    descriptionKey: 'quickSetupDesc',
+    color: 'text-yellow-600 group-hover:text-yellow-700',
+    bgColor: 'bg-gradient-to-br from-yellow-50 to-amber-50 group-hover:from-yellow-100 group-hover:to-amber-100',
+    borderColor: 'border-yellow-200 group-hover:border-yellow-300',
+    cardBg: 'bg-gradient-to-br from-yellow-50/80 to-amber-50/80 group-hover:from-yellow-100/90 group-hover:to-amber-100/90',
+    iconBg: 'bg-gradient-to-br from-yellow-100 to-amber-100 group-hover:from-yellow-200 group-hover:to-amber-200'
   },
   {
     icon: Shield,
     titleKey: 'securePlatform',
-    descriptionKey: 'securePlatformDesc'
+    descriptionKey: 'securePlatformDesc',
+    color: 'text-blue-600 group-hover:text-blue-700',
+    bgColor: 'bg-gradient-to-br from-blue-50 to-indigo-50 group-hover:from-blue-100 group-hover:to-indigo-100',
+    borderColor: 'border-blue-200 group-hover:border-blue-300',
+    cardBg: 'bg-gradient-to-br from-blue-50/80 to-indigo-50/80 group-hover:from-blue-100/90 group-hover:to-indigo-100/90',
+    iconBg: 'bg-gradient-to-br from-blue-100 to-indigo-100 group-hover:from-blue-200 group-hover:to-indigo-200'
   },
   {
     icon: Globe,
     titleKey: 'wideNetwork',
-    descriptionKey: 'wideNetworkDesc'
+    descriptionKey: 'wideNetworkDesc',
+    color: 'text-green-600 group-hover:text-green-700',
+    bgColor: 'bg-gradient-to-br from-green-50 to-teal-50 group-hover:from-green-100 group-hover:to-teal-100',
+    borderColor: 'border-green-200 group-hover:border-green-300',
+    cardBg: 'bg-gradient-to-br from-green-50/80 to-teal-50/80 group-hover:from-green-100/90 group-hover:to-teal-100/90',
+    iconBg: 'bg-gradient-to-br from-green-100 to-teal-100 group-hover:from-green-200 group-hover:to-teal-200'
   },
   {
     icon: Award,
     titleKey: 'qualityAssured',
-    descriptionKey: 'qualityAssuredDesc'
+    descriptionKey: 'qualityAssuredDesc',
+    color: 'text-purple-600 group-hover:text-purple-700',
+    bgColor: 'bg-gradient-to-br from-purple-50 to-violet-50 group-hover:from-purple-100 group-hover:to-violet-100',
+    borderColor: 'border-purple-200 group-hover:border-purple-300',
+    cardBg: 'bg-gradient-to-br from-purple-50/80 to-violet-50/80 group-hover:from-purple-100/90 group-hover:to-violet-100/90',
+    iconBg: 'bg-gradient-to-br from-purple-100 to-violet-100 group-hover:from-purple-200 group-hover:to-violet-200'
   }
 ];
 
@@ -172,6 +334,8 @@ const HomePage: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   // Get hero slides based on current language
   const heroSlides = getHeroSlides(t);
@@ -184,13 +348,24 @@ const HomePage: React.FC = () => {
     return () => clearInterval(timer);
   }, [heroSlides.length]);
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+  // Back to top functionality
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      setShowBackToTop(scrollTop > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
-  };
 
   const handleBackToHome = () => {
     setCurrentPage('home');
@@ -289,6 +464,24 @@ const HomePage: React.FC = () => {
             onBackToLogin={() => setCurrentPage('login')}
           />
         );
+      case 'features':
+        return (
+          <FeaturesPage
+            onBackToHome={handleBackToHome}
+          />
+        );
+      case 'investor':
+        return (
+          <InvestorPage
+            onBackToHome={handleBackToHome}
+          />
+        );
+      case 'blog':
+        return (
+          <BlogPage
+            onBackToHome={handleBackToHome}
+          />
+        );
       case 'about':
         return (
           <AboutPage
@@ -334,50 +527,143 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
                    {/* Professional Navbar Section */}
-             <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg">
+             <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-white via-sky-50 to-green-50/80 backdrop-blur-md border-b border-sky-200/50 shadow-lg">
                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                 <div className="flex items-center justify-between h-16 sm:h-18">
+                 <div className="flex items-center justify-between h-14 sm:h-16">
                    {/* Logo */}
-                   <div className="flex items-center space-x-3 animate-fade-in-left">
-                     <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-green-800 rounded-lg flex items-center justify-center hover-scale animate-glow shadow-md">
-                       <Leaf className="w-6 h-6 text-white" />
+                   <div className="flex items-center space-x-1.5 animate-fade-in-left">
+                     <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-green-800 rounded-lg flex items-center justify-center hover-scale animate-glow shadow-lg">
+                       <Leaf className="w-4 h-4 text-white" />
                      </div>
-                     <h1 className="text-xl sm:text-2xl font-bold gradient-text">
+                     <h1 className="text-lg sm:text-xl font-black text-gray-800 tracking-wide">
                        ACHHADAM
                      </h1>
                    </div>
 
-                   {/* Navigation */}
-                   <nav className="hidden md:flex items-center space-x-8">
-                     <a href="#features" className="nav-link text-gray-700 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105">
+                   {/* Navigation - Desktop */}
+                   <nav className="hidden md:flex items-center space-x-6">
+                     <button
+                       onClick={() => setCurrentPage('features')}
+                       className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
+                     >
                        Features
-                     </a>
+                     </button>
+                     <button
+                       onClick={() => setCurrentPage('investor')}
+                       className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
+                     >
+                       Investor
+                     </button>
+                     <button
+                       onClick={() => setCurrentPage('blog')}
+                       className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
+                     >
+                       Blog
+                     </button>
                      <button
                        onClick={() => setCurrentPage('about')}
-                       className="nav-link text-gray-700 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
+                       className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
                      >
                        About
                      </button>
                      <button
                        onClick={() => setCurrentPage('contact')}
-                       className="nav-link text-gray-700 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
+                       className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
                      >
                        Contact
                      </button>
                    </nav>
 
                    {/* Right Side */}
-                   <div className="flex items-center space-x-4 animate-fade-in-right">
+                   <div className="flex items-center space-x-2 sm:space-x-3 animate-fade-in-right">
                      <LanguageSelector />
                      <Button
                        onClick={() => setCurrentPage('login')}
-                       className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium hover-lift animate-fade-in-right hover-glow btn-pulse shadow-md"
+                       className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium hover-lift animate-fade-in-right hover-glow btn-pulse shadow-md text-sm sm:text-base"
                      >
                        Login
                      </Button>
+                     
+                     {/* Mobile Hamburger Menu */}
+                     <div className="md:hidden">
+                       <button
+                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                         className="text-gray-600 hover:text-green-600 transition-colors duration-300 p-2"
+                       >
+                         {isMobileMenuOpen ? (
+                           <X className="w-6 h-6" />
+                         ) : (
+                           <Menu className="w-6 h-6" />
+                         )}
+                       </button>
+                     </div>
                    </div>
                  </div>
                </div>
+
+               {/* Mobile Menu Dropdown */}
+               {isMobileMenuOpen && (
+                 <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
+                   <div className="px-4 py-4 space-y-4">
+                     <button
+                       onClick={() => {
+                         setCurrentPage('features');
+                         setIsMobileMenuOpen(false);
+                       }}
+                       className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
+                     >
+                       Features
+                     </button>
+                     <button
+                       onClick={() => {
+                         setCurrentPage('investor');
+                         setIsMobileMenuOpen(false);
+                       }}
+                       className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
+                     >
+                       Investor
+                     </button>
+                     <button
+                       onClick={() => {
+                         setCurrentPage('blog');
+                         setIsMobileMenuOpen(false);
+                       }}
+                       className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
+                     >
+                       Blog
+                     </button>
+                     <button
+                       onClick={() => {
+                         setCurrentPage('about');
+                         setIsMobileMenuOpen(false);
+                       }}
+                       className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
+                     >
+                       About
+                     </button>
+                     <button
+                       onClick={() => {
+                         setCurrentPage('contact');
+                         setIsMobileMenuOpen(false);
+                       }}
+                       className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
+                     >
+                       Contact
+                     </button>
+                     <div className="pt-4 border-t border-gray-200">
+                       <Button
+                         onClick={() => {
+                           setCurrentPage('login');
+                           setIsMobileMenuOpen(false);
+                         }}
+                         className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium hover-lift hover-glow btn-pulse shadow-md"
+                       >
+                         Login
+                       </Button>
+                     </div>
+                   </div>
+                 </div>
+               )}
              </header>
 
                    {/* Enhanced Hero Section */}
@@ -390,7 +676,7 @@ const HomePage: React.FC = () => {
                      index === currentSlide ? 'opacity-100' : 'opacity-0'
                    }`}
                  >
-                   <div className="absolute inset-0 bg-black/50 z-10"></div>
+                   <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-black/15 to-black/25 z-10"></div>
                    <img
                      src={slide.image}
                      alt={slide.title}
@@ -399,63 +685,47 @@ const HomePage: React.FC = () => {
                  </div>
                ))}
 
-               {/* Hero Content */}
+               {/* Hero Content - Simplified & Professional */}
                <div className="relative z-20 text-center text-white px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
                  <div className="animate-fade-in-up">
-                   <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight hero-text-shadow animate-float">
-                     {heroSlides[currentSlide].title}
-                   </h1>
-                   <p className="text-xl sm:text-2xl font-semibold mb-4 text-green-200 animate-slide-up stagger-1">
-                     {heroSlides[currentSlide].subtitle}
-                   </p>
-                   <p className="text-lg sm:text-xl mb-8 text-gray-200 max-w-2xl mx-auto animate-slide-up stagger-2">
-                     {heroSlides[currentSlide].description}
-                   </p>
-                   <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up stagger-3">
-                     <Button
-                       onClick={handleSignupClick}
-                       className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg font-semibold hover-lift btn-pulse shadow-lg"
-                     >
-                       {heroSlides[currentSlide].cta}
-                     </Button>
-                     <Button
-                       variant="outline"
-                       className="border-white text-white hover:bg-white hover:text-green-600 px-8 py-3 text-lg font-semibold hover-lift shadow-lg"
-                     >
-                       <Play className="w-5 h-5 mr-2" />
-                       {t('watchDemo')}
-                     </Button>
+                   {/* Completely Transparent Content Container */}
+                   <div className="p-6 sm:p-8">
+                     <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-4 leading-tight text-white drop-shadow-2xl">
+                       {heroSlides[currentSlide].title}
+                     </h1>
+                     <p className="text-lg sm:text-xl lg:text-2xl font-semibold mb-6 text-green-100 drop-shadow-lg max-w-2xl mx-auto">
+                       {heroSlides[currentSlide].subtitle}
+                     </p>
+                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                       <Button
+                         onClick={handleSignupClick}
+                         className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg font-bold rounded-full shadow-xl hover:shadow-green-500/25 hover:scale-105 transition-all duration-300"
+                       >
+                         {heroSlides[currentSlide].cta}
+                       </Button>
+                       <Button
+                         variant="outline"
+                         className="border-2 border-green-200 text-green-100 hover:bg-green-500/20 hover:border-green-300 px-8 py-3 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105"
+                       >
+                         <Play className="w-5 h-5 mr-2" />
+                         {t('watchDemo')}
+                       </Button>
+                     </div>
                    </div>
                  </div>
                </div>
 
-               {/* Slide Navigation */}
-               <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30 flex items-center space-x-4 animate-fade-in-up">
-                 <button
-                   onClick={prevSlide}
-                   className="w-12 h-12 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-all duration-300 hover-scale hover-glow"
-                 >
-                   <ChevronLeft className="w-6 h-6 text-white" />
-                 </button>
-
-                 <div className="flex space-x-3">
-                   {heroSlides.map((_, index) => (
-                     <button
-                       key={index}
-                       onClick={() => setCurrentSlide(index)}
-                       className={`w-4 h-4 rounded-full transition-all duration-300 hover-scale ${
-                         index === currentSlide ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/70'
-                       }`}
-                     />
-                   ))}
-                 </div>
-
-                 <button
-                   onClick={nextSlide}
-                   className="w-12 h-12 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-all duration-300 hover-scale hover-glow"
-                 >
-                   <ChevronRight className="w-6 h-6 text-white" />
-                 </button>
+               {/* Slide Navigation - Only Dots */}
+               <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30 flex items-center space-x-3 animate-fade-in-up">
+                 {heroSlides.map((_, index) => (
+                   <button
+                     key={index}
+                     onClick={() => setCurrentSlide(index)}
+                     className={`w-4 h-4 rounded-full transition-all duration-300 hover-scale ${
+                       index === currentSlide ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/70'
+                     }`}
+                   />
+                 ))}
                </div>
       </section>
 
@@ -471,7 +741,7 @@ const HomePage: React.FC = () => {
                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                  <div className="text-center mb-12 sm:mb-16 animate-fade-in-up">
                    <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-800 mb-4 sm:mb-6 gradient-text">
-                     Our Impact in Numbers
+                     Statistics of Platform Impact
                    </h2>
                    <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4">
                      Real results from real farmers, buyers, and transporters across India
@@ -480,14 +750,131 @@ const HomePage: React.FC = () => {
                  
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
                    {stats.map((stat, index) => (
-                     <div key={index} className={`text-center stat-card animate-fade-in-up stagger-${index + 1} bg-white/70 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-white/20`}>
-                       <div className={`w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 ${stat.color} bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 hover-scale animate-float`}>
-                         <stat.icon className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 ${stat.color}`} />
+                     <div key={index} className={`group text-center stat-card animate-fade-in-up stagger-${index + 1} ${stat.cardBg} rounded-xl sm:rounded-2xl p-6 sm:p-8 lg:p-10 shadow-lg border-2 ${stat.borderColor} hover:shadow-2xl transition-all duration-500 cursor-pointer mobile-card-touch`}>
+                       <div className={`w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 ${stat.bgColor} rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8 group-hover:scale-110 transition-all duration-300`}>
+                         <stat.icon className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 ${stat.color} transition-colors duration-300`} />
                        </div>
-                       <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-800 mb-2 sm:mb-3 gradient-text">{stat.value}</div>
-                       <div className="text-gray-600 font-semibold text-sm sm:text-base lg:text-lg">{stat.label}</div>
+                       <div className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${stat.color} mb-3 sm:mb-4 transition-colors duration-300`}>
+                         {stat.value}
+                       </div>
+                       <div className="text-base sm:text-lg lg:text-xl font-semibold text-gray-700 group-hover:text-gray-900 transition-colors duration-300">
+                         {stat.label}
+                       </div>
                      </div>
                    ))}
+                 </div>
+               </div>
+             </section>
+
+             {/* Farmers, Real Results Section */}
+             <section className="py-8 sm:py-12 md:py-16 lg:py-20 bg-gradient-to-br from-green-100 to-blue-100 relative group hover:from-green-200 hover:to-blue-200 transition-all duration-500 cursor-pointer mobile-section-touch">
+               {/* Background Hover Effects */}
+               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                 <div className="absolute top-10 right-20 w-32 h-32 bg-green-300 rounded-full blur-3xl group-hover:animate-pulse"></div>
+                 <div className="absolute bottom-10 left-20 w-24 h-24 bg-blue-300 rounded-full blur-3xl group-hover:animate-pulse"></div>
+                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-yellow-200 rounded-full blur-3xl group-hover:animate-pulse"></div>
+               </div>
+               
+               <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                 <div className="text-center mb-8 sm:mb-12 group-hover:scale-105 transition-transform duration-500">
+                   <div className="inline-flex items-center px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4 group-hover:bg-green-200 group-hover:text-green-800 transition-all duration-300">
+                     <div className="w-2 h-2 bg-gray-500 rounded-full mr-2 group-hover:bg-green-600 transition-colors duration-300"></div>
+                     Success Stories
+                   </div>
+                   <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 group-hover:text-green-800 transition-colors duration-500">
+                     Success Stories from Farmers
+                   </h2>
+                   <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto px-4 sm:px-0 group-hover:text-gray-700 transition-colors duration-500">
+                     Join 10,000+ farmers who have transformed their lives through direct selling
+                   </p>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                   <div className="space-y-8">
+                     {/* Descriptive Text with Hover Effects */}
+                     <div className="space-y-6">
+                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer mobile-card-touch mobile-card-touch">
+                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-100 transition-colors duration-300 mobile-icon-touch mobile-icon-touch">
+                           <TrendingUp className="w-5 h-5 text-gray-600 group-hover:text-green-600 transition-colors duration-300" />
+                         </div>
+                         <div>
+                           <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-900 transition-colors duration-300 mobile-text-touch mobile-text-touch">Increased Income</h3>
+                           <p className="text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch mobile-text-touch">Farmers earn 40% more by selling directly to buyers, eliminating middleman commissions</p>
+                         </div>
+                       </div>
+                       
+                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors duration-300">
+                           <Users className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
+                         </div>
+                         <div>
+                           <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-900 transition-colors duration-300">Direct Market Access</h3>
+                           <p className="text-gray-600 group-hover:text-blue-700 transition-colors duration-300">Connect directly with verified buyers and get fair prices for your produce</p>
+                         </div>
+                       </div>
+                       
+                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-orange-50 hover:border-orange-200 transition-all duration-300 cursor-pointer">
+                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-orange-100 transition-colors duration-300">
+                           <Award className="w-5 h-5 text-gray-600 group-hover:text-orange-600 transition-colors duration-300" />
+                         </div>
+                         <div>
+                           <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-900 transition-colors duration-300">Success Stories</h3>
+                           <p className="text-gray-600 group-hover:text-orange-700 transition-colors duration-300">Join 10,000+ farmers who have transformed their lives through our platform</p>
+                         </div>
+                       </div>
+                     </div>
+                     
+                     {/* Stats Cards */}
+                     <div className="grid grid-cols-2 gap-6">
+                       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 text-center group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                         <div className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300">₹2.5L+</div>
+                         <div className="text-sm text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">Monthly Income</div>
+                       </div>
+                       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 text-center group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                         <div className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">40%</div>
+                         <div className="text-sm text-gray-600 group-hover:text-blue-700 transition-colors duration-300">Higher Profits</div>
+                       </div>
+                     </div>
+                     
+                     <div className="flex items-center justify-center space-x-4 group hover:bg-gray-50 rounded-lg p-4 transition-all duration-300 cursor-pointer">
+                       <div className="flex -space-x-2">
+                         <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white group-hover:bg-green-300 transition-colors duration-300"></div>
+                         <div className="w-8 h-8 rounded-full bg-gray-400 border-2 border-white group-hover:bg-green-400 transition-colors duration-300"></div>
+                         <div className="w-8 h-8 rounded-full bg-gray-500 border-2 border-white group-hover:bg-green-500 transition-colors duration-300"></div>
+                       </div>
+                       <div className="text-sm text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">
+                         <span className="font-semibold group-hover:text-green-800 transition-colors duration-300">10,000+</span> farmers earning more
+                       </div>
+                     </div>
+                   </div>
+                   
+                   <div className="relative group">
+                     {/* Image Label */}
+                     <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
+                       <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                         Farmers
+                       </span>
+                     </div>
+                     <div className="relative rounded-lg overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
+                       {/* Base Image Container */}
+                       <div className="relative w-full h-64 sm:h-72 md:h-80 mobile-image-container">
+                         <img 
+                           src={kisanStandingImage} 
+                           alt="Successful Farmer" 
+                           className="w-full h-full object-cover rounded-lg scale-100 sm:scale-105"
+                           style={{objectPosition: '5% 20%'}}
+                         />
+                         
+                         {/* Animated Border - Always Visible */}
+                         <div className="absolute inset-0 border-4 border-red-600 rounded-lg animate-border-swing"></div>
+                         <div className="absolute inset-1 border-2 border-blue-400 rounded-lg animate-border-swing-reverse"></div>
+                         
+                         {/* Hover Effect - Color Change */}
+                         <div className="absolute inset-0 border-4 border-transparent group-hover:border-green-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 animate-border-swing"></div>
+                         <div className="absolute inset-1 border-2 border-transparent group-hover:border-blue-400 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 animate-border-swing-reverse"></div>
+                       </div>
+                     </div>
+                   </div>
                  </div>
                </div>
              </section>
@@ -509,16 +896,357 @@ const HomePage: React.FC = () => {
 
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                    {features.map((feature, index) => (
-                     <Card key={index} className={`text-center card-hover animate-fade-in-up stagger-${index + 1} bg-white/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-500`}>
+                     <Card key={index} className={`group text-center card-hover animate-fade-in-up stagger-${index + 1} ${feature.cardBg} backdrop-blur-sm border-2 ${feature.borderColor} shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer mobile-card-touch`}>
                        <CardContent className="p-8 sm:p-10">
-                         <div className={`w-24 h-24 ${feature.bgColor} rounded-full flex items-center justify-center mx-auto mb-8 hover-scale animate-glow shadow-lg`}>
-                           <feature.icon className={`w-12 h-12 ${feature.color.split(' ')[1]}`} />
+                         <div className={`w-24 h-24 ${feature.iconBg} rounded-full flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg group-hover:shadow-xl`}>
+                           <feature.icon className={`w-12 h-12 ${feature.color} transition-all duration-500 group-hover:scale-110`} />
                          </div>
-                         <h3 className="text-2xl font-bold text-gray-800 mb-6 gradient-text">{t(feature.titleKey)}</h3>
-                         <p className="text-gray-600 leading-relaxed text-lg">{t(feature.descriptionKey)}</p>
+                         <h3 className="text-2xl font-bold text-gray-800 mb-6 group-hover:text-gray-900 transition-colors duration-300">{t(feature.titleKey)}</h3>
+                         <p className="text-gray-600 leading-relaxed text-lg group-hover:text-gray-700 transition-colors duration-300">{t(feature.descriptionKey)}</p>
+                         
+                         {/* Hover Effect Elements */}
+                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                           <div className="absolute top-4 right-4 w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+                           <div className="absolute bottom-4 left-4 w-1 h-1 bg-blue-400 rounded-full animate-pulse"></div>
+                           <div className="absolute top-1/2 right-2 w-1 h-1 bg-purple-400 rounded-full animate-bounce"></div>
+                         </div>
                        </CardContent>
                      </Card>
                    ))}
+                 </div>
+               </div>
+             </section>
+
+             {/* Working Process Section */}
+             <section className="py-8 sm:py-12 md:py-16 lg:py-20 bg-gradient-to-br from-purple-100 to-indigo-100 relative group hover:from-purple-200 hover:to-indigo-200 transition-all duration-500 cursor-pointer mobile-section-touch">
+               {/* Background Hover Effects */}
+               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                 <div className="absolute top-20 right-20 w-40 h-40 bg-purple-300 rounded-full blur-3xl group-hover:animate-pulse"></div>
+                 <div className="absolute bottom-20 left-20 w-32 h-32 bg-indigo-300 rounded-full blur-3xl group-hover:animate-pulse"></div>
+                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-pink-200 rounded-full blur-3xl group-hover:animate-pulse"></div>
+                 <div className="absolute top-10 left-10 w-24 h-24 bg-blue-300 rounded-full blur-3xl group-hover:animate-pulse"></div>
+               </div>
+               
+               <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                 <div className="text-center mb-16 group-hover:scale-105 transition-transform duration-500">
+                   <div className="inline-flex items-center px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm font-medium mb-4 group-hover:bg-purple-200 group-hover:text-purple-800 transition-all duration-300">
+                     <div className="w-2 h-2 bg-gray-500 rounded-full mr-2 group-hover:bg-purple-600 transition-colors duration-300"></div>
+                     Our Process
+                   </div>
+                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 group-hover:text-purple-800 transition-colors duration-500">
+                     How Achhadam Works
+                   </h2>
+                   <p className="text-lg text-gray-600 max-w-3xl mx-auto group-hover:text-gray-700 transition-colors duration-500">
+                     A complete ecosystem connecting farmers, buyers, and transporters through technology
+                   </p>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center">
+                   <div className="space-y-6 sm:space-y-8">
+                     {/* Process Steps with Hover Effects */}
+                     <div className="space-y-6">
+                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-purple-50 hover:border-purple-200 transition-all duration-300 cursor-pointer">
+                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-purple-100 transition-colors duration-300">
+                           <span className="text-lg font-bold text-gray-600 group-hover:text-purple-600 transition-colors duration-300">1</span>
+                         </div>
+                         <div>
+                           <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-purple-900 transition-colors duration-300">Farmer Registration</h3>
+                           <p className="text-gray-600 group-hover:text-purple-700 transition-colors duration-300">Farmers register with their crop details, location, and quality specifications</p>
+                         </div>
+                       </div>
+                       
+                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-indigo-50 hover:border-indigo-200 transition-all duration-300 cursor-pointer">
+                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-100 transition-colors duration-300">
+                           <span className="text-lg font-bold text-gray-600 group-hover:text-indigo-600 transition-colors duration-300">2</span>
+                         </div>
+                         <div>
+                           <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-indigo-900 transition-colors duration-300">Smart Matching</h3>
+                           <p className="text-gray-600 group-hover:text-indigo-700 transition-colors duration-300">AI-powered algorithm matches farmers with verified buyers based on requirements</p>
+                         </div>
+                       </div>
+                       
+                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-pink-50 hover:border-pink-200 transition-all duration-300 cursor-pointer">
+                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-pink-100 transition-colors duration-300">
+                           <span className="text-lg font-bold text-gray-600 group-hover:text-pink-600 transition-colors duration-300">3</span>
+                         </div>
+                         <div>
+                           <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-pink-900 transition-colors duration-300">Quality Verification</h3>
+                           <p className="text-gray-600 group-hover:text-pink-700 transition-colors duration-300">On-site quality checks and certification by our expert team</p>
+                         </div>
+                       </div>
+                       
+                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors duration-300">
+                           <span className="text-lg font-bold text-gray-600 group-hover:text-blue-600 transition-colors duration-300">4</span>
+                         </div>
+                         <div>
+                           <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-900 transition-colors duration-300">Secure Payment</h3>
+                           <p className="text-gray-600 group-hover:text-blue-700 transition-colors duration-300">Instant payment processing with escrow protection for both parties</p>
+                         </div>
+                       </div>
+                       
+                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-100 transition-colors duration-300 mobile-icon-touch">
+                           <span className="text-lg font-bold text-gray-600 group-hover:text-green-600 transition-colors duration-300">5</span>
+                         </div>
+                         <div>
+                           <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-900 transition-colors duration-300 mobile-text-touch">Logistics & Delivery</h3>
+                           <p className="text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">Optimized delivery routes and real-time tracking for fresh produce</p>
+                         </div>
+                       </div>
+                     </div>
+                     
+                     {/* Process Stats */}
+                     <div className="grid grid-cols-3 gap-4">
+                       <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 text-center group hover:bg-purple-50 hover:border-purple-200 transition-all duration-300 cursor-pointer">
+                         <div className="text-xl font-bold text-gray-900 mb-1 group-hover:text-purple-600 transition-colors duration-300">24/7</div>
+                         <div className="text-xs text-gray-600 group-hover:text-purple-700 transition-colors duration-300">Support</div>
+                       </div>
+                       <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 text-center group hover:bg-indigo-50 hover:border-indigo-200 transition-all duration-300 cursor-pointer">
+                         <div className="text-xl font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors duration-300">99%</div>
+                         <div className="text-xs text-gray-600 group-hover:text-indigo-700 transition-colors duration-300">Success Rate</div>
+                       </div>
+                       <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 text-center group hover:bg-pink-50 hover:border-pink-200 transition-all duration-300 cursor-pointer">
+                         <div className="text-xl font-bold text-gray-900 mb-1 group-hover:text-pink-600 transition-colors duration-300">48h</div>
+                         <div className="text-xs text-gray-600 group-hover:text-pink-700 transition-colors duration-300">Avg. Delivery</div>
+                       </div>
+                     </div>
+                   </div>
+                   
+                   <div className="relative group">
+                     {/* Image Label */}
+                     <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
+                       <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                         Working Process
+                       </span>
+                     </div>
+                     <div className="relative rounded-lg overflow-hidden shadow-2xl transform group-hover:scale-105 transition-all duration-500 cursor-pointer">
+                       {/* Piechart Container with White Background - Mobile Responsive */}
+                       <div className="relative w-full h-72 sm:h-80 md:h-96 bg-white rounded-lg flex items-center justify-center pl-1 sm:pl-2">
+                         <img 
+                           src="/src/assets/working process.jpeg" 
+                           alt="Achhadam Working Process Piechart" 
+                           className="w-72 h-72 sm:w-80 sm:h-80 md:w-80 md:h-80 object-cover rounded-full scale-100 sm:scale-[1.68] mobile-image-container"
+                           style={{objectPosition: 'center center'}}
+                           onClick={() => window.open('/src/assets/working process.jpeg', '_blank')}
+                         />
+                         
+                         {/* Animated Border - Always Visible */}
+                         <div className="absolute inset-0 border-4 border-red-600 rounded-lg animate-border-swing"></div>
+                         <div className="absolute inset-1 border-2 border-blue-400 rounded-lg animate-border-swing-reverse"></div>
+                         
+                         {/* Hover Effect - Color Change */}
+                         <div className="absolute inset-0 border-4 border-transparent group-hover:border-purple-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 animate-border-swing"></div>
+                         <div className="absolute inset-1 border-2 border-transparent group-hover:border-pink-400 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 animate-border-swing-reverse"></div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </section>
+
+             {/* Direct Trade Revolution Section */}
+             <section className="py-16 sm:py-20 bg-gradient-to-br from-orange-100 to-red-100 relative">
+               <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                 <div className="text-center mb-12">
+                   <div className="inline-flex items-center px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm font-medium mb-4">
+                     <div className="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
+                     Direct Trade
+                   </div>
+                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                     Eliminate the Middleman
+                   </h2>
+                   <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                     Direct farmer-buyer connection ensuring maximum profit and fair prices
+                   </p>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                   <div className="space-y-6">
+                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-orange-50 hover:border-orange-200 transition-all duration-300 cursor-pointer">
+                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-orange-100 transition-colors duration-300">
+                         <Users className="w-5 h-5 text-gray-600 group-hover:text-orange-600 transition-colors duration-300" />
+                       </div>
+                       <div>
+                         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-900 transition-colors duration-300">Direct Connection</h3>
+                         <p className="text-gray-600 group-hover:text-orange-700 transition-colors duration-300">Farmers sell directly to verified buyers, no commission fees</p>
+                       </div>
+                     </div>
+                     
+                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-100 transition-colors duration-300 mobile-icon-touch">
+                         <Heart className="w-5 h-5 text-gray-600 group-hover:text-green-600 transition-colors duration-300" />
+                       </div>
+                       <div>
+                         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-900 transition-colors duration-300 mobile-text-touch">Fair Pricing</h3>
+                         <p className="text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">Farmers get 40% more profit, buyers save 25%</p>
+                       </div>
+                     </div>
+                     
+                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors duration-300">
+                         <Award className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
+                       </div>
+                       <div>
+                         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-900 transition-colors duration-300">Quality Assurance</h3>
+                         <p className="text-gray-600 group-hover:text-blue-700 transition-colors duration-300">Verified quality standards and instant payments</p>
+                       </div>
+                     </div>
+                     
+                     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                       <div className="grid grid-cols-2 gap-6">
+                         <div className="text-center">
+                           <div className="text-2xl font-bold text-gray-900 mb-2">₹50Cr+</div>
+                           <div className="text-sm text-gray-600">Trade Volume</div>
+                         </div>
+                         <div className="text-center">
+                           <div className="text-2xl font-bold text-gray-900 mb-2">15,000+</div>
+                           <div className="text-sm text-gray-600">Successful Trades</div>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                   
+                   <div className="relative group">
+                     {/* Image Label */}
+                     <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
+                       <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                         Direct Trade
+                       </span>
+                     </div>
+                     <div className="relative rounded-lg overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
+                       {/* Base Image Container */}
+                       <div className="relative w-full h-80 sm:h-80 mobile-image-container">
+                         <img 
+                           src={operatingImage} 
+                           alt="Direct Trade Platform" 
+                           className="w-full h-full object-cover rounded-lg scale-110"
+                           style={{objectPosition: '20% 10%'}}
+                         />
+                         
+                         {/* Animated Border - Always Visible */}
+                         <div className="absolute inset-0 border-4 border-red-600 rounded-lg animate-border-swing"></div>
+                         <div className="absolute inset-1 border-2 border-blue-400 rounded-lg animate-border-swing-reverse"></div>
+                         
+                         {/* Hover Effect - Color Change */}
+                         <div className="absolute inset-0 border-4 border-transparent group-hover:border-orange-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 animate-border-swing"></div>
+                         <div className="absolute inset-1 border-2 border-transparent group-hover:border-yellow-400 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 animate-border-swing-reverse"></div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </section>
+
+             {/* Smart Agriculture Technology Section */}
+             <section className="py-16 sm:py-20 bg-gradient-to-br from-blue-100 to-purple-100 relative">
+               <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                 <div className="text-center mb-12">
+                   <div className="inline-flex items-center px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm font-medium mb-4">
+                     <div className="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
+                     Advanced Technology
+                   </div>
+                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                     Smart Agriculture Technology
+                   </h2>
+                   <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                     IoT sensors, AI analytics, and real-time monitoring to maximize crop yield
+                   </p>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                   <div className="space-y-6 flex flex-col justify-center h-full">
+                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors duration-300">
+                         <Zap className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
+                       </div>
+                       <div>
+                         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-900 transition-colors duration-300">Real-time Monitoring</h3>
+                         <p className="text-gray-600 group-hover:text-blue-700 transition-colors duration-300">24/7 soil moisture, temperature, and humidity tracking</p>
+                       </div>
+                     </div>
+                     
+                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-100 transition-colors duration-300 mobile-icon-touch">
+                         <TrendingUp className="w-5 h-5 text-gray-600 group-hover:text-green-600 transition-colors duration-300" />
+                       </div>
+                       <div>
+                         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-900 transition-colors duration-300 mobile-text-touch">Yield Optimization</h3>
+                         <p className="text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">AI-powered recommendations to increase production by 40%</p>
+                       </div>
+                     </div>
+                     
+                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-purple-50 hover:border-purple-200 transition-all duration-300 cursor-pointer">
+                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-purple-100 transition-colors duration-300">
+                         <Shield className="w-5 h-5 text-gray-600 group-hover:text-purple-600 transition-colors duration-300" />
+                       </div>
+                       <div>
+                         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-purple-900 transition-colors duration-300">Predictive Analytics</h3>
+                         <p className="text-gray-600 group-hover:text-purple-700 transition-colors duration-300">Early disease detection and weather-based decisions</p>
+                       </div>
+                     </div>
+                     
+                     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                       <div className="flex items-center justify-between mb-3">
+                         <span className="text-sm font-medium text-gray-600">Adoption Rate</span>
+                         <span className="text-xl font-bold text-gray-900">95%</span>
+                       </div>
+                       <div className="w-full bg-gray-200 rounded-full h-2">
+                         <div className="bg-gray-600 h-2 rounded-full w-[95%]"></div>
+                       </div>
+                       <p className="text-sm text-gray-600 mt-2">Farmers using smart technology</p>
+                     </div>
+                     
+                     {/* Additional Rectangle 1 - IoT Sensors */}
+                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-cyan-50 hover:border-cyan-200 transition-all duration-300 cursor-pointer">
+                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-cyan-100 transition-colors duration-300">
+                         <Activity className="w-5 h-5 text-gray-600 group-hover:text-cyan-600 transition-colors duration-300" />
+                       </div>
+                       <div>
+                         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-cyan-900 transition-colors duration-300">IoT Sensors Network</h3>
+                         <p className="text-gray-600 group-hover:text-cyan-700 transition-colors duration-300">Advanced sensor technology for precise environmental monitoring</p>
+                       </div>
+                     </div>
+                     
+                     {/* Additional Rectangle 2 - Data Analytics */}
+                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-indigo-50 hover:border-indigo-200 transition-all duration-300 cursor-pointer">
+                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-100 transition-colors duration-300">
+                         <BarChart3 className="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition-colors duration-300" />
+                       </div>
+                       <div>
+                         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-indigo-900 transition-colors duration-300">Data Analytics</h3>
+                         <p className="text-gray-600 group-hover:text-indigo-700 transition-colors duration-300">Machine learning algorithms for crop optimization and yield prediction</p>
+                       </div>
+                     </div>
+                   </div>
+                   
+                   <div className="relative group">
+                     {/* Image Label */}
+                     <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
+                       <span className="bg-indigo-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                         Smart Tech
+                       </span>
+                     </div>
+                     <div className="relative rounded-lg overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
+                       {/* Image with Border - Keep Original Size */}
+                       <div className="relative inline-block">
+                         <img 
+                           src={layerImage} 
+                           alt="Smart Agriculture Technology" 
+                           className="rounded-lg scale-100"
+                           style={{maxWidth: '100%', height: 'auto'}}
+                         />
+                         
+                         {/* Animated Border - Around Image */}
+                         <div className="absolute inset-0 border-4 border-red-600 rounded-lg animate-border-swing"></div>
+                         <div className="absolute inset-1 border-2 border-blue-400 rounded-lg animate-border-swing-reverse"></div>
+                         
+                         {/* Hover Effect - Color Change */}
+                         <div className="absolute inset-0 border-4 border-transparent group-hover:border-blue-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 animate-border-swing"></div>
+                         <div className="absolute inset-1 border-2 border-transparent group-hover:border-cyan-400 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 animate-border-swing-reverse"></div>
+                       </div>
+                     </div>
+                   </div>
                  </div>
                </div>
              </section>
@@ -543,12 +1271,19 @@ const HomePage: React.FC = () => {
 
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                    {benefits.map((benefit, index) => (
-                     <div key={index} className={`text-center stat-card animate-fade-in-up stagger-${index + 1} bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-500`}>
-                       <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto mb-8 hover-scale animate-float shadow-lg">
-                         <benefit.icon className="w-12 h-12 text-green-600" />
+                     <div key={index} className={`group text-center stat-card animate-fade-in-up stagger-${index + 1} ${benefit.cardBg} backdrop-blur-sm rounded-2xl p-8 shadow-xl border ${benefit.borderColor} hover:shadow-2xl transition-all duration-500 hover:scale-105`}>
+                       <div className={`w-24 h-24 ${benefit.iconBg} rounded-full flex items-center justify-center mx-auto mb-8 hover-scale animate-float shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
+                         <benefit.icon className={`w-12 h-12 ${benefit.color} group-hover:scale-110 transition-all duration-300`} />
                        </div>
-                       <h3 className="text-2xl font-bold text-gray-800 mb-6 gradient-text">{t(benefit.titleKey)}</h3>
-                       <p className="text-gray-600 leading-relaxed text-lg">{t(benefit.descriptionKey)}</p>
+                       <h3 className={`text-2xl font-bold ${benefit.color} mb-6 gradient-text group-hover:scale-105 transition-all duration-300`}>{t(benefit.titleKey)}</h3>
+                       <p className="text-gray-600 leading-relaxed text-lg group-hover:text-gray-700 transition-colors duration-300">{t(benefit.descriptionKey)}</p>
+                       
+                       {/* Animated dots */}
+                       <div className="flex justify-center mt-6 space-x-2">
+                         <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse group-hover:bg-yellow-400 transition-colors duration-300"></div>
+                         <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse group-hover:bg-blue-400 transition-colors duration-300 delay-100"></div>
+                         <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse group-hover:bg-green-400 transition-colors duration-300 delay-200"></div>
+                       </div>
                      </div>
                    ))}
                  </div>
@@ -682,6 +1417,17 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 z-50 w-14 h-14 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 animate-bounce-in flex items-center justify-center group"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
+        </button>
+      )}
     </div>
   );
 };

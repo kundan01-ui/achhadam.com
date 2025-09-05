@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const session = require('express-session');
 const mongoose = require('mongoose');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
@@ -46,6 +47,17 @@ app.use(limiter);
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Session middleware for OTP storage
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-session-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false, // Set to true in production with HTTPS
+    maxAge: 10 * 60 * 1000 // 10 minutes
+  }
+}));
 
 // Firebase Admin Initialization
 // आपको अपना Firebase service account key यहाँ add करना होगा
@@ -610,6 +622,12 @@ const authenticateToken = async (req, res, next) => {
     return res.status(403).json({ error: 'Invalid or expired token' });
   }
 };
+
+// Import auth routes
+const authRoutes = require('./src/routes/auth/index.js');
+
+// Register auth routes
+app.use('/api/auth', otpLimiter, authRoutes);
 
 // Get current user profile
 app.get('/api/auth/me', authenticateToken, async (req, res) => {

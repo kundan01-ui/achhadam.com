@@ -126,6 +126,30 @@ export const translations = {
     whyChooseDesc: 'हम किसानों, खरीदारों और ट्रांसपोर्टरों को हमारे नवीन डिजिटल प्लेटफॉर्म के माध्यम से जोड़कर कृषि में क्रांति ला रहे हैं।',
     platformBenefits: 'प्लेटफॉर्म लाभ',
     platformBenefitsDesc: 'हमारे व्यापक डिजिटल कृषि पारिस्थितिकी तंत्र के लाभों का अनुभव करें।',
+    
+    // Kisan Standing Section
+    kisanStandingTitle: 'किसानों की ताकत',
+    kisanStandingDescription: 'हमारे प्लेटफॉर्म पर हजारों किसान अपनी फसलों को सीधे बेचकर बेहतर मूल्य प्राप्त कर रहे हैं',
+    
+    // Technology Leverage Section
+    technologyLeverageTitle: 'तकनीक का उपयोग',
+    technologyLeverageDescription: 'हमारा प्लेटफॉर्म IoT और AI तकनीक का उपयोग करके किसानों की उत्पादकता और उपज को बढ़ाता है',
+    iotOptimization: 'IoT अनुकूलन',
+    iotOptimizationDesc: 'स्मार्ट सेंसर और IoT डिवाइस के माध्यम से खेती की निगरानी और अनुकूलन',
+    yieldProduction: 'उपज उत्पादन',
+    yieldProductionDesc: 'डेटा-संचालित निर्णय लेकर फसल उत्पादन में वृद्धि',
+    smartMonitoring: 'स्मार्ट निगरानी',
+    smartMonitoringDesc: '24/7 फसल और मिट्टी की स्थिति की निगरानी',
+    
+    // Direct Benefit Section
+    directBenefitTitle: 'किसानों को सीधा लाभ',
+    directBenefitDescription: 'हमारा डिजिटल प्लेटफॉर्म बिचौलियों को हटाकर किसानों को सीधा लाभ पहुंचाता है',
+    eliminateMiddleman: 'बिचौलियों को हटाना',
+    eliminateMiddlemanDesc: 'पारंपरिक बिचौलियों को हटाकर किसानों को बेहतर मूल्य मिलता है',
+    directFarmerBenefit: 'किसानों का सीधा लाभ',
+    directFarmerBenefitDesc: 'किसान अपनी फसल सीधे खरीदारों को बेचकर अधिक मुनाफा कमाते हैं',
+    fairPricing: 'निष्पक्ष मूल्य निर्धारण',
+    fairPricingDesc: 'पारदर्शी मूल्य निर्धारण से किसानों को उचित मूल्य मिलता है',
     whatUsersSay: 'हमारे उपयोगकर्ता क्या कहते हैं',
     whatUsersSayDesc: 'ACHHADAM पर भरोसा करने वाले हजारों संतुष्ट किसानों, खरीदारों और ट्रांसपोर्टरों में शामिल हों।',
     readyToTransform: 'अपने कृषि व्यवसाय को बदलने के लिए तैयार हैं?',
@@ -417,6 +441,30 @@ export const translations = {
     whyChooseDesc: 'We\'re revolutionizing agriculture by connecting farmers, buyers, and transporters through our innovative digital platform.',
     platformBenefits: 'Platform Benefits',
     platformBenefitsDesc: 'Experience the advantages of our comprehensive digital farming ecosystem.',
+    
+    // Kisan Standing Section
+    kisanStandingTitle: 'Farmer Power',
+    kisanStandingDescription: 'Thousands of farmers on our platform are getting better prices by selling their crops directly',
+    
+    // Technology Leverage Section
+    technologyLeverageTitle: 'Technology Leverage',
+    technologyLeverageDescription: 'Our platform uses IoT and AI technology to increase farmers\' productivity and yield',
+    iotOptimization: 'IoT Optimization',
+    iotOptimizationDesc: 'Monitor and optimize farming through smart sensors and IoT devices',
+    yieldProduction: 'Yield Production',
+    yieldProductionDesc: 'Increase crop production through data-driven decisions',
+    smartMonitoring: 'Smart Monitoring',
+    smartMonitoringDesc: '24/7 monitoring of crop and soil conditions',
+    
+    // Direct Benefit Section
+    directBenefitTitle: 'Direct Farmer Benefits',
+    directBenefitDescription: 'Our digital platform benefits farmers directly by eliminating middlemen',
+    eliminateMiddleman: 'Eliminate Middlemen',
+    eliminateMiddlemanDesc: 'Remove traditional middlemen to give farmers better prices',
+    directFarmerBenefit: 'Direct Farmer Benefit',
+    directFarmerBenefitDesc: 'Farmers earn more profit by selling crops directly to buyers',
+    fairPricing: 'Fair Pricing',
+    fairPricingDesc: 'Transparent pricing ensures farmers get fair value',
     whatUsersSay: 'What Our Users Say',
     whatUsersSayDesc: 'Join thousands of satisfied farmers, buyers, and transporters who trust ACHHADAM.',
     readyToTransform: 'Ready to Transform Your Agriculture Business?',
@@ -709,6 +757,30 @@ export const translations = {
     whyChooseDesc: 'आम्ही आमच्या नाविन्यपूर्ण डिजिटल प्लॅटफॉर्मद्वारे शेतकरी, खरेदीदार आणि वाहतूकदारांना जोडून शेतीत क्रांती आणत आहोत.',
     platformBenefits: 'प्लॅटफॉर्म फायदे',
     platformBenefitsDesc: 'आमच्या व्यापक डिजिटल शेती इकोसिस्टमचे फायदे अनुभवा.',
+    
+    // Kisan Standing Section
+    kisanStandingTitle: 'शेतकऱ्यांची ताकद',
+    kisanStandingDescription: 'आमच्या प्लॅटफॉर्मवर हजारो शेतकरी थेट पिके विकून चांगले भाव मिळवत आहेत',
+    
+    // Technology Leverage Section
+    technologyLeverageTitle: 'तंत्रज्ञानाचा वापर',
+    technologyLeverageDescription: 'आमचे प्लॅटफॉर्म IoT आणि AI तंत्रज्ञान वापरून शेतकऱ्यांची उत्पादकता आणि उत्पादन वाढवते',
+    iotOptimization: 'IoT ऑप्टिमायझेशन',
+    iotOptimizationDesc: 'स्मार्ट सेंसर आणि IoT डिव्हाइसेसद्वारे शेतीचे निरीक्षण आणि ऑप्टिमायझेशन',
+    yieldProduction: 'उत्पादन उत्पादन',
+    yieldProductionDesc: 'डेटा-चालित निर्णय घेऊन पिकांच्या उत्पादनात वाढ',
+    smartMonitoring: 'स्मार्ट निरीक्षण',
+    smartMonitoringDesc: 'पिके आणि मातीच्या स्थितीचे 24/7 निरीक्षण',
+    
+    // Direct Benefit Section
+    directBenefitTitle: 'शेतकऱ्यांना थेट लाभ',
+    directBenefitDescription: 'आमचे डिजिटल प्लॅटफॉर्म मध्यस्थांना काढून शेतकऱ्यांना थेट लाभ पोहोचवते',
+    eliminateMiddleman: 'मध्यस्थांना काढणे',
+    eliminateMiddlemanDesc: 'पारंपरिक मध्यस्थांना काढून शेतकऱ्यांना चांगले भाव मिळतात',
+    directFarmerBenefit: 'शेतकऱ्यांचा थेट लाभ',
+    directFarmerBenefitDesc: 'शेतकरी थेट खरेदीदारांना पिके विकून अधिक नफा कमावतात',
+    fairPricing: 'निष्पक्ष मूल्य निर्धारण',
+    fairPricingDesc: 'पारदर्शक मूल्य निर्धारणामुळे शेतकऱ्यांना योग्य मूल्य मिळते',
     whatUsersSay: 'आमचे वापरकर्ते काय म्हणतात',
     whatUsersSayDesc: 'ACHHADAM वर विश्वास ठेवणाऱ्या हजारो समाधानी शेतकरी, खरेदीदार आणि वाहतूकदारांमध्ये सामील व्हा.',
     readyToTransform: 'तुमचा शेती व्यवसाय बदलण्यास तयार आहात?',

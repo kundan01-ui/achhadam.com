@@ -185,3 +185,7 @@ npm run dev
 **Your frontend will be fully configured with all services!** 🚀
 
 
+
+
+
+

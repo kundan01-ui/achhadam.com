@@ -68,3 +68,7 @@ npm install --legacy-peer-deps && npm install class-variance-authority clsx tail
 **The missing dependencies have been added to package.json!** 🎉
 
 
+
+
+
+

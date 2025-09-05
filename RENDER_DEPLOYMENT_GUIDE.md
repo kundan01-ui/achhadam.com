@@ -237,3 +237,7 @@ Once deployed, your ACHHADAM Digital Farming Platform will be live at:
 Your platform is now ready for users! 🚀
 
 
+
+
+
+
