@@ -139,6 +139,8 @@ const userSchema = new mongoose.Schema({
   vehicleTypes: [String],
   serviceAreas: [String],
   isVerified: { type: Boolean, default: false },
+  resetOTP: { type: String },
+  resetOTPExpiry: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
@@ -625,9 +627,11 @@ const authenticateToken = async (req, res, next) => {
 
 // Import auth routes
 const authRoutes = require('./src/routes/auth/index.js');
+const passwordResetRoutes = require('./routes/auth.js');
 
 // Register auth routes
 app.use('/api/auth', otpLimiter, authRoutes);
+app.use('/api/auth', passwordResetRoutes);
 
 // Get current user profile
 app.get('/api/auth/me', authenticateToken, async (req, res) => {

@@ -1,210 +1,155 @@
 const crypto = require('crypto');
 
-// In-memory storage for development (use Redis in production)
-const otpStore = new Map();
+// In production, you would integrate with SMS service providers like:
+// - Twilio
+// - AWS SNS
+// - TextLocal
+// - MSG91
+// - Fast2SMS
 
 class OTPService {
   constructor() {
-    this.otpExpiry = 5 * 60 * 1000; // 5 minutes in milliseconds
-    this.maxAttempts = 3;
+    this.otpStorage = new Map(); // In production, use Redis or database
   }
 
   // Generate 6-digit OTP
   generateOTP() {
-    return crypto.randomInt(100000, 999999).toString();
+    return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  // Store OTP with phone number and expiry
-  storeOTP(phone, otp) {
-    const otpData = {
-      otp: otp,
-      createdAt: Date.now(),
-      attempts: 0,
-      verified: false
-    };
-    
-    otpStore.set(phone, otpData);
-    
-    // Auto-cleanup after expiry
-    setTimeout(() => {
-      otpStore.delete(phone);
-    }, this.otpExpiry);
-    
-    return otpData;
+  // Send OTP (mock implementation - replace with real SMS service)
+  async sendOTP(phone) {
+    try {
+      const otp = this.generateOTP();
+      
+      // Store OTP with expiry (10 minutes)
+      this.otpStorage.set(phone, {
+        otp: otp,
+        expiry: Date.now() + 10 * 60 * 1000, // 10 minutes
+        attempts: 0
+      });
+
+      // In production, send real SMS here
+      if (process.env.NODE_ENV === 'production') {
+        // TODO: Integrate with real SMS service
+        console.log(`📱 SMS would be sent to ${phone} with OTP: ${otp}`);
+        
+        // Example with Twilio (uncomment and configure):
+        /*
+        const accountSid = process.env.TWILIO_ACCOUNT_SID;
+        const authToken = process.env.TWILIO_AUTH_TOKEN;
+        const client = require('twilio')(accountSid, authToken);
+        
+        await client.messages.create({
+          body: `Your Achhadam password reset OTP is: ${otp}. Valid for 10 minutes.`,
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: `+91${phone}`
+        });
+        */
+      } else {
+        // Development mode - just log the OTP
+        console.log(`🔐 Development OTP for ${phone}: ${otp}`);
+      }
+
+      return {
+        success: true,
+        otp: process.env.NODE_ENV === 'development' ? otp : undefined,
+        message: 'OTP sent successfully'
+      };
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      return {
+        success: false,
+        message: 'Failed to send OTP'
+      };
+    }
   }
 
   // Verify OTP
-  verifyOTP(phone, inputOTP) {
-    const otpData = otpStore.get(phone);
-    
-    if (!otpData) {
-      return { success: false, message: 'OTP expired or not found' };
-    }
-    
-    // Check if OTP is expired
-    if (Date.now() - otpData.createdAt > this.otpExpiry) {
-      otpStore.delete(phone);
-      return { success: false, message: 'OTP has expired' };
-    }
-    
-    // Check attempts limit
-    if (otpData.attempts >= this.maxAttempts) {
-      otpStore.delete(phone);
-      return { success: false, message: 'Maximum attempts exceeded' };
-    }
-    
-    // Increment attempts
-    otpData.attempts++;
-    
-    // Verify OTP
-    if (otpData.otp === inputOTP) {
-      otpData.verified = true;
-      otpStore.delete(phone); // Clean up after successful verification
-      return { success: true, message: 'OTP verified successfully' };
-    } else {
-      return { success: false, message: 'Invalid OTP' };
-    }
-  }
-
-  // Check if OTP exists and is valid
-  checkOTP(phone) {
-    const otpData = otpStore.get(phone);
-    
-    if (!otpData) {
-      return { exists: false, message: 'OTP not found' };
-    }
-    
-    if (Date.now() - otpData.createdAt > this.otpExpiry) {
-      otpStore.delete(phone);
-      return { exists: false, message: 'OTP expired' };
-    }
-    
-    return { 
-      exists: true, 
-      attempts: otpData.attempts,
-      remainingTime: Math.ceil((this.otpExpiry - (Date.now() - otpData.createdAt)) / 1000)
-    };
-  }
-
-  // Send OTP via SMS (Mock implementation for development)
-  async sendOTP(phone, otp) {
+  async verifyOTP(phone, otp) {
     try {
-      // In production, integrate with SMS service like Twilio, Fast2SMS, or MSG91
+      const storedData = this.otpStorage.get(phone);
       
-      // Mock SMS sending for development
-      console.log(`📱 Mock SMS sent to ${phone}: Your ACHHADAM OTP is ${otp}. Valid for 5 minutes.`);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      return {
-        success: true,
-        message: 'OTP sent successfully',
-        provider: 'Mock SMS Service'
-      };
-      
-      /* Production SMS Integration Example:
-      
-      // Using Twilio
-      const accountSid = process.env.TWILIO_ACCOUNT_SID;
-      const authToken = process.env.TWILIO_AUTH_TOKEN;
-      const client = require('twilio')(accountSid, authToken);
-      
-      const message = await client.messages.create({
-        body: `Your ACHHADAM OTP is ${otp}. Valid for 5 minutes.`,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: `+91${phone}`
-      });
-      
-      return {
-        success: true,
-        message: 'OTP sent successfully',
-        provider: 'Twilio',
-        messageId: message.sid
-      };
-      
-      */
-      
-    } catch (error) {
-      console.error('SMS sending failed:', error);
-      return {
-        success: false,
-        message: 'Failed to send SMS',
-        error: error.message
-      };
-    }
-  }
-
-  // Resend OTP
-  async resendOTP(phone) {
-    try {
-      // Check if phone already has an OTP
-      const existingOTP = this.checkOTP(phone);
-      
-      if (existingOTP.exists) {
-        // Check if enough time has passed for resend (1 minute)
-        const timeSinceLastOTP = Date.now() - otpStore.get(phone).createdAt;
-        if (timeSinceLastOTP < 60000) { // 1 minute
-          const remainingTime = Math.ceil((60000 - timeSinceLastOTP) / 1000);
-          return {
-            success: false,
-            message: `Please wait ${remainingTime} seconds before requesting a new OTP`
-          };
-        }
+      if (!storedData) {
+        return {
+          success: false,
+          message: 'OTP not found. Please request a new OTP.'
+        };
       }
-      
-      // Generate new OTP
-      const newOTP = this.generateOTP();
-      
-      // Store new OTP
-      this.storeOTP(phone, newOTP);
-      
-      // Send new OTP
-      const smsResult = await this.sendOTP(phone, newOTP);
-      
-      if (smsResult.success) {
+
+      // Check if OTP is expired
+      if (Date.now() > storedData.expiry) {
+        this.otpStorage.delete(phone);
+        return {
+          success: false,
+          message: 'OTP expired. Please request a new OTP.'
+        };
+      }
+
+      // Check attempt limit (max 3 attempts)
+      if (storedData.attempts >= 3) {
+        this.otpStorage.delete(phone);
+        return {
+          success: false,
+          message: 'Too many failed attempts. Please request a new OTP.'
+        };
+      }
+
+      // Verify OTP
+      if (storedData.otp === otp) {
+        this.otpStorage.delete(phone);
         return {
           success: true,
-          message: 'New OTP sent successfully',
-          otp: newOTP // Remove this in production
+          message: 'OTP verified successfully'
         };
       } else {
-        return smsResult;
+        // Increment attempt count
+        storedData.attempts++;
+        this.otpStorage.set(phone, storedData);
+        
+        return {
+          success: false,
+          message: `Invalid OTP. ${3 - storedData.attempts} attempts remaining.`
+        };
       }
-      
     } catch (error) {
-      console.error('Resend OTP failed:', error);
+      console.error('Verify OTP error:', error);
       return {
         success: false,
-        message: 'Failed to resend OTP',
-        error: error.message
+        message: 'Failed to verify OTP'
       };
     }
   }
 
-  // Clean up expired OTPs
-  cleanupExpiredOTPs() {
+  // Clean expired OTPs (call this periodically)
+  cleanExpiredOTPs() {
     const now = Date.now();
-    for (const [phone, otpData] of otpStore.entries()) {
-      if (now - otpData.createdAt > this.otpExpiry) {
-        otpStore.delete(phone);
+    for (const [phone, data] of this.otpStorage.entries()) {
+      if (now > data.expiry) {
+        this.otpStorage.delete(phone);
       }
     }
   }
 }
 
-// Cleanup expired OTPs every minute
+// Create singleton instance
+const otpService = new OTPService();
+
+// Clean expired OTPs every 5 minutes
 setInterval(() => {
-  const otpService = new OTPService();
-  otpService.cleanupExpiredOTPs();
-}, 60000);
+  otpService.cleanExpiredOTPs();
+}, 5 * 60 * 1000);
 
-module.exports = OTPService;
+// Export functions
+const sendOTP = async (phone) => {
+  return await otpService.sendOTP(phone);
+};
 
+const verifyOTP = async (phone, otp) => {
+  return await otpService.verifyOTP(phone, otp);
+};
 
-
-
-
-
-
-
+module.exports = {
+  sendOTP,
+  verifyOTP
+};

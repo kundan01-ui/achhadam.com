@@ -11,12 +11,12 @@ import type { GoogleUserData } from '../../types/auth';
 
 interface LoginPageProps {
   onSignupClick: () => void;
-  onUserTypeSelect: (userType: 'farmer' | 'buyer' | 'transporter', user: any) => void;
+  onUserTypeSelect: (userType: 'farmer' | 'buyer' | 'transporter' | 'google-signin', user?: GoogleUserData) => void;
   onBackToHome: () => void;
   onForgotPassword?: () => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, onBackToHome }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, onBackToHome, onForgotPassword }) => {
   const { t } = useLanguage();
   const [formData, setFormData] = useState({
     phone: '',
@@ -34,13 +34,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
     try {
       console.log('🔄 Processing Google Sign-in:', user);
       
-      // Here you can either:
-      // 1. Create a new user account with Google data
-      // 2. Link Google account to existing user
-      // 3. Directly login the user
-      
-      // For now, we'll directly login the user
-      onUserTypeSelect('farmer', user); // Default to farmer, you can modify this logic
+      // Store user data and show user type selection
+      // We'll pass the user to the parent component to show user type selection
+      onUserTypeSelect('google-signin', user); // Special type to indicate Google signin
       
     } catch (error: any) {
       console.error('❌ Google Sign-in processing failed:', error);

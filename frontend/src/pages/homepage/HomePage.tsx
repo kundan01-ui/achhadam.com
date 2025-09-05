@@ -7,16 +7,18 @@ import LoginPage from '../auth/LoginPage';
 import FarmerSignupPage from '../auth/FarmerSignupPage';
 import BuyerSignupPage from '../auth/BuyerSignupPage';
 import TransporterSignupPage from '../auth/TransporterSignupPage';
+import UserTypeSelectionPage from '../auth/UserTypeSelectionPage';
+import ForgetPasswordPage from '../auth/ForgetPasswordPage';
 import FarmerDashboard from '../dashboard/FarmerDashboard';
 import BuyerDashboard from '../dashboard/BuyerDashboard';
 import TransporterDashboard from '../dashboard/TransporterDashboard';
-import ForgotPasswordPage from '../auth/ForgotPasswordPage';
 import AboutPage from './AboutPage';
 import ContactPage from './ContactPage';
 import FeaturesPage from './FeaturesPage';
 import InvestorPage from './InvestorPage';
 import BlogPage from './BlogPage';
 import UserTypeSelector from '../../components/ui/UserTypeSelector';
+import type { GoogleUserData } from '../../types/auth';
 
 // Import images
 import agri1Image from '../../assets/agri1.jpg - Copy.jpg';
@@ -311,14 +313,14 @@ const benefits = [
   }
 ];
 
-type AuthPage = 'home' | 'login' | 'user-type-selection' | 'farmer-signup' | 'buyer-signup' | 'transporter-signup' | 'farmer-dashboard' | 'buyer-dashboard' | 'transporter-dashboard';
+type AuthPage = 'home' | 'login' | 'user-type-selection' | 'farmer-signup' | 'buyer-signup' | 'transporter-signup' | 'farmer-dashboard' | 'buyer-dashboard' | 'transporter-dashboard' | 'forgot-password';
 
 const HomePage: React.FC = () => {
   const { t } = useLanguage();
   const [currentPage, setCurrentPage] = useState<AuthPage>('home');
   const [selectedUserType, setSelectedUserType] = useState<'farmer' | 'buyer' | 'transporter'>('farmer');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<GoogleUserData | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -377,10 +379,19 @@ const HomePage: React.FC = () => {
     setCurrentPage(`${userType}-signup` as AuthPage);
   };
 
-  const handleLoginSuccess = (userType: string, user: any) => {
-    setIsAuthenticated(true);
-    setUserData(user);
-    setCurrentPage(`${userType}-dashboard` as AuthPage);
+  const handleLoginSuccess = (userType: string, user?: GoogleUserData) => {
+    console.log('🎯 Login success:', userType, user);
+    
+    if (userType === 'google-signin' && user) {
+      // Store Google user data and show user type selection
+      setUserData(user);
+      setCurrentPage('user-type-selection');
+    } else {
+      // Regular login flow
+      setIsAuthenticated(true);
+      setUserData(user || null);
+      setCurrentPage(`${userType}-dashboard` as AuthPage);
+    }
   };
 
   const renderAuthContent = () => {
@@ -396,7 +407,18 @@ const HomePage: React.FC = () => {
           />
         );
       case 'user-type-selection':
-        return (
+        return userData ? (
+          <UserTypeSelectionPage
+            user={userData}
+            onUserTypeSelect={(userType, user) => {
+              console.log('🎯 User selected type:', userType, 'for Google user:', user);
+              setIsAuthenticated(true);
+              setUserData(user);
+              setCurrentPage(`${userType}-dashboard` as AuthPage);
+            }}
+            onBack={() => setCurrentPage('login')}
+          />
+        ) : (
           <div className="min-h-screen bg-gradient-to-br from-green-100 via-emerald-50 to-teal-100 flex items-center justify-center p-4">
             <div className="w-full max-w-4xl">
               <div className="bg-white rounded-2xl shadow-2xl p-8">
@@ -446,8 +468,9 @@ const HomePage: React.FC = () => {
         );
       case 'forgot-password':
         return (
-          <ForgotPasswordPage
-            onBackToLogin={() => setCurrentPage('login')}
+          <ForgetPasswordPage
+            onBack={() => setCurrentPage('login')}
+            onSuccess={() => setCurrentPage('login')}
           />
         );
       case 'features':
@@ -532,31 +555,31 @@ const HomePage: React.FC = () => {
                        onClick={() => setCurrentPage('features')}
                        className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
                      >
-                       Features
+                       {t('navbarFeatures')}
                      </button>
                      <button
                        onClick={() => setCurrentPage('investor')}
                        className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
                      >
-                       Investor
+                       {t('navbarInvestor')}
                      </button>
                      <button
                        onClick={() => setCurrentPage('blog')}
                        className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
                      >
-                       Blog
+                       {t('navbarBlog')}
                      </button>
                      <button
                        onClick={() => setCurrentPage('about')}
                        className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
                      >
-                       About
+                       {t('navbarAbout')}
                      </button>
                      <button
                        onClick={() => setCurrentPage('contact')}
                        className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
                      >
-                       Contact
+                       {t('navbarContact')}
                      </button>
                    </nav>
 
@@ -567,7 +590,7 @@ const HomePage: React.FC = () => {
                        onClick={() => setCurrentPage('login')}
                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium hover-lift animate-fade-in-right hover-glow btn-pulse shadow-md text-sm sm:text-base"
                      >
-                       Login
+                       {t('navbarLogin')}
                      </Button>
                      
                      {/* Mobile Hamburger Menu */}
@@ -598,7 +621,7 @@ const HomePage: React.FC = () => {
                        }}
                        className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
                      >
-                       Features
+                       {t('navbarFeatures')}
                      </button>
                      <button
                        onClick={() => {
@@ -607,7 +630,7 @@ const HomePage: React.FC = () => {
                        }}
                        className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
                      >
-                       Investor
+                       {t('navbarInvestor')}
                      </button>
                      <button
                        onClick={() => {
@@ -616,7 +639,7 @@ const HomePage: React.FC = () => {
                        }}
                        className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
                      >
-                       Blog
+                       {t('navbarBlog')}
                      </button>
                      <button
                        onClick={() => {
@@ -625,7 +648,7 @@ const HomePage: React.FC = () => {
                        }}
                        className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
                      >
-                       About
+                       {t('navbarAbout')}
                      </button>
                      <button
                        onClick={() => {
@@ -634,7 +657,7 @@ const HomePage: React.FC = () => {
                        }}
                        className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
                      >
-                       Contact
+                       {t('navbarContact')}
                      </button>
                      <div className="pt-4 border-t border-gray-200">
                        <Button
@@ -644,7 +667,7 @@ const HomePage: React.FC = () => {
                          }}
                          className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium hover-lift hover-glow btn-pulse shadow-md"
                        >
-                         Login
+                         {t('navbarLogin')}
                        </Button>
                      </div>
                    </div>
@@ -728,7 +751,7 @@ const HomePage: React.FC = () => {
                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                  <div className="text-center mb-12 sm:mb-16 animate-fade-in-up">
                    <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-800 mb-4 sm:mb-6 gradient-text">
-                     Statistics of Platform Impact
+{t('statisticsTitle')}
                    </h2>
                    <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4">
                      Real results from real farmers, buyers, and transporters across India
@@ -769,7 +792,7 @@ const HomePage: React.FC = () => {
                      Success Stories
                    </div>
                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 group-hover:text-green-800 transition-colors duration-500">
-                     Success Stories from Farmers
+{t('farmersTitle')}
                    </h2>
                    <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto px-4 sm:px-0 group-hover:text-gray-700 transition-colors duration-500">
                      Join 10,000+ farmers who have transformed their lives through direct selling
@@ -839,7 +862,7 @@ const HomePage: React.FC = () => {
                      {/* Image Label */}
                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
                        <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
-                         Farmers
+{t('farmersTitle')}
                        </span>
                      </div>
                      <div className="relative rounded-lg overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
@@ -874,7 +897,7 @@ const HomePage: React.FC = () => {
                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                  <div className="text-center mb-20 animate-fade-in-up">
                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-800 mb-6 gradient-text">
-                     {t('whyChooseAchhadam')}
+{t('whyChooseTitle')}
                    </h2>
                    <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
                      {t('whyChooseDesc')}
@@ -921,7 +944,7 @@ const HomePage: React.FC = () => {
                      Our Process
                    </div>
                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 group-hover:text-purple-800 transition-colors duration-500">
-                     How Achhadam Works
+{t('howItWorksTitle')}
                    </h2>
                    <p className="text-lg text-gray-600 max-w-3xl mx-auto group-hover:text-gray-700 transition-colors duration-500">
                      A complete ecosystem connecting farmers, buyers, and transporters through technology
@@ -1004,7 +1027,7 @@ const HomePage: React.FC = () => {
                      {/* Image Label */}
                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
                        <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
-                         Working Process
+{t('workingProcessTitle')}
                        </span>
                      </div>
                      <div className="relative rounded-lg overflow-hidden shadow-2xl transform group-hover:scale-105 transition-all duration-500 cursor-pointer">
@@ -1041,7 +1064,7 @@ const HomePage: React.FC = () => {
                      Direct Trade
                    </div>
                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-                     Eliminate the Middleman
+{t('eliminateMiddlemanTitle')}
                    </h2>
                    <p className="text-lg text-gray-600 max-w-3xl mx-auto">
                      Direct farmer-buyer connection ensuring maximum profit and fair prices
@@ -1098,7 +1121,7 @@ const HomePage: React.FC = () => {
                      {/* Image Label */}
                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
                        <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
-                         Direct Trade
+{t('directTradeTitle')}
                        </span>
                      </div>
                      <div className="relative rounded-lg overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
@@ -1134,7 +1157,7 @@ const HomePage: React.FC = () => {
                      Advanced Technology
                    </div>
                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-                     Smart Agriculture Technology
+{t('smartAgricultureTitle')}
                    </h2>
                    <p className="text-lg text-gray-600 max-w-3xl mx-auto">
                      IoT sensors, AI analytics, and real-time monitoring to maximize crop yield
@@ -1211,7 +1234,7 @@ const HomePage: React.FC = () => {
                      {/* Image Label */}
                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
                        <span className="bg-indigo-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
-                         Smart Tech
+{t('smartTechTitle')}
                        </span>
                      </div>
                      <div className="relative rounded-lg overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
@@ -1249,7 +1272,7 @@ const HomePage: React.FC = () => {
                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                  <div className="text-center mb-20 animate-fade-in-up">
                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-800 mb-6 gradient-text">
-                     {t('platformBenefits')}
+{t('platformBenefitsTitle')}
                    </h2>
                    <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
                      {t('platformBenefitsDesc')}

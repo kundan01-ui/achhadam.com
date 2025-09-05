@@ -3,6 +3,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import LanguageSelector from '../../components/ui/LanguageSelector';
+import PasswordInput from '../../components/ui/PasswordInput';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { apiService, type SignupRequest } from '../../services/api';
 import { firebaseOTPService } from '../../services/firebaseOTP';
@@ -393,12 +394,13 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
         <label className="text-sm font-medium text-gray-700">
           {t('password')} *
         </label>
-        <Input
-          type="password"
-          placeholder={t('enterPassword')}
+        <PasswordInput
           value={formData.password}
-          onChange={(e) => handleInputChange('password', e.target.value)}
-          minLength={6}
+          onChange={(value) => handleInputChange('password', value)}
+          placeholder={t('enterPassword')}
+          showStrength={true}
+          showRequirements={true}
+          minLength={8}
           required
         />
       </div>
@@ -407,11 +409,12 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
         <label className="text-sm font-medium text-gray-700">
           {t('confirmPassword')} *
         </label>
-        <Input
-          type="password"
-          placeholder={t('enterConfirmPassword')}
+        <PasswordInput
           value={formData.confirmPassword}
-          onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+          onChange={(value) => handleInputChange('confirmPassword', value)}
+          placeholder={t('enterConfirmPassword')}
+          showStrength={false}
+          showRequirements={false}
           required
         />
       </div>

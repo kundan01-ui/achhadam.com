@@ -1,5 +1,9 @@
 // API service for authentication and user management
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://achhadam-backend.onrender.com/api';
+// Render Backend (Production) - Re-enabled
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://achhadam-backend.onrender.com';
+
+// Local Backend (Development) - Commented out for production
+// const API_BASE_URL = 'http://localhost:10000';
 
 export interface User {
   id: string;
@@ -183,6 +187,31 @@ class ApiService {
   // Health Check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     return this.request<{ status: string; timestamp: string }>('/api/health');
+  }
+
+  // Password Reset APIs
+  async sendResetOTP(phone: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>('/api/auth/send-reset-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone: phone.replace('+91', '') }),
+    });
+  }
+
+  async verifyResetOTP(phone: string, otp: string): Promise<{ success: boolean; message: string; resetToken?: string }> {
+    return this.request<{ success: boolean; message: string; resetToken?: string }>('/api/auth/verify-reset-otp', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        phone: phone.replace('+91', ''), 
+        otp 
+      }),
+    });
+  }
+
+  async resetPassword(resetToken: string, newPassword: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ resetToken, newPassword }),
+    });
   }
 }
 
