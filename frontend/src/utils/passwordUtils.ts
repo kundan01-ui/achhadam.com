@@ -64,3 +64,4 @@ export const getPasswordStrengthBgColor = (score: number): string => {
   if (score <= 4) return 'bg-blue-500';
   return 'bg-green-500';
 };
+

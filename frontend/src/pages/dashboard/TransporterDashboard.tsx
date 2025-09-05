@@ -444,73 +444,68 @@ const TransporterDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({
             </button>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Delivery ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Route
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vehicle
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fare
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {deliveries.map((delivery) => (
-                <tr key={delivery.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {delivery.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {delivery.customer}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {/* Mobile-Friendly Delivery Cards */}
+        <div className="space-y-3 p-4">
+          {deliveries.map((delivery) => (
+            <div key={delivery.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="flex flex-col space-y-3">
+                {/* Delivery Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-900">{delivery.id}</h4>
+                    <p className="text-xs text-gray-500">{delivery.customer}</p>
+                  </div>
+                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(delivery.status)}`}>
+                    {delivery.status.replace('_', ' ').toUpperCase()}
+                  </span>
+                </div>
+                
+                {/* Route Info */}
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Navigation className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">From: {delivery.pickupLocation}</p>
+                    <p className="text-xs text-gray-500">To: {delivery.deliveryLocation}</p>
+                  </div>
+                </div>
+                
+                {/* Vehicle & Fare Info */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <Truck className="h-4 w-4 text-green-600" />
+                    </div>
                     <div>
-                      <div className="text-xs text-gray-500">From: {delivery.pickupLocation}</div>
-                      <div className="text-xs text-gray-500">To: {delivery.deliveryLocation}</div>
+                      <p className="text-sm font-medium text-gray-900">{delivery.assignedVehicle}</p>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {delivery.assignedVehicle}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(delivery.status)}`}>
-                      {delivery.status.replace('_', ' ').toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatCurrency(delivery.fare)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-700">
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button className="text-green-600 hover:text-green-700">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-gray-900">{formatCurrency(delivery.fare)}</p>
+                  </div>
+                </div>
+                
+                {/* Actions */}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                  <div className="flex space-x-2">
+                    <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View">
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Edit">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Cancel">
+                      <XCircle className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <button className="text-xs text-gray-500 hover:text-gray-700">
+                    Track Route →
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

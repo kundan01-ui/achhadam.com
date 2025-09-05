@@ -115,37 +115,8 @@ async function connectPostgreSQL() {
   }
 }
 
-// User Schema (MongoDB)
-const userSchema = new mongoose.Schema({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  phone: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  userType: { 
-    type: String, 
-    required: true, 
-    enum: ['farmer', 'buyer', 'transporter'] 
-  },
-  email: String,
-  farmName: String,
-  farmSize: Number,
-  farmSizeUnit: String,
-  village: String,
-  district: String,
-  state: String,
-  mainCrops: [String],
-  experience: String,
-  companyName: String,
-  vehicleTypes: [String],
-  serviceAreas: [String],
-  isVerified: { type: Boolean, default: false },
-  resetOTP: { type: String },
-  resetOTPExpiry: { type: Date },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
-
-const User = mongoose.model('User', userSchema);
+// Import User model from models directory
+const User = require('./models/User');
 
 // OTP Service
 class FirebaseOTPService {

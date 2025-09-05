@@ -550,3 +550,4 @@ const InvestorPage: React.FC<InvestorPageProps> = ({ onBackToHome }) => {
 };
 
 export default InvestorPage;
+
