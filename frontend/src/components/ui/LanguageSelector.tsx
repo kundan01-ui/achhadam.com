@@ -30,13 +30,13 @@ const LanguageSelector: React.FC = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors shadow-sm"
+        className="flex items-center space-x-1 sm:space-x-2 px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors shadow-sm"
         aria-label={t('selectLanguage')}
       >
-        <span className="text-base">{currentLang?.flag}</span>
+        <span className="text-sm sm:text-base">{currentLang?.flag}</span>
         <span className="hidden sm:inline text-sm">{currentLang?.nativeName}</span>
         <svg
-          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

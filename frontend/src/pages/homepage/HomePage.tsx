@@ -26,6 +26,7 @@ import quangImage from '../../assets/pexels-quang-nguyen-vinh-222549-2132171.jpg
 import kisanStandingImage from '../../assets/kisan standing.jpeg';
 import layerImage from '../../assets/layer.jpeg';
 import operatingImage from '../../assets/seed-production-industry7bb7-768x384.jpg';
+import workingProcessImage from '../../assets/working process.jpeg';
 
 import { 
   Leaf, 
@@ -690,6 +691,7 @@ const HomePage: React.FC = () => {
                        </Button>
                        <Button
                          variant="outline"
+                         onClick={() => setCurrentPage('features')}
                          className="border-2 border-green-200 text-green-100 hover:bg-green-500/20 hover:border-green-300 px-8 py-3 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105"
                        >
                          <Play className="w-5 h-5 mr-2" />
@@ -1009,11 +1011,11 @@ const HomePage: React.FC = () => {
                        {/* Piechart Container with White Background - Mobile Responsive */}
                        <div className="relative w-full h-72 sm:h-80 md:h-96 bg-white rounded-lg flex items-center justify-center pl-1 sm:pl-2">
                          <img 
-                           src="/src/assets/working process.jpeg" 
+                           src={workingProcessImage} 
                            alt="Achhadam Working Process Piechart" 
                            className="w-72 h-72 sm:w-80 sm:h-80 md:w-80 md:h-80 object-cover rounded-full scale-100 sm:scale-[1.68] mobile-image-container"
                            style={{objectPosition: 'center center'}}
-                           onClick={() => window.open('/src/assets/working process.jpeg', '_blank')}
+                           onClick={() => window.open(workingProcessImage, '_blank')}
                          />
                          
                          {/* Animated Border - Always Visible */}
@@ -1340,6 +1342,7 @@ const HomePage: React.FC = () => {
                      </Button>
                      <Button
                        variant="outline"
+                       onClick={() => setCurrentPage('about')}
                        className="border-2 border-white text-white hover:bg-white hover:text-green-600 px-10 py-4 text-xl font-bold hover-lift shadow-2xl"
                      >
                        {t('learnMore')}
@@ -1365,10 +1368,10 @@ const HomePage: React.FC = () => {
                 {t('revolutionizingAgriculture')}
               </p>
               <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale">
+                <a href="tel:+919876543210" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale">
                   <Phone className="w-5 h-5" />
                 </a>
-                <a href="#" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale">
+                <a href="mailto:info@achhadam.com" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale">
                   <Mail className="w-5 h-5" />
                 </a>
               </div>
@@ -1378,10 +1381,10 @@ const HomePage: React.FC = () => {
             <div className="animate-fade-in-up stagger-1">
               <h4 className="text-lg font-semibold mb-4">{t('forFarmers')}</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="footer-link text-gray-400">{t('smartFarmingFooter')}</a></li>
-                <li><a href="#" className="footer-link text-gray-400">{t('marketAccess')}</a></li>
-                <li><a href="#" className="footer-link text-gray-400">{t('cropAdvisory')}</a></li>
-                <li><a href="#" className="footer-link text-gray-400">{t('weatherUpdates')}</a></li>
+                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('smartFarmingFooter')}</button></li>
+                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('marketAccess')}</button></li>
+                <li><button onClick={() => setCurrentPage('blog')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('cropAdvisory')}</button></li>
+                <li><button onClick={() => setCurrentPage('blog')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('weatherUpdates')}</button></li>
               </ul>
             </div>
 
@@ -1389,10 +1392,10 @@ const HomePage: React.FC = () => {
             <div className="animate-fade-in-up stagger-2">
               <h4 className="text-lg font-semibold mb-4">{t('forBuyers')}</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="footer-link text-gray-400">{t('qualityProduce')}</a></li>
-                <li><a href="#" className="footer-link text-gray-400">{t('directSourcing')}</a></li>
-                <li><a href="#" className="footer-link text-gray-400">{t('marketIntelligenceFooter')}</a></li>
-                <li><a href="#" className="footer-link text-gray-400">{t('logisticsSupport')}</a></li>
+                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('qualityProduce')}</button></li>
+                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('directSourcing')}</button></li>
+                <li><button onClick={() => setCurrentPage('blog')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('marketIntelligenceFooter')}</button></li>
+                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('logisticsSupport')}</button></li>
               </ul>
             </div>
           </div>
