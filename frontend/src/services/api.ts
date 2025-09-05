@@ -1,5 +1,5 @@
 // API service for authentication and user management
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://achhadam-backend.onrender.com/api';
 
 export interface User {
   id: string;
@@ -113,7 +113,7 @@ class ApiService {
     return this.request<any>('/auth/send-otp', {
       method: 'POST',
       body: JSON.stringify({ 
-        phone,
+        phone: phone.replace('+91', ''), // Remove +91 prefix for backend
         confirmationResult: confirmationResult || null
       })
     });
@@ -122,14 +122,19 @@ class ApiService {
   async verifyOTP(phone: string, otp: string): Promise<any> {
     return this.request<any>('/auth/verify-otp', {
       method: 'POST',
-      body: JSON.stringify({ phone, otp })
+      body: JSON.stringify({ 
+        phone: phone.replace('+91', ''), // Remove +91 prefix for backend
+        otp 
+      })
     });
   }
 
   async resendOTP(phone: string): Promise<any> {
     return this.request<any>('/auth/resend-otp', {
       method: 'POST',
-      body: JSON.stringify({ phone })
+      body: JSON.stringify({ 
+        phone: phone.replace('+91', '') // Remove +91 prefix for backend
+      })
     });
   }
 

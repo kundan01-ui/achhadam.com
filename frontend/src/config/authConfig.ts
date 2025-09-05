@@ -2,8 +2,8 @@
 export const AUTH_CONFIG = {
   // reCAPTCHA Configuration
   RECAPTCHA: {
-    SITE_KEY: import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LdJZ7srAAAAAHDrTDx2C9BnKX8o6_dp8oFfsRBU',
-    DOMAINS: ['localhost', '127.0.0.1', 'your-production-domain.com']
+    SITE_KEY: import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LcMZR0UAAAAALgPMcgHwga7gY5p8QMg1Hj-bmUv',
+    DOMAINS: ['localhost', '127.0.0.1', 'achhadamf.onrender.com']
   },
   
   // Google Sign-in Configuration
