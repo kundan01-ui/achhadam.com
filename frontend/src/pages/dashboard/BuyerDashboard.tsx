@@ -86,28 +86,56 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
 
   // Mock user profile data
   const [userProfile, setUserProfile] = useState({
-    id: '1',
-    name: user?.name || 'Amit Sharma',
-    email: user?.email || 'amit@buyer.com',
-    phone: '+91 9876543210',
+    id: user?.id || '1',
+    name: user?.name || user?.firstName + ' ' + user?.lastName || 'Buyer User',
+    email: user?.email || 'buyer@achhadam.com',
+    phone: user?.phone || '+91 0000000000',
     userType: 'buyer' as const,
-    address: '123 Business Park, Sector 5, Gurgaon',
-    city: 'Gurgaon',
-    state: 'Haryana',
-    pincode: '122001',
-    dateOfBirth: '1988-03-20',
-    profileImage: '',
-    businessName: 'Sharma Trading Co.',
-    businessType: 'company',
-    kycStatus: 'verified' as const,
-    aadharNumber: '9876-5432-1098',
-    panNumber: 'XYZAB9876C',
-    bankAccountNumber: '9876543210987654',
-    ifscCode: 'HDFC0001234',
-    bankName: 'HDFC Bank',
-    createdAt: '2024-01-01',
+    address: user?.address || 'Business Address',
+    city: user?.city || 'City',
+    state: user?.state || 'State',
+    pincode: user?.pincode || '000000',
+    dateOfBirth: user?.dateOfBirth || '1990-01-01',
+    profileImage: user?.profileImage || '',
+    businessName: user?.businessName || 'My Business',
+    businessType: user?.businessType || 'company',
+    kycStatus: user?.kycStatus || 'pending' as const,
+    aadharNumber: user?.aadharNumber || '',
+    panNumber: user?.panNumber || '',
+    bankAccountNumber: user?.bankAccountNumber || '',
+    ifscCode: user?.ifscCode || '',
+    bankName: user?.bankName || '',
+    createdAt: user?.createdAt || new Date().toISOString(),
     lastLogin: new Date().toISOString()
   });
+
+  // Update user profile when user data changes
+  useEffect(() => {
+    if (user) {
+      setUserProfile(prev => ({
+        ...prev,
+        id: user.id || prev.id,
+        name: user.name || user.firstName + ' ' + user.lastName || prev.name,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+        address: user.address || prev.address,
+        city: user.city || prev.city,
+        state: user.state || prev.state,
+        pincode: user.pincode || prev.pincode,
+        dateOfBirth: user.dateOfBirth || prev.dateOfBirth,
+        profileImage: user.profileImage || prev.profileImage,
+        businessName: user.businessName || prev.businessName,
+        businessType: user.businessType || prev.businessType,
+        kycStatus: user.kycStatus || prev.kycStatus,
+        aadharNumber: user.aadharNumber || prev.aadharNumber,
+        panNumber: user.panNumber || prev.panNumber,
+        bankAccountNumber: user.bankAccountNumber || prev.bankAccountNumber,
+        ifscCode: user.ifscCode || prev.ifscCode,
+        bankName: user.bankName || prev.bankName,
+        createdAt: user.createdAt || prev.createdAt
+      }));
+    }
+  }, [user]);
 
   // Mock data - replace with real API calls
   const [stats] = useState<DashboardStats>({

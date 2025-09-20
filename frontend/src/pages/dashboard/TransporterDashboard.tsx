@@ -109,30 +109,60 @@ const TransporterDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({
 
   // Mock user profile data
   const [userProfile, setUserProfile] = useState({
-    id: '1',
-    name: user?.name || 'Vikram Singh',
-    email: user?.email || 'vikram@transporter.com',
-    phone: '+91 9876543210',
+    id: user?.id || '1',
+    name: user?.name || user?.firstName + ' ' + user?.lastName || 'Transporter User',
+    email: user?.email || 'transporter@achhadam.com',
+    phone: user?.phone || '+91 0000000000',
     userType: 'transporter' as const,
-    address: 'Transport Hub, Industrial Area, Delhi',
-    city: 'Delhi',
-    state: 'Delhi',
-    pincode: '110001',
-    dateOfBirth: '1982-11-10',
-    profileImage: '',
-    businessName: 'Singh Transport Services',
-    businessType: 'partnership',
-    licenseNumber: 'DL-1234567890',
-    experience: 15,
-    kycStatus: 'verified' as const,
-    aadharNumber: '4567-8901-2345',
-    panNumber: 'PQRST5678D',
-    bankAccountNumber: '4567890123456789',
-    ifscCode: 'ICIC0001234',
-    bankName: 'ICICI Bank',
-    createdAt: '2024-01-01',
+    address: user?.address || 'Transport Address',
+    city: user?.city || 'City',
+    state: user?.state || 'State',
+    pincode: user?.pincode || '000000',
+    dateOfBirth: user?.dateOfBirth || '1990-01-01',
+    profileImage: user?.profileImage || '',
+    businessName: user?.businessName || 'My Transport',
+    businessType: user?.businessType || 'partnership',
+    licenseNumber: user?.licenseNumber || '',
+    experience: user?.experience || 0,
+    kycStatus: user?.kycStatus || 'pending' as const,
+    aadharNumber: user?.aadharNumber || '',
+    panNumber: user?.panNumber || '',
+    bankAccountNumber: user?.bankAccountNumber || '',
+    ifscCode: user?.ifscCode || '',
+    bankName: user?.bankName || '',
+    createdAt: user?.createdAt || new Date().toISOString(),
     lastLogin: new Date().toISOString()
   });
+
+  // Update user profile when user data changes
+  useEffect(() => {
+    if (user) {
+      setUserProfile(prev => ({
+        ...prev,
+        id: user.id || prev.id,
+        name: user.name || user.firstName + ' ' + user.lastName || prev.name,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+        address: user.address || prev.address,
+        city: user.city || prev.city,
+        state: user.state || prev.state,
+        pincode: user.pincode || prev.pincode,
+        dateOfBirth: user.dateOfBirth || prev.dateOfBirth,
+        profileImage: user.profileImage || prev.profileImage,
+        businessName: user.businessName || prev.businessName,
+        businessType: user.businessType || prev.businessType,
+        licenseNumber: user.licenseNumber || prev.licenseNumber,
+        experience: user.experience || prev.experience,
+        kycStatus: user.kycStatus || prev.kycStatus,
+        aadharNumber: user.aadharNumber || prev.aadharNumber,
+        panNumber: user.panNumber || prev.panNumber,
+        bankAccountNumber: user.bankAccountNumber || prev.bankAccountNumber,
+        ifscCode: user.ifscCode || prev.ifscCode,
+        bankName: user.bankName || prev.bankName,
+        createdAt: user.createdAt || prev.createdAt
+      }));
+    }
+  }, [user]);
 
   // Mock data - replace with real API calls
   const [stats] = useState<TransporterStats>({

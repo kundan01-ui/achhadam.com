@@ -65,3 +65,5 @@ export const getPasswordStrengthBgColor = (score: number): string => {
   return 'bg-green-500';
 };
 
+
+
