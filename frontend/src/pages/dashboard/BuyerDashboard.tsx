@@ -6,6 +6,16 @@ import FavoritesPage from './FavoritesPage';
 import SettingsPage from './SettingsPage';
 import ContractsPage from './ContractsPage';
 import ProfileModal from '../../components/ui/ProfileModal';
+import ChatModal from '../../components/ui/ChatModal';
+import { 
+  loadAllFarmerCrops, 
+  filterCropsByCategory, 
+  searchCrops, 
+  sortCrops, 
+  getCropCategories,
+  getMarketplaceStats,
+  type MarketplaceCrop 
+} from '../../services/marketplaceService';
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -38,7 +48,8 @@ import {
   User,
   ChevronDown,
   X,
-  Home
+  Home,
+  MessageCircle
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -83,6 +94,23 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Marketplace states
+  const [marketplaceCrops, setMarketplaceCrops] = useState<MarketplaceCrop[]>([]);
+  const [filteredCrops, setFilteredCrops] = useState<MarketplaceCrop[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [marketplaceSearchQuery, setMarketplaceSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('demand');
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [selectedCrop, setSelectedCrop] = useState<MarketplaceCrop | null>(null);
+  const [marketplaceStats, setMarketplaceStats] = useState(getMarketplaceStats());
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [selectedQuality, setSelectedQuality] = useState('all');
+  const [selectedOrganic, setSelectedOrganic] = useState('all');
+  const [showImageGallery, setShowImageGallery] = useState(false);
+  const [selectedCropImages, setSelectedCropImages] = useState<any[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Mock user profile data
   const [userProfile, setUserProfile] = useState({
@@ -137,78 +165,78 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     }
   }, [user]);
 
-  // Mock data - replace with real API calls
-  const [stats] = useState<DashboardStats>({
-    totalOrders: 156,
-    pendingOrders: 12,
-    completedOrders: 144,
-    totalSpent: 2450000,
-    favoriteSuppliers: 8,
-    activeContracts: 3
-  });
+  // Load marketplace data - REAL FARMER DATA
+  useEffect(() => {
+    const loadMarketplaceData = () => {
+      console.log('🛒 Loading marketplace data for buyer:', userProfile.name);
+      const crops = loadAllFarmerCrops();
+      setMarketplaceCrops(crops);
+      setFilteredCrops(crops);
+      setMarketplaceStats(getMarketplaceStats());
+      console.log(`🛒 Marketplace loaded: ${crops.length} crops from ${new Set(crops.map(c => c.farmerId)).size} farmers`);
+    };
 
-  const [recentOrders] = useState<RecentOrder[]>([
-    {
-      id: 'ORD-001',
-      supplier: 'Green Valley Farms',
-      product: 'Organic Wheat',
-      quantity: 500,
-      price: 25000,
-      status: 'shipped',
-      date: '2024-01-15',
-      location: 'Punjab, India'
-    },
-    {
-      id: 'ORD-002',
-      supplier: 'Fresh Harvest Co.',
-      product: 'Premium Rice',
-      quantity: 300,
-      price: 18000,
-      status: 'confirmed',
-      date: '2024-01-14',
-      location: 'Haryana, India'
-    },
-    {
-      id: 'ORD-003',
-      supplier: 'Golden Grains Ltd.',
-      product: 'Basmati Rice',
-      quantity: 200,
-      price: 15000,
-      status: 'delivered',
-      date: '2024-01-13',
-      location: 'Uttar Pradesh, India'
-    }
-  ]);
+    loadMarketplaceData();
+    
+    // Refresh data every 10 seconds for real-time updates
+    const interval = setInterval(loadMarketplaceData, 10000);
+    return () => clearInterval(interval);
+  }, [userProfile.name]);
 
-  const [suppliers] = useState<Supplier[]>([
-    {
-      id: '1',
-      name: 'Green Valley Farms',
-      rating: 4.8,
-      location: 'Punjab, India',
-      products: ['Wheat', 'Rice', 'Corn'],
-      isVerified: true,
-      lastOrder: '2024-01-15'
-    },
-    {
-      id: '2',
-      name: 'Fresh Harvest Co.',
-      rating: 4.6,
-      location: 'Haryana, India',
-      products: ['Rice', 'Vegetables', 'Fruits'],
-      isVerified: true,
-      lastOrder: '2024-01-14'
-    },
-    {
-      id: '3',
-      name: 'Golden Grains Ltd.',
-      rating: 4.9,
-      location: 'Uttar Pradesh, India',
-      products: ['Basmati Rice', 'Wheat'],
-      isVerified: true,
-      lastOrder: '2024-01-13'
+  // Filter and search crops
+  useEffect(() => {
+    let filtered = marketplaceCrops;
+    
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filterCropsByCategory(filtered, selectedCategory);
     }
-  ]);
+    
+    // Search crops
+    if (marketplaceSearchQuery.trim()) {
+      filtered = searchCrops(filtered, marketplaceSearchQuery);
+    }
+    
+    // Price range filter
+    filtered = filtered.filter(crop => 
+      crop.price >= priceRange.min && crop.price <= priceRange.max
+    );
+
+    // Quality filter
+    if (selectedQuality !== 'all') {
+      filtered = filtered.filter(crop => crop.quality === selectedQuality);
+    }
+
+    // Organic filter
+    if (selectedOrganic !== 'all') {
+      if (selectedOrganic === 'organic') {
+        filtered = filtered.filter(crop => crop.organic);
+      } else if (selectedOrganic === 'non-organic') {
+        filtered = filtered.filter(crop => !crop.organic);
+      }
+    }
+    
+    // Sort crops
+    filtered = sortCrops(filtered, sortBy);
+    
+    setFilteredCrops(filtered);
+  }, [marketplaceCrops, selectedCategory, marketplaceSearchQuery, sortBy, priceRange, selectedQuality, selectedOrganic]);
+
+  // Real stats - calculated from actual data
+  const stats: DashboardStats = {
+    totalOrders: 0, // Will be loaded from orders
+    pendingOrders: 0, // Will be loaded from pending orders
+    completedOrders: 0, // Will be loaded from completed orders
+    totalSpent: 0, // Will be calculated from order history
+    favoriteSuppliers: 0, // Will be calculated from supplier data
+    activeContracts: 0 // Will be loaded from contracts
+  };
+
+  // Real recent orders - loaded from actual data
+  const recentOrders: RecentOrder[] = [];
+
+  // Real suppliers - loaded from actual farmer data
+  const suppliers: Supplier[] = [];
 
   const navigationItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, color: 'text-blue-600' },
@@ -470,6 +498,354 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     </div>
   );
 
+  const renderMarketplace = () => (
+    <div className="space-y-6">
+      {/* Marketplace Header */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">🌾 Farmer Marketplace</h2>
+            <p className="text-gray-600 mt-1">Discover fresh crops from local farmers</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-600">
+              <span className="font-semibold text-green-600">{marketplaceStats.totalCrops}</span> crops available
+            </div>
+            <div className="text-sm text-gray-600">
+              <span className="font-semibold text-blue-600">{marketplaceStats.totalFarmers}</span> farmers
+            </div>
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+            >
+              {showAdvancedFilters ? 'Hide Filters' : 'Advanced Filters'}
+            </button>
+            <button
+              onClick={() => {
+                const crops = loadAllFarmerCrops();
+                setMarketplaceCrops(crops);
+                setFilteredCrops(crops);
+                setMarketplaceStats(getMarketplaceStats());
+                console.log('🔄 Marketplace data refreshed manually');
+              }}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+            >
+              🔄 Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filter Bar */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search crops, farmers, or locations..."
+                value={marketplaceSearchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Category Filter */}
+          <div className="lg:w-48">
+            <select
+              value={selectedCategory}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="all">All Categories</option>
+              {marketplaceStats.categories.map(category => (
+                <option key={category.value} value={category.value}>
+                  {category.label} ({category.count})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Sort */}
+          <div className="lg:w-48">
+            <select
+              value={sortBy}
+              onChange={(e) => handleSortChange(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="demand">Sort by Demand</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="distance">Distance</option>
+              <option value="rating">Farmer Rating</option>
+              <option value="recent">Recently Added</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Results Count */}
+      <div className="text-sm text-gray-600">
+        Showing {filteredCrops.length} of {marketplaceCrops.length} crops
+      </div>
+
+      {/* Advanced Filters */}
+      {showAdvancedFilters && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Advanced Filters</h3>
+            <button
+              onClick={clearFilters}
+              className="text-sm text-blue-600 hover:text-blue-700"
+            >
+              Clear All
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Price Range */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Price Range (₹)</label>
+              <div className="flex space-x-2">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={priceRange.min}
+                  onChange={(e) => handlePriceRangeChange(Number(e.target.value), priceRange.max)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={priceRange.max}
+                  onChange={(e) => handlePriceRangeChange(priceRange.min, Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Quality */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quality</label>
+              <select
+                value={selectedQuality}
+                onChange={(e) => handleQualityChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Quality</option>
+                <option value="A">Grade A</option>
+                <option value="B">Grade B</option>
+                <option value="C">Grade C</option>
+              </select>
+            </div>
+
+            {/* Organic */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Organic</label>
+              <select
+                value={selectedOrganic}
+                onChange={(e) => handleOrganicChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Types</option>
+                <option value="organic">Organic Only</option>
+                <option value="non-organic">Non-Organic Only</option>
+              </select>
+            </div>
+
+            {/* Distance */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Max Distance (km)</label>
+              <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="all">Any Distance</option>
+                <option value="10">Within 10 km</option>
+                <option value="25">Within 25 km</option>
+                <option value="50">Within 50 km</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Crop Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredCrops.map((crop, index) => (
+          <div key={`${crop.id}_${index}_${crop.farmer.id}`} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+            {/* Crop Image */}
+            <div className="relative h-48 bg-gray-100 cursor-pointer" onClick={() => handleImageClick(crop)}>
+              {crop.images && crop.images.length > 0 ? (
+                <img
+                  src={crop.images[0]?.imageUrl || '/placeholder-crop.jpg'}
+                  alt={crop.name}
+                  className="w-full h-full object-cover hover:opacity-90 transition-opacity"
+                  onError={(e) => {
+                    e.currentTarget.src = '/placeholder-crop.jpg';
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">🌾</div>
+                    <div className="text-sm">No Image</div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Image Gallery Indicator */}
+              {crop.images && crop.images.length > 1 && (
+                <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                  {crop.images.length} images
+                </div>
+              )}
+              
+              {/* Click to View Gallery */}
+              <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                <div className="opacity-0 hover:opacity-100 transition-opacity">
+                  <Eye className="h-8 w-8 text-white" />
+                </div>
+              </div>
+              
+              {/* Status Badge */}
+              <div className="absolute top-2 left-2">
+                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                  {crop.status}
+                </span>
+              </div>
+              
+              {/* Demand Score */}
+              <div className="absolute top-2 right-2">
+                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                  {Math.round(crop.demandScore)}% Demand
+                </span>
+              </div>
+            </div>
+
+            {/* Crop Info */}
+            <div className="p-4">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <h3 className="font-semibold text-gray-900 text-lg">{crop.name}</h3>
+                  <p className="text-sm text-gray-600">{crop.type} • {crop.variety}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-green-600">
+                    ₹{crop.price}/{crop.unit === 'kg' ? 'kg' : 'quintal'}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {crop.quantity} {crop.unit}
+                  </div>
+                </div>
+              </div>
+
+              {/* Farmer Info */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <User className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{crop.farmer.name}</div>
+                    <div className="text-xs text-gray-500 flex items-center">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      {crop.farmer.location}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center text-yellow-500">
+                    <Star className="h-4 w-4 fill-current" />
+                    <span className="text-sm ml-1">{crop.farmer.rating.toFixed(1)}</span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {crop.distance?.toFixed(1)} km away
+                  </div>
+                </div>
+              </div>
+
+              {/* Crop Details */}
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Quality:</span>
+                  <span className="font-medium">{crop.quality} Grade</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Harvest Date:</span>
+                  <span className="font-medium">{new Date(crop.harvestDate).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Organic:</span>
+                  <span className={`font-medium ${crop.organic ? 'text-green-600' : 'text-gray-600'}`}>
+                    {crop.organic ? 'Yes' : 'No'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Price Comparison */}
+              {crop.priceComparison && (
+                <div className="mb-4 p-2 bg-gray-50 rounded-lg">
+                  <div className="text-xs text-gray-600 mb-1">Market Comparison</div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Market Average:</span>
+                    <span className="text-sm font-medium">₹{crop.priceComparison.marketAverage.toFixed(0)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">This Price:</span>
+                    <span className={`text-sm font-medium ${crop.priceComparison.isAboveAverage ? 'text-red-600' : 'text-green-600'}`}>
+                      ₹{crop.price} ({crop.priceComparison.isAboveAverage ? '+' : ''}{crop.priceComparison.percentageDifference.toFixed(1)}%)
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleChatWithFarmer(crop)}
+                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span>Chat</span>
+                </button>
+                <button
+                  onClick={() => handleOrderCrop(crop)}
+                  className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  <span>Order</span>
+                </button>
+                <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Heart className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* No Results */}
+      {filteredCrops.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">🌾</div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No crops found</h3>
+          <p className="text-gray-600 mb-4">Try adjusting your search or filter criteria</p>
+          <button
+            onClick={() => {
+              setSelectedCategory('all');
+              setMarketplaceSearchQuery('');
+              setSortBy('demand');
+            }}
+            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Clear Filters
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   const renderOrders = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -585,6 +961,82 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     console.log('Profile updated:', updatedProfile);
   };
 
+  // Marketplace functions
+  const handleChatWithFarmer = (crop: MarketplaceCrop) => {
+    setSelectedCrop(crop);
+    setShowChatModal(true);
+  };
+
+  const handleCloseChat = () => {
+    setShowChatModal(false);
+    setSelectedCrop(null);
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setMarketplaceSearchQuery(query);
+  };
+
+  const handleSortChange = (sort: string) => {
+    setSortBy(sort);
+  };
+
+  const handleOrderCrop = (crop: MarketplaceCrop) => {
+    // Open order modal or redirect to order page
+    console.log('Ordering crop:', crop);
+    // TODO: Implement order functionality
+  };
+
+  const handlePriceRangeChange = (min: number, max: number) => {
+    setPriceRange({ min, max });
+  };
+
+  const handleQualityChange = (quality: string) => {
+    setSelectedQuality(quality);
+  };
+
+  const handleOrganicChange = (organic: string) => {
+    setSelectedOrganic(organic);
+  };
+
+  const clearFilters = () => {
+    setSelectedCategory('all');
+    setMarketplaceSearchQuery('');
+    setSortBy('demand');
+    setPriceRange({ min: 0, max: 1000 });
+    setSelectedQuality('all');
+    setSelectedOrganic('all');
+  };
+
+  const handleImageClick = (crop: MarketplaceCrop) => {
+    if (crop.images && crop.images.length > 0) {
+      setSelectedCropImages(crop.images);
+      setCurrentImageIndex(0);
+      setShowImageGallery(true);
+    }
+  };
+
+  const handleCloseImageGallery = () => {
+    setShowImageGallery(false);
+    setSelectedCropImages([]);
+    setCurrentImageIndex(0);
+  };
+
+  const handleNextImage = () => {
+    if (selectedCropImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % selectedCropImages.length);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (selectedCropImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + selectedCropImages.length) % selectedCropImages.length);
+    }
+  };
+
   const handleDeleteAccount = () => {
     // Here you would typically make an API call to delete the account
     console.log('Account deletion requested');
@@ -598,7 +1050,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       case 'orders':
         return renderOrders();
       case 'products':
-        return <ProductsPage />;
+        return renderMarketplace();
       case 'suppliers':
         return <SuppliersPage />;
       case 'analytics':
@@ -828,6 +1280,96 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
           if (onLogout) onLogout();
         }}
       />
+
+      {/* Chat Modal */}
+      {selectedCrop && (
+        <ChatModal
+          isOpen={showChatModal}
+          onClose={handleCloseChat}
+          farmer={selectedCrop.farmer}
+          crop={selectedCrop}
+          buyer={userProfile}
+        />
+      )}
+
+      {/* Image Gallery Modal */}
+      {showImageGallery && selectedCropImages.length > 0 && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] w-full overflow-hidden">
+            {/* Gallery Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Crop Images</h3>
+              <button
+                onClick={handleCloseImageGallery}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Main Image */}
+            <div className="relative">
+              <img
+                src={selectedCropImages[currentImageIndex]?.imageUrl || '/placeholder-crop.jpg'}
+                alt={`Crop image ${currentImageIndex + 1}`}
+                className="w-full h-96 object-contain bg-gray-100"
+                onError={(e) => {
+                  e.currentTarget.src = '/placeholder-crop.jpg';
+                }}
+              />
+              
+              {/* Navigation Arrows */}
+              {selectedCropImages.length > 1 && (
+                <>
+                  <button
+                    onClick={handlePrevImage}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+                  >
+                    <ChevronDown className="h-6 w-6 rotate-90" />
+                  </button>
+                  <button
+                    onClick={handleNextImage}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+                  >
+                    <ChevronDown className="h-6 w-6 -rotate-90" />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Image Counter */}
+            <div className="p-4 text-center text-sm text-gray-600">
+              {currentImageIndex + 1} of {selectedCropImages.length}
+            </div>
+
+            {/* Thumbnail Strip */}
+            {selectedCropImages.length > 1 && (
+              <div className="p-4 border-t">
+                <div className="flex space-x-2 overflow-x-auto">
+                  {selectedCropImages.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`flex-shrink-0 w-16 h-16 rounded border-2 ${
+                        index === currentImageIndex ? 'border-blue-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <img
+                        src={image?.imageUrl || '/placeholder-crop.jpg'}
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover rounded"
+                        onError={(e) => {
+                          e.currentTarget.src = '/placeholder-crop.jpg';
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

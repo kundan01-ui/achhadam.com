@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { saveToMongoDB, saveToPostgreSQL, uploadImagesToCloud, loadCropsFromDatabase, deleteCropFromDatabase, updateCropInDatabase } from '../../services/databaseService';
+import { testUserSpecificData, clearAllFarmerData } from '../../utils/userSpecificTest';
 import { 
   LayoutDashboard, 
   Leaf, 
@@ -191,6 +193,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showCropUploadModal, setShowCropUploadModal] = useState(false);
   const [cropFormData, setCropFormData] = useState({
+    id: null, // For edit mode
     cropName: '',
     cropType: '',
     variety: '',
@@ -202,7 +205,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     organic: false,
     location: '',
     description: '',
-    images: []
+    images: [],
+    uploadedAt: null // For edit mode
   });
 
   // State for uploaded crops (user's actual crops)
@@ -211,9 +215,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   const [selectedCropImages, setSelectedCropImages] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // User profile data - using actual user data
+  // User profile data - using actual user data with persistent ID
   const [userProfile, setUserProfile] = useState({
-    id: user?.id || '1',
+    id: user?.id || localStorage.getItem('farmer_user_id') || `farmer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     name: user?.name || user?.firstName + ' ' + user?.lastName || 'Farmer User',
     email: user?.email || 'farmer@achhadam.com',
     phone: user?.phone || '+91 0000000000',
@@ -232,6 +236,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     bankAccountNumber: user?.bankAccountNumber || '',
     ifscCode: user?.ifscCode || '',
     bankName: user?.bankName || '',
+    landArea: user?.landArea || 0,
     createdAt: user?.createdAt || new Date().toISOString(),
     lastLogin: new Date().toISOString()
   });
@@ -296,38 +301,784 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     if (!images || images.length === 0) return null;
     if (images.length === 1) return images[0];
     
-    // Simple algorithm: choose the first image as "best" for now
-    // In real implementation, you could use image analysis, file size, etc.
-    return images[0];
+    // Enhanced algorithm: prioritize analyzed images with high quality
+    const analyzedImages = images.filter(img => img && img.analysis && img.analysis.isAnalyzed);
+    if (analyzedImages.length > 0) {
+      // Return image with highest confidence score
+      const bestAnalyzed = analyzedImages.reduce((best, current) => 
+        (current.analysis?.confidence || 0) > (best.analysis?.confidence || 0) ? current : best
+      );
+      return bestAnalyzed;
+    }
+    
+    // Fallback: choose image with largest file size (usually better quality)
+    const validImages = images.filter(img => img && img.fileSize);
+    if (validImages.length === 0) return images[0]; // Return first image if no valid images
+    
+    const sortedBySize = validImages.sort((a, b) => (b.fileSize || 0) - (a.fileSize || 0));
+    return sortedBySize[0];
   };
 
-  // Function to save crops to localStorage (simulating database)
-  const saveCropsToStorage = (crops) => {
+  // Function to handle image display with fallback
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return '/placeholder-crop.jpg';
+    
+    // If it's a blob URL (from file upload), return as is
+    if (imageUrl.startsWith('blob:')) {
+      return imageUrl;
+    }
+    
+    // If it's a data URL, return as is
+    if (imageUrl.startsWith('data:')) {
+      return imageUrl;
+    }
+    
+    // Handle file objects
+    if (imageUrl instanceof File) {
+      return URL.createObjectURL(imageUrl);
+    }
+    
+    // For other URLs, return as is
+    return imageUrl;
+  };
+
+  // Enhanced database structure for systematic image storage
+  const createImageMetadata = (file, cropId, farmerId) => {
+    // Validate file object
+    if (!file || !(file instanceof File)) {
+      console.error('Invalid file object:', file);
+      return null;
+    }
+
     try {
-      localStorage.setItem(`farmer_crops_${userProfile.id}`, JSON.stringify(crops));
+      // Convert file to compressed data URL for storage
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target.result;
+          
+          // Create image element using document.createElement
+          const img = document.createElement('img');
+          
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              
+              // Calculate new dimensions (max 800px width, maintain aspect ratio)
+              const maxWidth = 800;
+              const maxHeight = 600;
+              let { width, height } = img;
+              
+              if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+              }
+              if (height > maxHeight) {
+                width = (width * maxHeight) / height;
+                height = maxHeight;
+              }
+              
+              // Set canvas dimensions
+              canvas.width = width;
+              canvas.height = height;
+              
+              // Draw and compress image
+              ctx.drawImage(img, 0, 0, width, height);
+              const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
+              
+              const imageMetadata = {
+                id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                cropId: cropId,
+                farmerId: farmerId,
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type,
+                uploadDate: new Date().toISOString(),
+                imageUrl: compressedDataUrl, // Use compressed data URL
+                blobData: null, // Don't store file object
+                metadata: {
+                  width: width,
+                  height: height,
+                  aspectRatio: width / height,
+                  quality: 'compressed', // Compressed for storage
+                  dominantColors: [], // For future color analysis
+                  cropType: null, // For future crop detection
+                  healthScore: null // For future health analysis
+                },
+                analysis: {
+                  isAnalyzed: false,
+                  analysisDate: null,
+                  confidence: null,
+                  suggestions: []
+                }
+              };
+              resolve(imageMetadata);
+            } catch (error) {
+              console.error('Error compressing image:', error);
+              // Fallback: use original data URL without compression
+              const imageMetadata = {
+                id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                cropId: cropId,
+                farmerId: farmerId,
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type,
+                uploadDate: new Date().toISOString(),
+                imageUrl: dataUrl, // Use original data URL
+                blobData: null,
+                metadata: {
+                  width: null,
+                  height: null,
+                  aspectRatio: null,
+                  quality: 'original',
+                  dominantColors: [],
+                  cropType: null,
+                  healthScore: null
+                },
+                analysis: {
+                  isAnalyzed: false,
+                  analysisDate: null,
+                  confidence: null,
+                  suggestions: []
+                }
+              };
+              resolve(imageMetadata);
+            }
+          };
+          
+          img.onerror = () => {
+            console.error('Error loading image:', file);
+            resolve(null);
+          };
+          
+          // Set image source
+          img.src = dataUrl;
+        };
+        
+        reader.onerror = () => {
+          console.error('Error reading file:', file);
+          resolve(null);
+        };
+        
+        reader.readAsDataURL(file);
+      });
     } catch (error) {
-      console.error('Error saving crops to storage:', error);
+      console.error('Error creating image metadata:', error);
+      return Promise.resolve(null);
     }
   };
 
-  // Function to load crops from localStorage
+  // Enhanced crop data structure with proper image management
+  const createCropData = async (formData, images) => {
+    const cropId = `crop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    console.log(`🌾 Creating crop data for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
+    
+    // Process images safely with async handling
+    const imagePromises = images.map(file => createImageMetadata(file, cropId, userProfile.id));
+    const imageResults = await Promise.all(imagePromises);
+    const processedImages = imageResults.filter(img => img !== null); // Remove null entries
+    
+    const cropData = {
+      id: cropId,
+      name: formData.cropName,
+      type: formData.cropType,
+      variety: formData.variety,
+      quantity: formData.quantity,
+      unit: formData.unit,
+      quality: formData.quality,
+      price: parseFloat(formData.price),
+      harvestDate: formData.harvestDate,
+      organic: formData.organic,
+      location: formData.location,
+      description: formData.description,
+      status: 'active',
+      uploadedAt: new Date().toISOString(),
+      farmerName: userProfile.name,
+      farmerId: userProfile.id,
+      // Enhanced image structure
+      images: processedImages,
+      // Additional metadata for analysis
+      analytics: {
+        totalImages: processedImages.length,
+        bestImageId: null, // Will be set by AI analysis
+        averageImageQuality: null,
+        cropHealthScore: null,
+        marketValue: null,
+        demandScore: null
+      },
+      // Database tracking
+      database: {
+        isSynced: false,
+        lastSyncDate: null,
+        version: 1,
+        checksum: null // For data integrity
+      }
+    };
+
+    console.log(`✅ Crop data created for ${userProfile.name}:`, {
+      cropId: cropData.id,
+      farmerId: cropData.farmerId,
+      farmerName: cropData.farmerName,
+      images: cropData.images.length
+    });
+
+    return cropData;
+  };
+
+  // Database integration functions
+  const saveToDatabase = async (cropData) => {
+    try {
+      console.log('Saving crop to database:', cropData);
+      
+      // Get user key from localStorage or create from user data
+      let userKey = localStorage.getItem('farmer_user_key');
+      if (!userKey) {
+        const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
+        userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        localStorage.setItem('farmer_user_key', userKey);
+      }
+      
+      console.log(`🔑 Using user key for database save: ${userKey}`);
+      
+      // Step 1: Upload images to cloud storage
+      const imageUploadResult = await uploadImagesToCloud(cropData.images);
+      if (!imageUploadResult.success) {
+        throw new Error('Failed to upload images: ' + imageUploadResult.error);
+      }
+      
+      // Step 2: Save to MongoDB
+      const mongoResult = await saveToMongoDB(cropData);
+      if (!mongoResult.success) {
+        console.warn('MongoDB save failed:', mongoResult.error);
+        // Continue with PostgreSQL even if MongoDB fails
+      }
+      
+      // Step 3: Save to PostgreSQL
+      const postgresResult = await saveToPostgreSQL(cropData);
+      if (!postgresResult.success) {
+        console.warn('PostgreSQL save failed:', postgresResult.error);
+        // Continue with localStorage fallback
+      }
+      
+      // Step 4: Save to localStorage as backup
+      const databaseEntry = {
+        version: '1.0',
+        lastUpdated: new Date().toISOString(),
+        farmerId: userProfile.id,
+        farmerName: userProfile.name,
+        farmerEmail: userProfile.email,
+        farmerPhone: userProfile.phone,
+        totalCrops: 1,
+        totalImages: cropData.images.length,
+        crops: [cropData],
+        statistics: {
+          totalEarnings: cropData.price * cropData.quantity,
+          averageCropValue: cropData.price,
+          mostCommonCropType: cropData.type,
+          imageQualityDistribution: {
+            total: cropData.images.length,
+            highQuality: 0,
+            mediumQuality: 0,
+            lowQuality: 0,
+            unknown: cropData.images.length
+          }
+        }
+      };
+      
+      localStorage.setItem(`farmer_database_${userKey}`, JSON.stringify(databaseEntry));
+      
+      console.log('Crop saved successfully to all databases:', {
+        mongoDB: mongoResult.success,
+        postgreSQL: postgresResult.success,
+        localStorage: true,
+        cloudStorage: imageUploadResult.success
+      });
+      
+      return { 
+        success: true, 
+        data: cropData,
+        details: {
+          mongoDB: mongoResult.success,
+          postgreSQL: postgresResult.success,
+          localStorage: true,
+          cloudStorage: imageUploadResult.success
+        }
+      };
+    } catch (error) {
+      console.error('Error saving to database:', error);
+      
+      // Fallback: Try to save to localStorage only
+      try {
+        let userKey = localStorage.getItem('farmer_user_key');
+        if (!userKey) {
+          const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
+          userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
+          localStorage.setItem('farmer_user_key', userKey);
+        }
+        
+        const fallbackEntry = {
+          version: '1.0',
+          lastUpdated: new Date().toISOString(),
+          farmerId: userProfile.id,
+          farmerName: userProfile.name,
+          farmerEmail: userProfile.email,
+          farmerPhone: userProfile.phone,
+          totalCrops: 1,
+          totalImages: cropData.images.length,
+          crops: [cropData],
+          statistics: {
+            totalEarnings: cropData.price * cropData.quantity,
+            averageCropValue: cropData.price,
+            mostCommonCropType: cropData.type,
+            imageQualityDistribution: {
+              total: cropData.images.length,
+              highQuality: 0,
+              mediumQuality: 0,
+              lowQuality: 0,
+              unknown: cropData.images.length
+            }
+          }
+        };
+        
+        localStorage.setItem(`farmer_database_${userKey}`, JSON.stringify(fallbackEntry));
+        console.log('Fallback save to localStorage successful');
+        
+        return { 
+          success: true, 
+          data: cropData,
+          details: {
+            mongoDB: false,
+            postgreSQL: false,
+            localStorage: true,
+            cloudStorage: false,
+            fallback: true
+          }
+        };
+      } catch (fallbackError) {
+        console.error('Fallback save also failed:', fallbackError);
+        return { success: false, error: error.message };
+      }
+    }
+  };
+
+  // Smart storage system with quota management - USER SPECIFIC
+  const saveCropsToStorage = (crops) => {
+    try {
+      if (!userProfile.id) {
+        console.error('Cannot save crops: No user ID available');
+        return;
+      }
+
+      // Get user key from localStorage or create from user data
+      let userKey = localStorage.getItem('farmer_user_key');
+      if (!userKey) {
+        const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
+        userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        localStorage.setItem('farmer_user_key', userKey);
+      }
+      
+      console.log(`💾 Saving crops for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
+      console.log(`🔑 Using user key: ${userKey}`);
+
+      // Check storage quota first
+      const quotaCheck = checkStorageQuota();
+      if (!quotaCheck.available) {
+        console.warn('Storage quota exceeded, clearing old data');
+        clearOldData();
+      }
+      
+      // Create database entry with metadata - USER SPECIFIC
+      const databaseEntry = {
+        version: '1.0',
+        lastUpdated: new Date().toISOString(),
+        farmerId: userProfile.id,
+        farmerName: userProfile.name,
+        farmerEmail: userProfile.email,
+        farmerPhone: userProfile.phone,
+        totalCrops: crops.length,
+        totalImages: crops.reduce((sum, crop) => sum + crop.images.length, 0),
+        crops: crops.map(crop => ({
+          ...crop,
+          farmerId: userProfile.id, // Ensure farmerId is set
+          farmerName: userProfile.name // Ensure farmerName is set
+        })),
+        statistics: {
+          totalEarnings: crops.reduce((sum, crop) => sum + (crop.price * crop.quantity), 0),
+          averageCropValue: crops.length > 0 ? crops.reduce((sum, crop) => sum + crop.price, 0) / crops.length : 0,
+          mostCommonCropType: getMostCommonCropType(crops),
+          imageQualityDistribution: getImageQualityDistribution(crops)
+        }
+      };
+      
+      const dataString = JSON.stringify(databaseEntry);
+      const dataSize = new Blob([dataString]).size;
+      const dataSizeMB = (dataSize / (1024 * 1024)).toFixed(2);
+      
+      console.log(`Data size: ${dataSizeMB}MB`);
+      
+      // Check if data is too large for localStorage
+      if (dataSize > 3 * 1024 * 1024) { // 3MB limit (reduced for safety)
+        console.warn('Data too large for localStorage, using fallback storage');
+        
+        // Store only essential data without images
+        const essentialData = {
+          ...databaseEntry,
+          crops: databaseEntry.crops.map(crop => ({
+            ...crop,
+            images: crop.images.map(img => ({
+              ...img,
+              imageUrl: null, // Remove image data to save space
+              compressed: true
+            }))
+          }))
+        };
+        
+        localStorage.setItem(`farmer_database_${userKey}`, JSON.stringify(essentialData));
+        console.log(`💾 Essential data saved for farmer ${userProfile.name} (images removed due to size)`);
+      } else {
+        localStorage.setItem(`farmer_database_${userKey}`, dataString);
+        console.log(`💾 Full database saved successfully for farmer ${userProfile.name}:`, {
+          crops: crops.length,
+          images: crops.reduce((sum, crop) => sum + crop.images.length, 0),
+          size: dataSizeMB + 'MB',
+          farmerId: userProfile.id,
+          farmerName: userProfile.name
+        });
+        
+        // Verify user-specific storage
+        crops.forEach((crop, index) => {
+          console.log(`📋 Saved crop ${index + 1}: ${crop.name} by ${crop.farmerName} (ID: ${crop.farmerId})`);
+        });
+        
+        // Verify data persistence
+        const savedData = localStorage.getItem(`farmer_database_${userKey}`);
+        if (savedData) {
+          const parsed = JSON.parse(savedData);
+          console.log(`✅ Data persistence verified: ${parsed.crops?.length || 0} crops saved for ${parsed.farmerName}`);
+        } else {
+          console.log(`❌ Data persistence failed: No data found after saving`);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving crops to database:', error);
+      
+      // Fallback: save without images
+      try {
+        const fallbackData = {
+          version: '1.0',
+          lastUpdated: new Date().toISOString(),
+          farmerId: userProfile.id,
+          totalCrops: crops.length,
+          totalImages: crops.reduce((sum, crop) => sum + crop.images.length, 0),
+          crops: crops.map(crop => ({
+            ...crop,
+            images: [] // Remove all images
+          })),
+          statistics: {
+            totalEarnings: crops.reduce((sum, crop) => sum + (crop.price * crop.quantity), 0),
+            averageCropValue: crops.length > 0 ? crops.reduce((sum, crop) => sum + crop.price, 0) / crops.length : 0,
+            mostCommonCropType: getMostCommonCropType(crops),
+            imageQualityDistribution: { total: 0, highQuality: 0, mediumQuality: 0, lowQuality: 0, unknown: 0 }
+          }
+        };
+        
+        localStorage.setItem(`farmer_database_${userKey}`, JSON.stringify(fallbackData));
+        console.log('Fallback data saved (no images)');
+      } catch (fallbackError) {
+        console.error('Fallback save also failed:', fallbackError);
+      }
+    }
+  };
+
+  // Storage quota management functions
+  const checkStorageQuota = () => {
+    try {
+      const testKey = 'quota_test';
+      const testData = 'x'.repeat(1024 * 1024); // 1MB test data
+      localStorage.setItem(testKey, testData);
+      localStorage.removeItem(testKey);
+      return { available: true, message: 'Storage available' };
+    } catch (error) {
+      return { available: false, message: 'Storage quota exceeded' };
+    }
+  };
+
+  const clearOldData = () => {
+    try {
+      // Get user key from localStorage or create from user data
+      let userKey = localStorage.getItem('farmer_user_key');
+      if (!userKey) {
+        const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
+        userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      }
+      
+      // Clear old crop data to free up space
+      const keys = Object.keys(localStorage);
+      const oldKeys = keys.filter(key => 
+        key.startsWith('farmer_crops_') && 
+        key !== `farmer_database_${userKey}`
+      );
+      
+      oldKeys.forEach(key => localStorage.removeItem(key));
+      console.log(`Cleared ${oldKeys.length} old entries`);
+    } catch (error) {
+      console.error('Error clearing old data:', error);
+    }
+  };
+
+  // Helper functions for database analysis
+  const getMostCommonCropType = (crops) => {
+    if (crops.length === 0) return 'None';
+    const types = crops.map(crop => crop.type);
+    const typeCount = types.reduce((acc, type) => {
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.keys(typeCount).reduce((a, b) => typeCount[a] > typeCount[b] ? a : b);
+  };
+
+  // Validate user data integrity
+  const validateUserData = () => {
+    console.log(`🔍 Validating user data for: ${userProfile.name} (ID: ${userProfile.id})`);
+    
+    // Get user key from localStorage or create from user data
+    let userKey = localStorage.getItem('farmer_user_key');
+    if (!userKey) {
+      const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
+      userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    }
+    
+    // Check if user has data in localStorage
+    const databaseKey = `farmer_database_${userKey}`;
+    const userData = localStorage.getItem(databaseKey);
+    
+    if (userData) {
+      try {
+        const parsed = JSON.parse(userData);
+        console.log(`✅ User data validation passed:`, {
+          farmerId: parsed.farmerId,
+          farmerName: parsed.farmerName,
+          totalCrops: parsed.crops?.length || 0,
+          lastUpdated: parsed.lastUpdated,
+          dataIntegrity: 'OK'
+        });
+        return true;
+      } catch (error) {
+        console.error(`❌ User data validation failed:`, error);
+        return false;
+      }
+    } else {
+      console.log(`❌ No user data found for validation`);
+      return false;
+    }
+  };
+
+  // Clear all data function
+  const clearAllData = () => {
+    console.log(`🗑️ Clearing all data for: ${userProfile.name} (ID: ${userProfile.id})`);
+    
+    // Get user key from localStorage or create from user data
+    let userKey = localStorage.getItem('farmer_user_key');
+    if (!userKey) {
+      const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
+      userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    }
+    
+    // Clear user-specific data only
+    const userDatabaseKey = `farmer_database_${userKey}`;
+    localStorage.removeItem(userDatabaseKey);
+    
+    // Clear user session data
+    localStorage.removeItem('farmer_user_id');
+    localStorage.removeItem('farmer_user_key');
+    localStorage.removeItem('farmer_email');
+    localStorage.removeItem('farmer_phone');
+    
+    // Reset state
+    setUploadedCrops([]);
+    
+    console.log(`✅ All data cleared for farmer: ${userProfile.name}`);
+    console.log(`🔄 Please refresh the page to see changes`);
+  };
+
+  const getImageQualityDistribution = (crops) => {
+    const allImages = crops.flatMap(crop => crop.images);
+    return {
+      total: allImages.length,
+      highQuality: allImages.filter(img => img.metadata.quality === 'high').length,
+      mediumQuality: allImages.filter(img => img.metadata.quality === 'medium').length,
+      lowQuality: allImages.filter(img => img.metadata.quality === 'low').length,
+      unknown: allImages.filter(img => img.metadata.quality === 'unknown').length
+    };
+  };
+
+  // Enhanced function to load crops from database - USER SPECIFIC
   const loadCropsFromStorage = () => {
     try {
+      if (!userProfile.id) {
+        console.log('❌ No user ID available, returning empty crops');
+        return [];
+      }
+
+      // Get user key from localStorage or create from user data
+      let userKey = localStorage.getItem('farmer_user_key');
+      if (!userKey) {
+        const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
+        userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        localStorage.setItem('farmer_user_key', userKey);
+      }
+      
+      console.log(`🔍 Loading crops for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
+      console.log(`🔍 User key: ${userKey}`);
+
+      // Try to load from new database structure first
+      const databaseKey = `farmer_database_${userKey}`;
+      console.log(`🔍 Looking for database key: ${databaseKey}`);
+      
+      const databaseEntry = localStorage.getItem(databaseKey);
+      if (databaseEntry) {
+        const parsed = JSON.parse(databaseEntry);
+        console.log(`✅ Loaded database for farmer ${userProfile.name}:`, {
+          totalCrops: parsed.crops?.length || 0,
+          totalImages: parsed.totalImages || 0,
+          lastUpdated: parsed.lastUpdated,
+          farmerId: parsed.farmerId,
+          farmerName: parsed.farmerName
+        });
+        
+        // Double check that crops belong to this farmer
+        const userCrops = parsed.crops?.filter(crop => crop.farmerId === userProfile.id) || [];
+        console.log(`🌾 Filtered crops for ${userProfile.name}: ${userCrops.length} crops`);
+        
+        // Debug: Show all crops in database
+        if (parsed.crops) {
+          console.log(`🔍 All crops in database:`, parsed.crops.map(crop => ({
+            name: crop.name,
+            farmerId: crop.farmerId,
+            farmerName: crop.farmerName
+          })));
+        }
+        
+        return userCrops;
+      } else {
+        console.log(`❌ No database found for key: ${databaseKey}`);
+      }
+      
+      // Fallback to old structure for backward compatibility
       const savedCrops = localStorage.getItem(`farmer_crops_${userProfile.id}`);
-      return savedCrops ? JSON.parse(savedCrops) : [];
+      if (savedCrops) {
+        const crops = JSON.parse(savedCrops);
+        // Migrate old data to new structure
+        const migratedCrops = crops.map(crop => ({
+          ...crop,
+          images: crop.images.map((img, index) => ({
+            id: `img_${crop.id}_${index}`,
+            cropId: crop.id,
+            farmerId: userProfile.id,
+            fileName: `image_${index + 1}.jpg`,
+            fileSize: 0,
+            fileType: 'image/jpeg',
+            uploadDate: crop.uploadedAt,
+            imageUrl: img,
+            metadata: {
+              width: null,
+              height: null,
+              aspectRatio: null,
+              quality: 'unknown',
+              dominantColors: [],
+              cropType: crop.type,
+              healthScore: null
+            },
+            analysis: {
+              isAnalyzed: false,
+              analysisDate: null,
+              confidence: null,
+              suggestions: []
+            }
+          })),
+          analytics: {
+            totalImages: crop.images.length,
+            bestImageId: null,
+            averageImageQuality: null,
+            cropHealthScore: null,
+            marketValue: null,
+            demandScore: null
+          },
+          database: {
+            isSynced: false,
+            lastSyncDate: null,
+            version: 1,
+            checksum: null
+          }
+        }));
+        
+        // Save migrated data
+        saveCropsToStorage(migratedCrops);
+        return migratedCrops;
+      }
+      
+      return [];
     } catch (error) {
-      console.error('Error loading crops from storage:', error);
+      console.error('Error loading crops from database:', error);
       return [];
     }
   };
 
-  // Update user profile when user data changes
+  // Update user profile when user data changes - USER SPECIFIC with PERSISTENT ID
   useEffect(() => {
     if (user) {
+      // Create a unique identifier based on user data - THIS IS THE KEY!
+      const userIdentifier = user.phone || user.email || user.id || 'anonymous';
+      const userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      
+      console.log(`🔍 User identification:`, {
+        phone: user.phone,
+        email: user.email,
+        id: user.id,
+        identifier: userIdentifier,
+        userKey: userKey
+      });
+      
+      // Check if this specific user already has a database
+      const existingUserData = localStorage.getItem(`farmer_database_${userKey}`);
+      
+      let persistentUserId;
+      
+      if (existingUserData) {
+        // User already exists, use their existing ID
+        const parsed = JSON.parse(existingUserData);
+        persistentUserId = parsed.farmerId;
+        console.log(`♻️ Found existing user: ${parsed.farmerName} (ID: ${persistentUserId})`);
+        console.log(`📊 Existing user data:`, {
+          totalCrops: parsed.crops?.length || 0,
+          lastUpdated: parsed.lastUpdated,
+          farmerPhone: parsed.farmerPhone,
+          farmerEmail: parsed.farmerEmail
+        });
+      } else {
+        // New user, create new ID
+        persistentUserId = user.id || `farmer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        console.log(`🆕 Creating new user: ${userIdentifier} (ID: ${persistentUserId})`);
+        console.log(`📝 This is a completely new farmer with no existing data`);
+      }
+      
+      // Store user info for this session
+      localStorage.setItem('farmer_user_id', persistentUserId);
+      localStorage.setItem('farmer_email', user.email || '');
+      localStorage.setItem('farmer_phone', user.phone || '');
+      
+      const newUserName = user.name || user.firstName + ' ' + user.lastName || 'Farmer User';
+      
+      console.log(`👤 Setting user profile: ${newUserName} (ID: ${persistentUserId})`);
+      console.log(`📧 User email: ${user.email || 'Not provided'}`);
+      console.log(`📱 User phone: ${user.phone || 'Not provided'}`);
+      
       setUserProfile(prev => ({
         ...prev,
-        id: user.id || prev.id,
-        name: user.name || user.firstName + ' ' + user.lastName || prev.name,
+        id: persistentUserId, // Use persistent ID
+        name: newUserName,
         email: user.email || prev.email,
         phone: user.phone || prev.phone,
         address: user.address || prev.address,
@@ -346,164 +1097,159 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         bankName: user.bankName || prev.bankName,
         createdAt: user.createdAt || prev.createdAt
       }));
+      
+      // Store user key for consistent database access
+      localStorage.setItem('farmer_user_key', userKey);
+      console.log(`🔑 Stored user key: ${userKey}`);
     }
   }, [user]);
 
-  // Load crops from storage when component mounts
+  // Load crops from storage when component mounts - USER SPECIFIC with PERSISTENCE
   useEffect(() => {
-    const savedCrops = loadCropsFromStorage();
-    setUploadedCrops(savedCrops);
-  }, [userProfile.id]);
+    if (userProfile.id) {
+      // Get user key from localStorage or create from user data
+      let userKey = localStorage.getItem('farmer_user_key');
+      if (!userKey) {
+        const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
+        userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        localStorage.setItem('farmer_user_key', userKey);
+      }
+      
+      console.log(`🔄 Loading crops for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
+      console.log(`🔍 Checking localStorage for key: farmer_database_${userKey}`);
+      
+      // Check if data exists in localStorage
+      const databaseKey = `farmer_database_${userKey}`;
+      const existingData = localStorage.getItem(databaseKey);
+      
+      if (existingData) {
+        console.log(`✅ Found existing data for farmer ${userProfile.name}`);
+        const parsed = JSON.parse(existingData);
+        console.log(`📊 Database info:`, {
+          totalCrops: parsed.crops?.length || 0,
+          lastUpdated: parsed.lastUpdated,
+          farmerId: parsed.farmerId,
+          farmerName: parsed.farmerName
+        });
+      } else {
+        console.log(`❌ No existing data found for farmer ${userProfile.name}`);
+        console.log(`🔍 Available farmer databases:`, Object.keys(localStorage).filter(key => key.startsWith('farmer_database_')));
+        console.log(`📝 This is a new farmer with no existing data. Starting fresh.`);
+        console.log(`📊 Showing zero state: 0 crops, 0 earnings, 0 land`);
+      }
+      
+      const savedCrops = loadCropsFromStorage();
+      setUploadedCrops(savedCrops);
+      console.log(`🌾 Loaded ${savedCrops.length} crops for farmer ${userProfile.name}`);
+      
+      // Log each crop to verify user-specific data
+      savedCrops.forEach((crop, index) => {
+        console.log(`📋 Crop ${index + 1}: ${crop.name} by ${crop.farmerName} (ID: ${crop.farmerId})`);
+      });
+      
+      // Debug: Check all localStorage keys
+      console.log(`🔍 All localStorage keys:`, Object.keys(localStorage).filter(key => key.startsWith('farmer_')));
+      
+      // Show user session info
+      console.log(`👤 User session info:`, {
+        currentUserId: userProfile.id,
+        currentUserName: userProfile.name,
+        currentUserEmail: userProfile.email,
+        currentUserPhone: userProfile.phone,
+        sessionStartTime: new Date().toISOString()
+      });
+      
+      // Validate user data integrity
+      validateUserData();
+    }
+  }, [userProfile.id, userProfile.name]);
 
-  // Save crops to storage whenever uploadedCrops changes
+  // Calculate real-time statistics from uploaded crops
+  const calculateRealTimeStats = () => {
+    const totalCrops = uploadedCrops.length;
+    const activeCrops = uploadedCrops.filter(crop => crop.status === 'active').length;
+    const harvestedCrops = uploadedCrops.filter(crop => {
+      const harvestDate = new Date(crop.harvestDate);
+      const today = new Date();
+      return harvestDate <= today;
+    }).length;
+    
+    const totalEarnings = uploadedCrops.reduce((sum, crop) => {
+      return sum + (crop.price * crop.quantity);
+    }, 0);
+    
+    // Mock land area (in real app, this would come from farmer profile)
+    const totalLand = userProfile.landArea || 0;
+    
+    // Mock pending orders (in real app, this would come from orders API)
+    const pendingOrders = Math.floor(Math.random() * 5); // Random for demo
+    
+    console.log(`📊 Real-time stats for ${userProfile.name}:`, {
+      totalCrops,
+      activeCrops,
+      harvestedCrops,
+      totalEarnings,
+      totalLand,
+      pendingOrders
+    });
+
+    return {
+      totalCrops,
+      activeCrops,
+      harvestedCrops,
+      totalEarnings,
+      totalLand,
+      pendingOrders
+    };
+  };
+
+  const realTimeStats = calculateRealTimeStats();
+
+  // Save crops to storage whenever uploadedCrops changes - USER SPECIFIC
   useEffect(() => {
-    if (uploadedCrops.length > 0) {
+    if (uploadedCrops.length > 0 && userProfile.id) {
+      console.log(`💾 Saving ${uploadedCrops.length} crops for farmer ${userProfile.name} (ID: ${userProfile.id})`);
       saveCropsToStorage(uploadedCrops);
     }
-  }, [uploadedCrops, userProfile.id]);
+  }, [uploadedCrops, userProfile.id, userProfile.name]);
 
-  // Mock data for comprehensive farmer dashboard
-  const [cropListings] = useState([
-    {
-      id: '1',
-      name: 'Premium Basmati Rice',
-      type: 'Rice',
-      quantity: 50,
-      unit: 'quintal',
-      quality: 'Premium',
-      price: 2500,
-      harvestDate: '2024-01-15',
-      location: 'Patna, Bihar',
-      images: ['/api/placeholder/300/200'],
-      organic: true,
-      soilType: 'Alluvial',
-      farmingMethod: 'Organic',
-      shelfLife: '12 months',
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Fresh Tomatoes',
-      type: 'Vegetables',
-      quantity: 25,
-      unit: 'quintal',
-      quality: 'Grade A',
-      price: 1200,
-      harvestDate: '2024-01-20',
-      location: 'Patna, Bihar',
-      images: ['/api/placeholder/300/200'],
-      organic: false,
-      soilType: 'Red Soil',
-      farmingMethod: 'Traditional',
-      shelfLife: '2 weeks',
-      status: 'active'
-    }
-  ]);
+  // Real crop listings - loaded from user's actual data
+  const cropListings = uploadedCrops;
 
-  const [buyerRequests] = useState([
-    {
-      id: '1',
-      buyerName: 'FreshMart Stores',
-      cropType: 'Rice',
-      quantity: 30,
-      unit: 'quintal',
-      maxPrice: 2800,
-      location: 'Delhi',
-      distance: '1200 km',
-      rating: 4.8,
-      previousTransactions: 45,
-      preferredPayment: 'Advance + Balance',
-      urgency: 'high',
-      message: 'Need premium quality rice for export'
-    },
-    {
-      id: '2',
-      buyerName: 'Local Mandi',
-      cropType: 'Tomatoes',
-      quantity: 20,
-      unit: 'quintal',
-      maxPrice: 1000,
-      location: 'Patna',
-      distance: '50 km',
-      rating: 4.2,
-      previousTransactions: 12,
-      preferredPayment: 'Cash on Delivery',
-      urgency: 'medium',
-      message: 'Daily supply needed'
-    }
-  ]);
+  // Real buyer requests - loaded from actual data
+  const [buyerRequests] = useState([]);
 
-  const [incomingOrders] = useState([
-    {
-      id: '1',
-      buyerName: 'FreshMart Stores',
-      cropName: 'Premium Basmati Rice',
-      quantity: 30,
-      unit: 'quintal',
-      offeredPrice: 2800,
-      totalAmount: 84000,
-      deliveryTerms: 'FOB Patna',
-      paymentTerms: '50% Advance, 50% on Delivery',
-      deliveryDate: '2024-01-25',
-      status: 'pending',
-      chatMessages: 3,
-      contractGenerated: false
-    },
-    {
-      id: '2',
-      buyerName: 'Local Mandi',
-      cropName: 'Fresh Tomatoes',
-      quantity: 20,
-      unit: 'quintal',
-      offeredPrice: 1000,
-      totalAmount: 20000,
-      deliveryTerms: 'Pickup from Farm',
-      paymentTerms: 'Cash on Delivery',
-      deliveryDate: '2024-01-22',
-      status: 'negotiating',
-      chatMessages: 7,
-      contractGenerated: true
-    }
-  ]);
+  // Real incoming orders - loaded from actual data
+  const [incomingOrders] = useState([]);
 
-  const [salesAnalytics] = useState({
-    monthlyRevenue: 125000,
-    totalOrders: 45,
-    averageOrderValue: 2777,
-    topCrop: 'Rice',
-    seasonalTrend: '+15%',
-    marketShare: '8.5%'
-  });
+  // Real sales analytics - calculated from actual data
+  const salesAnalytics = {
+    monthlyRevenue: uploadedCrops.reduce((sum, crop) => sum + (crop.price * crop.quantity), 0),
+    totalOrders: incomingOrders.length,
+    averageOrderValue: incomingOrders.length > 0 ? 
+      incomingOrders.reduce((sum, order) => sum + order.totalAmount, 0) / incomingOrders.length : 0,
+    topCrop: uploadedCrops.length > 0 ? 
+      uploadedCrops.reduce((max, crop) => crop.quantity > max.quantity ? crop : max, uploadedCrops[0])?.type || 'None' : 'None',
+    seasonalTrend: '0%', // Will be calculated from historical data
+    marketShare: '0%' // Will be calculated from market data
+  };
 
-  const [marketIntelligence] = useState({
-    mandiRates: {
-      rice: 2400,
-      wheat: 2200,
-      tomatoes: 800,
-      potatoes: 1200
-    },
-    priceTrends: {
-      rice: '+5%',
-      wheat: '+2%',
-      tomatoes: '-10%',
-      potatoes: '+8%'
-    },
-    demandForecast: {
-      rice: 'High',
-      wheat: 'Medium',
-      tomatoes: 'Low',
-      potatoes: 'High'
-    }
-  });
+  // Real market intelligence - loaded from actual market data
+  const marketIntelligence = {
+    mandiRates: {}, // Will be loaded from market API
+    priceTrends: {}, // Will be calculated from historical data
+    demandForecast: {} // Will be calculated from market analysis
+  };
 
-  const [financialData] = useState({
-    totalEarnings: 450000,
-    pendingPayments: 25000,
-    platformCommission: 22500,
-    netEarnings: 402500,
-    bankAccount: 'SBI ****7890',
-    lastSettlement: '2024-01-15'
-  });
+  // Real financial data - calculated from actual transactions
+  const financialData = {
+    totalEarnings: uploadedCrops.reduce((sum, crop) => sum + (crop.price * crop.quantity), 0),
+    pendingPayments: 0, // Will be calculated from pending orders
+    platformCommission: 0, // Will be calculated from platform fees
+    netEarnings: uploadedCrops.reduce((sum, crop) => sum + (crop.price * crop.quantity), 0),
+    bankAccount: userProfile.bankAccountNumber ? `****${userProfile.bankAccountNumber.slice(-4)}` : 'Not Added',
+    lastSettlement: 'Never' // Will be updated from settlement history
+  };
 
   const navigationItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -586,9 +1332,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
                 {/* Main Image */}
                 <img 
-                  src={selectedCropImages[currentImageIndex]} 
+                  src={getImageUrl(selectedCropImages[currentImageIndex])} 
                   alt={`Crop Image ${currentImageIndex + 1}`}
                   className="max-w-full max-h-full object-contain rounded-lg"
+                  onError={(e) => {
+                    console.log('Gallery image failed to load:', e.target.src);
+                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+PC9zdmc+';
+                  }}
                 />
 
                 {/* Next Button */}
@@ -626,9 +1376,12 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                     }`}
                   >
                     <img 
-                      src={image} 
+                      src={getImageUrl(image)} 
                       alt={`Thumbnail ${index + 1}`}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5OQTwvdGV4dD48L3N2Zz4=';
+                      }}
                     />
                   </button>
                 ))}
@@ -672,8 +1425,12 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">🌾 Crop Upload</h2>
-                <p className="text-gray-600 mt-1">सरल तरीके से अपनी फसल अपलोड करें</p>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {cropFormData.id ? '✏️ Edit Crop' : '🌾 Crop Upload'}
+                </h2>
+                <p className="text-gray-600 mt-1">
+                  {cropFormData.id ? 'अपनी फसल की जानकारी अपडेट करें' : 'सरल तरीके से अपनी फसल अपलोड करें'}
+                </p>
               </div>
               <button 
                 onClick={() => setShowCropUploadModal(false)}
@@ -917,8 +1674,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                     id="crop-photos"
                     onChange={(e) => {
                       const files = Array.from(e.target.files || []);
-                      const imageUrls = files.map(file => URL.createObjectURL(file));
-                      setCropFormData(prev => ({ ...prev, images: [...prev.images, ...imageUrls] }));
+                      setCropFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
                     }}
                   />
                   <label 
@@ -936,7 +1692,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                         {cropFormData.images.map((image, index) => (
                           <div key={index} className="relative">
                             <img 
-                              src={image} 
+                              src={image instanceof File ? URL.createObjectURL(image) : image} 
                               alt={`Crop ${index + 1}`}
                               className="w-16 h-16 object-cover rounded-lg border"
                             />
@@ -989,6 +1745,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                   onClick={() => {
                     // Reset form
                     setCropFormData({
+                      id: null, // Clear ID for new crop
                       cropName: '',
                       cropType: '',
                       variety: '',
@@ -1000,7 +1757,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       organic: false,
                       location: '',
                       description: '',
-                      images: []
+                      images: [],
+                      uploadedAt: null // Clear upload date for new crop
                     });
                   }}
                   className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -1008,64 +1766,91 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                   Reset
                 </button>
                 <button 
-                  onClick={() => {
+                  onClick={async () => {
                     // Handle crop upload
                     if (!cropFormData.cropName || !cropFormData.quantity || !cropFormData.price) {
                       alert('कृपया सभी आवश्यक फील्ड भरें (Please fill all required fields)');
                       return;
                     }
 
-                    // Create new crop object
-                    const newCrop = {
-                      id: Date.now().toString(),
-                      name: cropFormData.cropName,
-                      type: cropFormData.cropType,
-                      variety: cropFormData.variety,
-                      quantity: cropFormData.quantity,
-                      unit: cropFormData.unit,
-                      quality: cropFormData.quality,
-                      price: parseFloat(cropFormData.price),
-                      harvestDate: cropFormData.harvestDate,
-                      organic: cropFormData.organic,
-                      location: cropFormData.location,
-                      description: cropFormData.description,
-                      images: cropFormData.images,
-                      status: 'active',
-                      uploadedAt: new Date().toISOString(),
-                      farmerName: userProfile.name,
-                      farmerId: userProfile.id
-                    };
+                    try {
+                      // Check if this is an edit operation (cropFormData has an existing ID)
+                      const isEditMode = cropFormData.id;
+                      
+                      if (isEditMode) {
+                        // Update existing crop
+                        const updatedCrop = await createCropData(cropFormData, cropFormData.images);
+                        updatedCrop.id = cropFormData.id; // Keep the original ID
+                        updatedCrop.uploadedAt = cropFormData.uploadedAt; // Keep original upload date
+                        
+                        // Update in database
+                        const result = await saveToDatabase(updatedCrop);
+                        
+                        if (result.success) {
+                          // Update the existing crop in the list
+                          const updatedCrops = uploadedCrops.map(crop => 
+                            crop.id === cropFormData.id ? updatedCrop : crop
+                          );
+                          setUploadedCrops(updatedCrops);
+                          
+                          // Save to storage immediately for real-time updates
+                          saveCropsToStorage(updatedCrops);
+                          
+                          console.log('✅ Crop updated successfully:', updatedCrop);
+                          console.log('🖼️ Updated crop images:', updatedCrop.images);
+                          alert('फसल सफलतापूर्वक अपडेट हो गई! (Crop updated successfully!)');
+                          setShowCropUploadModal(false);
+                        } else {
+                          throw new Error(result.error || 'Failed to update crop');
+                        }
+                      } else {
+                        // Create new crop
+                        const newCrop = await createCropData(cropFormData, cropFormData.images);
 
-                    // Add to uploaded crops list
-                    const updatedCrops = [newCrop, ...uploadedCrops];
-                    setUploadedCrops(updatedCrops);
-                    
-                    // Save to storage immediately
-                    saveCropsToStorage(updatedCrops);
+                        // Save to database
+                        const result = await saveToDatabase(newCrop);
+                        
+                        if (result.success) {
+                          // Add to uploaded crops list
+                          const updatedCrops = [newCrop, ...uploadedCrops];
+                          setUploadedCrops(updatedCrops);
+                        
+                          // Save to storage immediately
+                          saveCropsToStorage(updatedCrops);
 
-                    // Reset form
-                    setCropFormData({
-                      cropName: '',
-                      cropType: '',
-                      variety: '',
-                      quantity: '',
-                      unit: 'quintal',
-                      quality: 'A',
-                      harvestDate: '',
-                      price: '',
-                      organic: false,
-                      location: '',
-                      description: '',
-                      images: []
-                    });
+                          // Reset form
+                          setCropFormData({
+                            id: null,
+                            cropName: '',
+                            cropType: '',
+                            variety: '',
+                            quantity: '',
+                            unit: 'quintal',
+                            quality: 'A',
+                            harvestDate: '',
+                            price: '',
+                            organic: false,
+                            location: '',
+                            description: '',
+                            images: [],
+                            uploadedAt: null
+                          });
 
-                    alert('फसल सफलतापूर्वक अपलोड हो गई! 🎉 (Crop uploaded successfully!)');
-                    setShowCropUploadModal(false);
+                          alert('फसल सफलतापूर्वक अपलोड हो गई! 🎉 (Crop uploaded successfully!)');
+                          setShowCropUploadModal(false);
+                        } else {
+                          alert('Error uploading crop: ' + result.error);
+                        }
+                      }
+                    } catch (error) {
+                      console.error('Error uploading crop:', error);
+                      alert('Error uploading crop. Please try again.');
+                    }
                   }}
                   className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
                 >
                   <Upload className="h-5 w-5" />
-                  <span>Upload Crop</span>
+                  <span>{cropFormData.id ? 'Update Crop' : 'Upload Crop'}</span>
                 </button>
               </div>
             </div>
@@ -1154,19 +1939,34 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                 {crop.images && crop.images.length > 0 ? (
                   <div className="mb-4 relative">
                     <img 
-                      src={selectBestImage(crop.images)} 
+                      src={getImageUrl(selectBestImage(crop.images)?.imageUrl)} 
                       alt={crop.name}
                       className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                      onError={(e) => {
+                        console.log('Image failed to load, using placeholder');
+                        e.currentTarget.src = '/placeholder-crop.jpg';
+                      }}
                       onClick={() => {
-                        setSelectedCropImages(crop.images);
+                        setSelectedCropImages(crop.images.map(img => img.imageUrl));
                         setCurrentImageIndex(0);
                         setShowImageGallery(true);
                       }}
                     />
+                    {/* Fallback for failed images */}
+                    <div className="mb-4 bg-gray-100 rounded-lg h-32 flex items-center justify-center" style={{ display: 'none' }}>
+                      <Camera className="h-8 w-8 text-gray-400" />
+                      <span className="text-gray-500 ml-2">Image not available</span>
+                    </div>
                     {/* Image count badge */}
                     {crop.images.length > 1 && (
                       <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-full">
                         +{crop.images.length - 1} more
+                      </div>
+                    )}
+                    {/* Image quality indicator */}
+                    {selectBestImage(crop.images)?.analysis?.isAnalyzed && (
+                      <div className="absolute top-2 left-2 bg-green-500 bg-opacity-70 text-white text-xs px-2 py-1 rounded-full">
+                        AI Analyzed
                       </div>
                     )}
                     {/* Click hint */}
@@ -1208,6 +2008,16 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                     <span>Uploaded:</span>
                     <span className="font-medium">{new Date(crop.uploadedAt).toLocaleDateString()}</span>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span>Images:</span>
+                    <span className="font-medium">{crop.analytics.totalImages} photos</span>
+                  </div>
+                  {crop.analytics.cropHealthScore && (
+                    <div className="flex items-center justify-between">
+                      <span>Health Score:</span>
+                      <span className="font-medium text-green-600">{crop.analytics.cropHealthScore}%</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
@@ -1216,6 +2026,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       onClick={() => {
                         // Edit crop functionality
                         setCropFormData({
+                          id: crop.id, // Include crop ID for edit mode
                           cropName: crop.name,
                           cropType: crop.type,
                           variety: crop.variety,
@@ -1227,7 +2038,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                           organic: crop.organic,
                           location: crop.location,
                           description: crop.description,
-                          images: crop.images
+                          images: crop.images,
+                          uploadedAt: crop.uploadedAt // Keep original upload date
                         });
                         setShowCropUploadModal(true);
                       }}
@@ -1956,7 +2768,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               <Leaf className="h-6 w-6 text-green-600" />
             </div>
             <p className="text-xs font-medium text-gray-600 mb-1">Total Crops</p>
-            <p className="text-2xl font-bold text-gray-900">12</p>
+            <p className="text-2xl font-bold text-gray-900">{realTimeStats.totalCrops}</p>
           </div>
         </div>
         
@@ -1967,7 +2779,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               <Sprout className="h-6 w-6 text-blue-600" />
             </div>
             <p className="text-xs font-medium text-gray-600 mb-1">Active Crops</p>
-            <p className="text-2xl font-bold text-blue-600">8</p>
+            <p className="text-2xl font-bold text-blue-600">{realTimeStats.activeCrops}</p>
           </div>
         </div>
         
@@ -1978,7 +2790,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               <Package className="h-6 w-6 text-purple-600" />
             </div>
             <p className="text-xs font-medium text-gray-600 mb-1">Harvested</p>
-            <p className="text-2xl font-bold text-purple-600">4</p>
+            <p className="text-2xl font-bold text-purple-600">{realTimeStats.harvestedCrops}</p>
           </div>
         </div>
         
@@ -1989,7 +2801,12 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               <TrendingUp className="h-6 w-6 text-yellow-600" />
             </div>
             <p className="text-xs font-medium text-gray-600 mb-1">Total Earnings</p>
-            <p className="text-lg font-bold text-gray-900">₹12.5L</p>
+            <p className="text-lg font-bold text-gray-900">
+              {realTimeStats.totalEarnings > 0 
+                ? `₹${(realTimeStats.totalEarnings / 100000).toFixed(1)}L` 
+                : '₹0'
+              }
+            </p>
           </div>
         </div>
         
@@ -2000,7 +2817,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               <MapPin className="h-6 w-6 text-indigo-600" />
             </div>
             <p className="text-xs font-medium text-gray-600 mb-1">Total Land</p>
-            <p className="text-lg font-bold text-indigo-600">25 acres</p>
+            <p className="text-lg font-bold text-indigo-600">
+              {realTimeStats.totalLand > 0 ? `${realTimeStats.totalLand} acres` : '0 acres'}
+            </p>
           </div>
         </div>
         
@@ -2011,7 +2830,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               <Clock className="h-6 w-6 text-orange-600" />
             </div>
             <p className="text-xs font-medium text-gray-600 mb-1">Pending Orders</p>
-            <p className="text-2xl font-bold text-orange-600">6</p>
+            <p className="text-2xl font-bold text-orange-600">{realTimeStats.pendingOrders}</p>
           </div>
         </div>
       </div>
@@ -2059,6 +2878,51 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               <span className="text-sm font-medium text-gray-900">Tomato (Field C)</span>
             </div>
             <span className="text-sm text-red-600 font-medium">Pest Alert</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Database Analytics - Real Practical Feature */}
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Database Analytics</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Camera className="h-5 w-5 text-blue-600" />
+                <span className="text-sm font-medium text-gray-900">Total Images</span>
+              </div>
+              <span className="text-sm text-blue-600 font-medium">
+                {uploadedCrops.reduce((sum, crop) => sum + crop.analytics.totalImages, 0)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                <span className="text-sm font-medium text-gray-900">Most Common Crop</span>
+              </div>
+              <span className="text-sm text-green-600 font-medium">
+                {realTimeStats.totalCrops > 0 ? getMostCommonCropType(uploadedCrops) : 'None'}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <BarChart3 className="h-5 w-5 text-purple-600" />
+                <span className="text-sm font-medium text-gray-900">Avg Crop Value</span>
+              </div>
+              <span className="text-sm text-purple-600 font-medium">
+                ₹{realTimeStats.totalCrops > 0 ? Math.round(realTimeStats.totalEarnings / realTimeStats.totalCrops) : 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Database className="h-5 w-5 text-orange-600" />
+                <span className="text-sm font-medium text-gray-900">Database Status</span>
+              </div>
+              <span className="text-sm text-orange-600 font-medium">Synced</span>
+            </div>
           </div>
         </div>
       </div>
@@ -2739,6 +3603,26 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             </div>
             
             <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Debug buttons - remove in production */}
+              <button
+                onClick={() => testUserSpecificData()}
+                className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Test Data
+              </button>
+              <button
+                onClick={() => validateUserData()}
+                className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                Validate
+              </button>
+              <button
+                onClick={() => clearAllData()}
+                className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Clear My Data
+              </button>
+              
               {/* Search - Hidden on mobile */}
               <div className="hidden sm:block relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />

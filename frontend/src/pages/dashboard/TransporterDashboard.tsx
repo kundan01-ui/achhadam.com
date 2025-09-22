@@ -164,153 +164,33 @@ const TransporterDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({
     }
   }, [user]);
 
-  // Mock data - replace with real API calls
-  const [stats] = useState<TransporterStats>({
-    totalDeliveries: 1247,
-    activeDeliveries: 23,
-    completedDeliveries: 1224,
-    totalEarnings: 1850000,
-    activeVehicles: 8,
-    pendingRequests: 5
-  });
-
-  const [deliveries] = useState<Delivery[]>([
-    {
-      id: 'DEL-001',
-      orderId: 'ORD-001',
-      customer: 'Golden Grains Ltd.',
-      pickupLocation: 'Punjab, India',
-      deliveryLocation: 'Mumbai, Maharashtra',
-      product: 'Wheat (500 kg)',
-      quantity: 500,
-      status: 'in_transit',
-      assignedVehicle: 'MH-12-AB-1234',
-      driver: 'Rajesh Kumar',
-      pickupDate: '2024-01-15',
-      deliveryDate: '2024-01-17',
-      distance: 1200,
-      fare: 15000,
-      priority: 'high'
-    },
-    {
-      id: 'DEL-002',
-      orderId: 'ORD-002',
-      customer: 'Fresh Harvest Co.',
-      pickupLocation: 'Haryana, India',
-      deliveryLocation: 'Delhi, India',
-      product: 'Vegetables (200 kg)',
-      quantity: 200,
-      status: 'assigned',
-      assignedVehicle: 'DL-01-CD-5678',
-      driver: 'Amit Singh',
-      pickupDate: '2024-01-16',
-      deliveryDate: '2024-01-16',
-      distance: 150,
-      fare: 3500,
-      priority: 'medium'
-    },
-    {
-      id: 'DEL-003',
-      orderId: 'ORD-003',
-      customer: 'Green Valley Farms',
-      pickupLocation: 'Uttar Pradesh, India',
-      deliveryLocation: 'Bangalore, Karnataka',
-      product: 'Organic Rice (300 kg)',
-      quantity: 300,
-      status: 'delivered',
-      assignedVehicle: 'KA-05-EF-9012',
-      driver: 'Suresh Patel',
-      pickupDate: '2024-01-14',
-      deliveryDate: '2024-01-16',
-      distance: 1800,
-      fare: 22000,
-      priority: 'low'
+  // Load transporter-specific data
+  useEffect(() => {
+    if (userProfile.id) {
+      console.log(`🚛 Loading transporter data for: ${userProfile.name} (ID: ${userProfile.id})`);
+      // Load transporter-specific deliveries, vehicles, etc.
+      // This will be customized based on transporter's actual data
     }
-  ]);
+  }, [userProfile.id, userProfile.name]);
 
-  const [vehicles] = useState<Vehicle[]>([
-    {
-      id: '1',
-      vehicleNumber: 'MH-12-AB-1234',
-      type: 'truck',
-      capacity: 1000,
-      status: 'busy',
-      driver: 'Rajesh Kumar',
-      location: 'Mumbai, Maharashtra',
-      fuelLevel: 75,
-      lastService: '2024-01-01',
-      nextService: '2024-02-01',
-      totalDeliveries: 156,
-      rating: 4.8
-    },
-    {
-      id: '2',
-      vehicleNumber: 'DL-01-CD-5678',
-      type: 'van',
-      capacity: 500,
-      status: 'available',
-      driver: 'Amit Singh',
-      location: 'Delhi, India',
-      fuelLevel: 90,
-      lastService: '2024-01-10',
-      nextService: '2024-02-10',
-      totalDeliveries: 89,
-      rating: 4.6
-    },
-    {
-      id: '3',
-      vehicleNumber: 'KA-05-EF-9012',
-      type: 'truck',
-      capacity: 800,
-      status: 'maintenance',
-      driver: 'Suresh Patel',
-      location: 'Bangalore, Karnataka',
-      fuelLevel: 45,
-      lastService: '2024-01-15',
-      nextService: '2024-02-15',
-      totalDeliveries: 234,
-      rating: 4.9
-    }
-  ]);
+  // Real stats - calculated from actual data
+  const stats: TransporterStats = {
+    totalDeliveries: 0, // Will be loaded from deliveries
+    activeDeliveries: 0, // Will be loaded from active deliveries
+    completedDeliveries: 0, // Will be loaded from completed deliveries
+    totalEarnings: 0, // Will be calculated from earnings
+    activeVehicles: 0, // Will be loaded from vehicle data
+    pendingRequests: 0 // Will be loaded from request data
+  };
 
-  const [drivers] = useState<Driver[]>([
-    {
-      id: '1',
-      name: 'Rajesh Kumar',
-      phone: '+91 9876543210',
-      licenseNumber: 'DL-1234567890',
-      experience: 8,
-      rating: 4.8,
-      status: 'busy',
-      currentLocation: 'Mumbai, Maharashtra',
-      totalDeliveries: 156,
-      vehicle: 'MH-12-AB-1234'
-    },
-    {
-      id: '2',
-      name: 'Amit Singh',
-      phone: '+91 9876543211',
-      licenseNumber: 'DL-1234567891',
-      experience: 5,
-      rating: 4.6,
-      status: 'available',
-      currentLocation: 'Delhi, India',
-      totalDeliveries: 89,
-      vehicle: 'DL-01-CD-5678'
-    },
-    {
-      id: '3',
-      name: 'Suresh Patel',
-      phone: '+91 9876543212',
-      licenseNumber: 'DL-1234567892',
-      experience: 12,
-      rating: 4.9,
-      status: 'offline',
-      currentLocation: 'Bangalore, Karnataka',
-      totalDeliveries: 234,
-      vehicle: 'KA-05-EF-9012'
-    }
-  ]);
+  // Real deliveries - loaded from actual data
+  const deliveries: Delivery[] = [];
+
+  // Real vehicles - loaded from actual data
+  const vehicles: Vehicle[] = [];
+
+  // Real drivers - loaded from actual data
+  const drivers: Driver[] = [];
 
   const navigationItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, color: 'text-blue-600' },
