@@ -16,6 +16,42 @@ import {
   getMarketplaceStats,
   type MarketplaceCrop 
 } from '../../services/marketplaceService';
+import razorpayService from '../../services/razorpayService';
+
+// Professional Marketplace Interfaces
+interface CartItem {
+  id: string;
+  crop: MarketplaceCrop;
+  quantity: number;
+  price: number;
+  totalPrice: number;
+  addedAt: string;
+}
+
+interface OrderItem {
+  id: string;
+  crop: MarketplaceCrop;
+  quantity: number;
+  price: number;
+  totalPrice: number;
+  farmer: {
+    id: string;
+    name: string;
+    phone: string;
+    location: string;
+  };
+}
+
+interface Order {
+  id: string;
+  items: OrderItem[];
+  totalAmount: number;
+  deliveryAddress: any;
+  paymentMethod: string;
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+  createdAt: string;
+  estimatedDelivery: string;
+}
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -95,9 +131,31 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
+  // User-specific data isolation for buyers - MOVED TO TOP
+  const [userKey, setUserKey] = useState<string>('');
+  
+  // Generate unique user key for buyer
+  useEffect(() => {
+    if (user) {
+      const userIdentifier = user.phone || user.email || user.id || 'anonymous';
+      const buyerKey = `buyer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      setUserKey(buyerKey);
+      console.log(`🔑 Buyer user key: ${buyerKey}`);
+    }
+  }, [user]);
+  
   // Marketplace states
   const [marketplaceCrops, setMarketplaceCrops] = useState<MarketplaceCrop[]>([]);
   const [filteredCrops, setFilteredCrops] = useState<MarketplaceCrop[]>([]);
+  
+  // Load marketplace data - USER SPECIFIC (but shared across all buyers)
+  useEffect(() => {
+    if (userKey) {
+      // Marketplace data is shared across all buyers (aggregated from all farmers)
+      // This is intentional - buyers should see all available crops
+      console.log('🌾 Loading marketplace data for buyer:', userKey);
+    }
+  }, [userKey]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [marketplaceSearchQuery, setMarketplaceSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('demand');
@@ -111,6 +169,84 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   const [showImageGallery, setShowImageGallery] = useState(false);
   const [selectedCropImages, setSelectedCropImages] = useState<any[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Professional Marketplace States
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [showCart, setShowCart] = useState(false);
+  
+  // Load cart from localStorage - USER SPECIFIC
+  useEffect(() => {
+    if (!userKey) return;
+    
+    const savedCart = localStorage.getItem(`buyer_cart_${userKey}`);
+    if (savedCart) {
+      try {
+        const parsedCart = JSON.parse(savedCart);
+        setCart(parsedCart);
+        console.log(`🛒 Loaded cart for buyer ${userKey}:`, parsedCart.length);
+      } catch (error) {
+        console.error('❌ Error loading cart from localStorage:', error);
+      }
+    }
+  }, [userKey]);
+  
+  // Save cart to localStorage - USER SPECIFIC
+  useEffect(() => {
+    if (cart.length > 0 && userKey) {
+      localStorage.setItem(`buyer_cart_${userKey}`, JSON.stringify(cart));
+      console.log(`💾 Saved cart for buyer ${userKey}:`, cart.length);
+    }
+  }, [cart, userKey]);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [selectedCropForOrder, setSelectedCropForOrder] = useState<MarketplaceCrop | null>(null);
+  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [deliveryAddress, setDeliveryAddress] = useState({
+    fullName: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    landmark: ''
+  });
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [orderSummary, setOrderSummary] = useState<any>(null);
+  
+  // Razorpay Payment States
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  
+  // Orders State
+  const [orders, setOrders] = useState<OrderItem[]>([]);
+  
+  
+  // Load orders from localStorage on component mount - USER SPECIFIC
+  useEffect(() => {
+    if (!userKey) return;
+    
+    const savedOrders = localStorage.getItem(`buyer_orders_${userKey}`);
+    if (savedOrders) {
+      try {
+        const parsedOrders = JSON.parse(savedOrders);
+        setOrders(parsedOrders);
+        console.log(`📦 Loaded orders for buyer ${userKey}:`, parsedOrders.length);
+      } catch (error) {
+        console.error('❌ Error loading orders from localStorage:', error);
+      }
+    } else {
+      console.log(`📦 No existing orders found for buyer ${userKey}`);
+    }
+  }, [userKey]);
+  
+  // Save orders to localStorage whenever orders change - USER SPECIFIC
+  useEffect(() => {
+    if (orders.length > 0 && userKey) {
+      localStorage.setItem(`buyer_orders_${userKey}`, JSON.stringify(orders));
+      console.log(`💾 Saved orders for buyer ${userKey}:`, orders.length);
+    }
+  }, [orders, userKey]);
 
   // Mock user profile data
   const [userProfile, setUserProfile] = useState({
@@ -136,6 +272,30 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     createdAt: user?.createdAt || new Date().toISOString(),
     lastLogin: new Date().toISOString()
   });
+  
+  // Load user profile from localStorage - USER SPECIFIC
+  useEffect(() => {
+    if (!userKey) return;
+    
+    const savedProfile = localStorage.getItem(`buyer_profile_${userKey}`);
+    if (savedProfile) {
+      try {
+        const parsedProfile = JSON.parse(savedProfile);
+        setUserProfile(parsedProfile);
+        console.log(`👤 Loaded profile for buyer ${userKey}:`, parsedProfile.name);
+      } catch (error) {
+        console.error('❌ Error loading profile from localStorage:', error);
+      }
+    }
+  }, [userKey]);
+  
+  // Save user profile to localStorage - USER SPECIFIC
+  useEffect(() => {
+    if (userProfile && userKey) {
+      localStorage.setItem(`buyer_profile_${userKey}`, JSON.stringify(userProfile));
+      console.log(`💾 Saved profile for buyer ${userKey}:`, userProfile.name);
+    }
+  }, [userProfile, userKey]);
 
   // Update user profile when user data changes
   useEffect(() => {
@@ -224,16 +384,25 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
 
   // Real stats - calculated from actual data
   const stats: DashboardStats = {
-    totalOrders: 0, // Will be loaded from orders
-    pendingOrders: 0, // Will be loaded from pending orders
-    completedOrders: 0, // Will be loaded from completed orders
-    totalSpent: 0, // Will be calculated from order history
+    totalOrders: orders.length,
+    pendingOrders: orders.filter(order => order.status === 'pending').length,
+    completedOrders: orders.filter(order => order.status === 'completed').length,
+    totalSpent: orders.reduce((sum, order) => sum + order.totalPrice, 0),
     favoriteSuppliers: 0, // Will be calculated from supplier data
     activeContracts: 0 // Will be loaded from contracts
   };
 
   // Real recent orders - loaded from actual data
-  const recentOrders: RecentOrder[] = [];
+  const recentOrders: RecentOrder[] = orders.map(order => ({
+    id: order.id,
+    productName: order.crop.name,
+    supplier: order.farmer.name,
+    quantity: order.quantity,
+    totalPrice: order.totalPrice,
+    status: order.status as 'pending' | 'completed' | 'cancelled',
+    orderDate: order.orderDate,
+    deliveryDate: order.deliveryDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+  }));
 
   // Real suppliers - loaded from actual farmer data
   const suppliers: Supplier[] = [];
@@ -514,6 +683,18 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
             <div className="text-sm text-gray-600">
               <span className="font-semibold text-blue-600">{marketplaceStats.totalFarmers}</span> farmers
             </div>
+            <button
+              onClick={() => setShowCart(true)}
+              className="relative px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm flex items-center space-x-2"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              <span>Cart</span>
+              {getCartItemCount() > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {getCartItemCount()}
+                </span>
+              )}
+            </button>
             <button
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
@@ -800,26 +981,33 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleChatWithFarmer(crop)}
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  <span>Chat</span>
-                </button>
-                <button
-                  onClick={() => handleOrderCrop(crop)}
-                  className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  <span>Order</span>
-                </button>
-                <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Heart className="h-4 w-4" />
-                </button>
-              </div>
+                  {/* Action Buttons */}
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleChatWithFarmer(crop)}
+                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      <span>Chat</span>
+                    </button>
+                    <button
+                      onClick={() => addToCart(crop, 1)}
+                      className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                      <span>Add to Cart</span>
+                    </button>
+                    <button
+                      onClick={() => handleOrderCrop(crop)}
+                      className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <Package className="h-4 w-4" />
+                      <span>Buy Now</span>
+                    </button>
+                    <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Heart className="h-4 w-4" />
+                    </button>
+                  </div>
             </div>
           </div>
         ))}
@@ -984,11 +1172,6 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     setSortBy(sort);
   };
 
-  const handleOrderCrop = (crop: MarketplaceCrop) => {
-    // Open order modal or redirect to order page
-    console.log('Ordering crop:', crop);
-    // TODO: Implement order functionality
-  };
 
   const handlePriceRangeChange = (min: number, max: number) => {
     setPriceRange({ min, max });
@@ -1037,6 +1220,242 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     }
   };
 
+  // Professional Marketplace Functions
+  const addToCart = (crop: MarketplaceCrop, quantity: number = 1) => {
+    const existingItem = cart.find(item => item.crop.id === crop.id);
+    
+    if (existingItem) {
+      // Update existing item
+      setCart(cart.map(item => 
+        item.crop.id === crop.id 
+          ? {
+              ...item,
+              quantity: item.quantity + quantity,
+              totalPrice: (item.quantity + quantity) * item.price
+            }
+          : item
+      ));
+    } else {
+      // Add new item
+      const newItem: CartItem = {
+        id: `cart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        crop,
+        quantity,
+        price: crop.price,
+        totalPrice: crop.price * quantity,
+        addedAt: new Date().toISOString()
+      };
+      setCart([...cart, newItem]);
+    }
+    
+    console.log('🛒 Added to cart:', crop.name, 'Quantity:', quantity);
+  };
+
+  const removeFromCart = (itemId: string) => {
+    setCart(cart.filter(item => item.id !== itemId));
+    console.log('🗑️ Removed from cart:', itemId);
+  };
+
+  const updateCartQuantity = (itemId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(itemId);
+      return;
+    }
+    
+    setCart(cart.map(item => 
+      item.id === itemId 
+        ? {
+            ...item,
+            quantity,
+            totalPrice: quantity * item.price
+          }
+        : item
+    ));
+  };
+
+  const getCartTotal = () => {
+    return cart.reduce((total, item) => total + item.totalPrice, 0);
+  };
+
+  const getCartItemCount = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const handleOrderCrop = (crop: MarketplaceCrop) => {
+    setSelectedCropForOrder(crop);
+    setOrderQuantity(1);
+    setShowOrderModal(true);
+  };
+
+
+  // Razorpay Payment Handler
+  const handleRazorpayPayment = async (orderSummary: any) => {
+    try {
+      setIsPaymentProcessing(true);
+      setPaymentStatus('processing');
+      setPaymentError(null);
+
+      // Create Razorpay order
+      const razorpayOrder = await razorpayService.createOrder(
+        orderSummary.totalAmount,
+        'INR',
+        orderSummary.orderId
+      );
+
+      // Initialize Razorpay payment
+      const razorpayConfig = {
+        key: razorpayService.getKeyId(),
+        amount: Math.round(orderSummary.totalAmount * 100), // Convert to paise and round
+        currency: 'INR',
+        name: 'ACHHADAM',
+        description: `Payment for ${orderSummary.cropName}`,
+        order_id: razorpayOrder.id, // Add order_id back
+        prefill: {
+          name: userProfile.name,
+          email: userProfile.email,
+          contact: userProfile.phone
+        },
+        notes: {
+          address: deliveryAddress.address,
+          order_id: orderSummary.orderId
+        },
+        theme: {
+          color: '#10B981'
+        },
+        // Enable UPI and QR Code options
+        method: {
+          netbanking: true,
+          wallet: true,
+          upi: true,
+          card: true,
+          emi: true
+        },
+        // Enable UPI apps
+        upi: {
+          flow: 'collect',
+          vpa: 'achhadam@paytm' // You can set your UPI ID
+        },
+        handler: async (response: any) => {
+          try {
+            console.log('💳 Payment successful:', response);
+            
+            // Verify payment
+            const isVerified = await razorpayService.verifyPayment(
+              response.razorpay_payment_id,
+              response.razorpay_order_id,
+              response.razorpay_signature
+            );
+
+            if (isVerified) {
+              setPaymentStatus('success');
+              console.log('✅ Payment verified successfully');
+              
+              // Add to orders
+              const orderItem: OrderItem = {
+                id: orderSummary.orderId,
+                crop: orderSummary.crop,
+                quantity: orderSummary.quantity,
+                price: orderSummary.price,
+                totalPrice: orderSummary.totalAmount,
+                status: 'confirmed',
+                orderDate: new Date().toISOString(),
+                deliveryAddress: deliveryAddress,
+                paymentMethod: 'razorpay',
+                paymentId: response.razorpay_payment_id,
+                farmer: orderSummary.farmer
+              };
+
+              setOrders(prev => [orderItem, ...prev]);
+              setShowPaymentModal(false);
+              setShowOrderModal(false);
+              setSelectedCropForOrder(null);
+              
+              // Show success message
+              alert('🎉 Order placed successfully! Payment confirmed.');
+              
+              // Update stats
+              console.log('📊 Updated orders count:', orders.length + 1);
+              console.log('💰 Total spent updated:', orders.reduce((sum, order) => sum + order.totalPrice, 0) + orderItem.totalPrice);
+            } else {
+              setPaymentStatus('failed');
+              setPaymentError('Payment verification failed');
+              alert('❌ Payment verification failed. Please try again.');
+            }
+          } catch (error) {
+            console.error('❌ Payment verification error:', error);
+            setPaymentStatus('failed');
+            setPaymentError('Payment verification failed');
+            alert('❌ Payment verification failed. Please try again.');
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsPaymentProcessing(false);
+            setPaymentStatus('idle');
+            console.log('💳 Payment cancelled by user');
+          }
+        }
+      };
+
+      razorpayService.initializePayment(razorpayConfig);
+    } catch (error) {
+      console.error('❌ Razorpay payment error:', error);
+      setPaymentStatus('failed');
+      setPaymentError('Payment initialization failed');
+      alert('❌ Payment initialization failed. Please try again.');
+    } finally {
+      setIsPaymentProcessing(false);
+    }
+  };
+
+  const handlePlaceOrder = () => {
+    if (!selectedCropForOrder) return;
+    
+    const orderItem: OrderItem = {
+      id: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      crop: selectedCropForOrder,
+      quantity: orderQuantity,
+      price: selectedCropForOrder.price,
+      totalPrice: selectedCropForOrder.price * orderQuantity,
+      farmer: {
+        id: selectedCropForOrder.farmer.id,
+        name: selectedCropForOrder.farmer.name,
+        phone: selectedCropForOrder.farmer.phone,
+        location: selectedCropForOrder.farmer.location
+      }
+    };
+
+    const order: Order = {
+      id: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      items: [orderItem],
+      totalAmount: orderItem.totalPrice,
+      deliveryAddress,
+      paymentMethod,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    };
+
+    setOrderSummary(order);
+    setShowOrderModal(false);
+    setShowPaymentModal(true);
+    
+    console.log('📦 Order placed:', order);
+  };
+
+  const handlePayment = (method: string) => {
+    setPaymentMethod(method);
+    console.log('💳 Payment method selected:', method);
+    
+    // Simulate payment processing
+    setTimeout(() => {
+      console.log('✅ Payment successful!');
+      setShowPaymentModal(false);
+      setOrderSummary(null);
+      alert('Order placed successfully! Payment completed.');
+    }, 2000);
+  };
+
   const handleDeleteAccount = () => {
     // Here you would typically make an API call to delete the account
     console.log('Account deletion requested');
@@ -1067,6 +1486,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Header */}
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
@@ -1370,7 +1790,452 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
           </div>
         </div>
       )}
+
+      {/* Professional Cart Modal */}
+      {showCart && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] overflow-hidden w-full mx-4">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">🛒 Shopping Cart</h3>
+              <button
+                onClick={() => setShowCart(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            {cart.length === 0 ? (
+              <div className="text-center py-12">
+                <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h4 className="text-xl font-semibold text-gray-900 mb-2">Your cart is empty</h4>
+                <p className="text-gray-600 mb-4">Add some crops to get started!</p>
+                <button
+                  onClick={() => setShowCart(false)}
+                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Continue Shopping
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {cart.map((item) => (
+                  <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+                    <img
+                      src={item.crop.images?.[0]?.imageUrl || '/placeholder-crop.jpg'}
+                      alt={item.crop.name}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900">{item.crop.name}</h4>
+                      <p className="text-sm text-gray-600">{item.crop.type} • {item.crop.variety}</p>
+                      <p className="text-sm text-gray-600">Farmer: {item.crop.farmer.name}</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
+                        className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+                      >
+                        -
+                      </button>
+                      <span className="w-8 text-center">{item.quantity}</span>
+                      <button
+                        onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
+                        className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-gray-900">₹{item.totalPrice}</div>
+                      <div className="text-sm text-gray-600">₹{item.price} each</div>
+                    </div>
+                    <button
+                      onClick={() => removeFromCart(item.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  </div>
+                ))}
+                
+                <div className="border-t pt-4">
+                  <div className="flex justify-between items-center text-xl font-bold">
+                    <span>Total:</span>
+                    <span className="text-green-600">₹{getCartTotal()}</span>
+                  </div>
+                  <div className="flex space-x-4 mt-4">
+                    <button
+                      onClick={() => setShowCart(false)}
+                      className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                      Continue Shopping
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowCart(false);
+                        setShowOrderModal(true);
+                      }}
+                      className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Proceed to Checkout
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Professional Order Modal */}
+      {showOrderModal && selectedCropForOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl max-h-[90vh] overflow-y-auto w-full mx-4">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">📦 Place Order</h3>
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Crop Details */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={selectedCropForOrder.images?.[0]?.imageUrl || '/placeholder-crop.jpg'}
+                    alt={selectedCropForOrder.name}
+                    className="w-20 h-20 object-cover rounded-lg"
+                  />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900">{selectedCropForOrder.name}</h4>
+                    <p className="text-sm text-gray-600">{selectedCropForOrder.type} • {selectedCropForOrder.variety}</p>
+                    <p className="text-sm text-gray-600">Farmer: {selectedCropForOrder.farmer.name}</p>
+                    <p className="text-sm text-gray-600">Location: {selectedCropForOrder.farmer.location}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-green-600">₹{selectedCropForOrder.price}</div>
+                    <div className="text-sm text-gray-600">per {selectedCropForOrder.unit}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quantity Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={() => setOrderQuantity(Math.max(1, orderQuantity - 1))}
+                    className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+                  >
+                    -
+                  </button>
+                  <span className="text-lg font-semibold w-12 text-center">{orderQuantity}</span>
+                  <button
+                    onClick={() => setOrderQuantity(orderQuantity + 1)}
+                    className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+                  >
+                    +
+                  </button>
+                  <span className="text-sm text-gray-600">{selectedCropForOrder.unit}</span>
+                </div>
+              </div>
+
+              {/* Delivery Address */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Address</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={deliveryAddress.fullName}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, fullName: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
+                    value={deliveryAddress.phone}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, phone: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Address"
+                    value={deliveryAddress.address}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, address: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <input
+                    type="text"
+                    placeholder="City"
+                    value={deliveryAddress.city}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, city: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <input
+                    type="text"
+                    placeholder="State"
+                    value={deliveryAddress.state}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, state: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Pincode"
+                    value={deliveryAddress.pincode}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, pincode: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+              </div>
+
+              {/* Order Summary */}
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center text-lg font-semibold">
+                  <span>Total Amount:</span>
+                  <span className="text-green-600">₹{selectedCropForOrder.price * orderQuantity}</span>
+                </div>
+                <div className="text-sm text-gray-600 mt-1">
+                  {orderQuantity} {selectedCropForOrder.unit} × ₹{selectedCropForOrder.price}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setShowOrderModal(false)}
+                  className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    const orderSummary = {
+                      orderId: `order_${Date.now()}`,
+                      crop: selectedCropForOrder,
+                      cropName: selectedCropForOrder?.cropName || '',
+                      quantity: orderQuantity,
+                      price: selectedCropForOrder?.price || 0,
+                      totalAmount: (selectedCropForOrder?.price || 0) * orderQuantity,
+                      farmer: selectedCropForOrder?.farmer
+                    };
+                    handleRazorpayPayment(orderSummary);
+                  }}
+                  disabled={isPaymentProcessing}
+                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isPaymentProcessing ? 'Processing...' : '💳 Pay with Razorpay (Card/UPI/QR)'}
+                </button>
+              </div>
+              
+              {/* UPI Payment Section */}
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-blue-900 mb-3">📱 Direct UPI Payment</h3>
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded-lg border">
+                      <p className="text-sm text-gray-600 mb-1">UPI ID:</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-lg font-mono font-bold text-blue-600">7209213003@axl</p>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText('7209213003@axl');
+                            alert('UPI ID copied to clipboard!');
+                          }}
+                          className="ml-2 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg border">
+                      <p className="text-sm text-gray-600 mb-2">Amount to Pay:</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xl font-bold text-green-600">
+                          ₹{((selectedCropForOrder?.price || 0) * orderQuantity).toFixed(2)}
+                        </p>
+                        <button
+                          onClick={() => {
+                            const amount = ((selectedCropForOrder?.price || 0) * orderQuantity).toFixed(2);
+                            navigator.clipboard.writeText(amount);
+                            alert(`Amount ₹${amount} copied to clipboard!`);
+                          }}
+                          className="ml-2 px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg border">
+                      <p className="text-sm text-gray-600 mb-2">QR Code:</p>
+                      <div className="flex justify-center">
+                        <div className="w-32 h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="text-2xl mb-1">📱</div>
+                            <p className="text-xs text-gray-500">QR Code</p>
+                            <p className="text-xs text-gray-400">Scan with UPI app</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-gray-500">
+                      <p>💡 Send exact amount to UPI ID above</p>
+                      <p>📱 Use any UPI app: Google Pay, PhonePe, Paytm</p>
+                      <p>🔍 Scan QR code with your UPI app</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Professional Payment Modal */}
+      {showPaymentModal && orderSummary && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl max-h-[90vh] overflow-y-auto w-full mx-4">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">💳 Payment</h3>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Order Summary */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3">Order Summary</h4>
+                {orderSummary.items.map((item: OrderItem) => (
+                  <div key={item.id} className="flex justify-between items-center py-2">
+                    <div>
+                      <div className="font-medium">{item.crop.name}</div>
+                      <div className="text-sm text-gray-600">{item.quantity} {item.crop.unit}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">₹{item.totalPrice}</div>
+                    </div>
+                  </div>
+                ))}
+                <div className="border-t pt-2 mt-2">
+                  <div className="flex justify-between items-center text-lg font-bold">
+                    <span>Total Amount:</span>
+                    <span className="text-green-600">₹{orderSummary.totalAmount}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Methods */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">Choose Payment Method</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button
+                    onClick={() => handlePayment('debit_card')}
+                    className="p-4 border border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-left"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">D</div>
+                      <div>
+                        <div className="font-medium">Debit Card</div>
+                        <div className="text-sm text-gray-600">Visa, Mastercard, RuPay</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handlePayment('credit_card')}
+                    className="p-4 border border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-left"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">C</div>
+                      <div>
+                        <div className="font-medium">Credit Card</div>
+                        <div className="text-sm text-gray-600">Visa, Mastercard, Amex</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handlePayment('upi')}
+                    className="p-4 border border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-left"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold">U</div>
+                      <div>
+                        <div className="font-medium">UPI</div>
+                        <div className="text-sm text-gray-600">PhonePe, Google Pay, Paytm</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handlePayment('netbanking')}
+                    className="p-4 border border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-left"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">N</div>
+                      <div>
+                        <div className="font-medium">Net Banking</div>
+                        <div className="text-sm text-gray-600">All major banks</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handlePayment('wallet')}
+                    className="p-4 border border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-left"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-yellow-600 rounded-full flex items-center justify-center text-white font-bold">W</div>
+                      <div>
+                        <div className="font-medium">Digital Wallet</div>
+                        <div className="text-sm text-gray-600">Paytm, PhonePe, Google Pay</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handlePayment('qr_code')}
+                    className="p-4 border border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-left"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white font-bold">Q</div>
+                      <div>
+                        <div className="font-medium">QR Code</div>
+                        <div className="text-sm text-gray-600">Scan to pay</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Payment Security */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="text-sm font-medium text-green-800">Secure Payment</span>
+                </div>
+                <p className="text-sm text-green-700 mt-1">
+                  Your payment information is encrypted and secure. We use industry-standard SSL encryption.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+    </>
   );
 };
 

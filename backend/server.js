@@ -604,6 +604,9 @@ const passwordResetRoutes = require('./routes/auth.js');
 app.use('/api/auth', otpLimiter, authRoutes);
 app.use('/api/auth', passwordResetRoutes);
 
+// Razorpay Routes - Temporarily commented out
+// app.use('/api/razorpay', require('./src/routes/razorpay.js'));
+
 // Get current user profile
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
   try {

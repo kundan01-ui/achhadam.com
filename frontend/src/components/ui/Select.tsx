@@ -221,21 +221,21 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
               )}
 
               <div className="py-1">
-                                  {filteredOptions.length > 0 ? (
-                    filteredOptions.map((option) => (
-                      <div
-                        key={option.value}
-                        className={cn(
-                          "px-3 py-2 cursor-pointer hover:bg-neutral-gray transition-colors duration-150",
-                          selectedValues.includes(option.value) && "bg-primary-green text-white hover:bg-secondary-green",
-                          option.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
-                        )}
-                        onClick={() => !option.disabled && handleSelect(option.value)}
-                      >
-                        {option.label}
-                      </div>
-                    ))
-                  ) : (
+                {filteredOptions.length > 0 ? (
+                  filteredOptions.map((option) => (
+                    <div
+                      key={option.value}
+                      className={cn(
+                        "px-3 py-2 cursor-pointer hover:bg-neutral-gray transition-colors duration-150",
+                        selectedValues.includes(option.value) && "bg-primary-green text-white hover:bg-secondary-green",
+                        option.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
+                      )}
+                      onClick={() => !option.disabled && handleSelect(option.value)}
+                    >
+                      {option.label}
+                    </div>
+                  ))
+                ) : (
                   <div className="px-3 py-2 text-text-light text-center">
                     No options found
                   </div>
@@ -264,7 +264,6 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
 Select.displayName = "Select";
 
 export { Select, selectVariants };
-export type { SelectOption };
 
 
 

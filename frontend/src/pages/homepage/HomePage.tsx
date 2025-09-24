@@ -760,7 +760,7 @@ const HomePage: React.FC = () => {
                  
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
                    {stats.map((stat, index) => (
-                     <div key={index} className={`group text-center stat-card animate-fade-in-up stagger-${index + 1} ${stat.cardBg} rounded-xl sm:rounded-2xl p-6 sm:p-8 lg:p-10 shadow-lg border-2 ${stat.borderColor} hover:shadow-2xl transition-all duration-500 cursor-pointer mobile-card-touch`}>
+                     <div key={index} className={`group text-center stat-card animate-fade-in-up stagger-${index + 1} ${stat.cardBg} rounded-xl sm:rounded-2xl p-6 sm:p-8 lg:p-10 shadow-lg border-2 ${stat.borderColor} hover:shadow-2xl transition-all duration-500 cursor-pointer`}>
                        <div className={`w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 ${stat.bgColor} rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8 group-hover:scale-110 transition-all duration-300`}>
                          <stat.icon className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 ${stat.color} transition-colors duration-300`} />
                        </div>
@@ -777,7 +777,7 @@ const HomePage: React.FC = () => {
              </section>
 
              {/* Farmers, Real Results Section */}
-             <section className="py-8 sm:py-12 md:py-16 lg:py-20 bg-gradient-to-br from-green-100 to-blue-100 relative group hover:from-green-200 hover:to-blue-200 transition-all duration-500 cursor-pointer mobile-section-touch">
+             <section className="py-8 sm:py-12 md:py-16 lg:py-20 bg-gradient-to-br from-green-100 to-blue-100 relative group hover:from-green-200 hover:to-blue-200 transition-all duration-500 cursor-pointer">
                {/* Background Hover Effects */}
                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                  <div className="absolute top-10 right-20 w-32 h-32 bg-green-300 rounded-full blur-3xl group-hover:animate-pulse"></div>
@@ -803,7 +803,7 @@ const HomePage: React.FC = () => {
                    <div className="space-y-8">
                      {/* Descriptive Text with Hover Effects */}
                      <div className="space-y-6">
-                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer mobile-card-touch mobile-card-touch">
+                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer  ">
                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-100 transition-colors duration-300 mobile-icon-touch mobile-icon-touch">
                            <TrendingUp className="w-5 h-5 text-gray-600 group-hover:text-green-600 transition-colors duration-300" />
                          </div>
@@ -813,7 +813,7 @@ const HomePage: React.FC = () => {
                          </div>
                        </div>
                        
-                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer ">
                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors duration-300">
                            <Users className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
                          </div>
@@ -836,11 +836,11 @@ const HomePage: React.FC = () => {
                      
                      {/* Stats Cards */}
                      <div className="grid grid-cols-2 gap-6">
-                       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 text-center group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 text-center group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer ">
                          <div className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300">₹2.5L+</div>
                          <div className="text-sm text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">Monthly Income</div>
                        </div>
-                       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 text-center group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 text-center group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer ">
                          <div className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">40%</div>
                          <div className="text-sm text-gray-600 group-hover:text-blue-700 transition-colors duration-300">Higher Profits</div>
                        </div>
@@ -867,7 +867,7 @@ const HomePage: React.FC = () => {
                      </div>
                      <div className="relative rounded-lg overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
                        {/* Base Image Container */}
-                       <div className="relative w-full h-64 sm:h-72 md:h-80 mobile-image-container">
+                       <div className="relative w-full h-64 sm:h-72 md:h-80">
                          <img 
                            src={kisanStandingImage} 
                            alt="Successful Farmer" 
@@ -906,7 +906,7 @@ const HomePage: React.FC = () => {
 
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                    {features.map((feature, index) => (
-                     <Card key={index} className={`group text-center card-hover animate-fade-in-up stagger-${index + 1} ${feature.cardBg} backdrop-blur-sm border-2 ${feature.borderColor} shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer mobile-card-touch`}>
+                     <Card key={index} className={`group text-center card-hover animate-fade-in-up stagger-${index + 1} ${feature.cardBg} backdrop-blur-sm border-2 ${feature.borderColor} shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer `}>
                        <CardContent className="p-8 sm:p-10">
                          <div className={`w-24 h-24 ${feature.iconBg} rounded-full flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg group-hover:shadow-xl`}>
                            <feature.icon className={`w-12 h-12 ${feature.color} transition-all duration-500 group-hover:scale-110`} />
@@ -928,7 +928,7 @@ const HomePage: React.FC = () => {
              </section>
 
              {/* Working Process Section */}
-             <section className="py-8 sm:py-12 md:py-16 lg:py-20 bg-gradient-to-br from-purple-100 to-indigo-100 relative group hover:from-purple-200 hover:to-indigo-200 transition-all duration-500 cursor-pointer mobile-section-touch">
+             <section className="py-8 sm:py-12 md:py-16 lg:py-20 bg-gradient-to-br from-purple-100 to-indigo-100 relative group hover:from-purple-200 hover:to-indigo-200 transition-all duration-500 cursor-pointer ">
                {/* Background Hover Effects */}
                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                  <div className="absolute top-20 right-20 w-40 h-40 bg-purple-300 rounded-full blur-3xl group-hover:animate-pulse"></div>
@@ -985,7 +985,7 @@ const HomePage: React.FC = () => {
                          </div>
                        </div>
                        
-                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer ">
                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors duration-300">
                            <span className="text-lg font-bold text-gray-600 group-hover:text-blue-600 transition-colors duration-300">4</span>
                          </div>
@@ -995,7 +995,7 @@ const HomePage: React.FC = () => {
                          </div>
                        </div>
                        
-                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                       <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer ">
                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-100 transition-colors duration-300 mobile-icon-touch">
                            <span className="text-lg font-bold text-gray-600 group-hover:text-green-600 transition-colors duration-300">5</span>
                          </div>
@@ -1036,7 +1036,7 @@ const HomePage: React.FC = () => {
                          <img 
                            src={workingProcessImage} 
                            alt="Achhadam Working Process Piechart" 
-                           className="w-72 h-72 sm:w-80 sm:h-80 md:w-80 md:h-80 object-cover rounded-full scale-100 sm:scale-[1.68] mobile-image-container"
+                           className="w-72 h-72 sm:w-80 sm:h-80 md:w-80 md:h-80 object-cover rounded-full scale-100 sm:scale-[1.68] "
                            style={{objectPosition: 'center center'}}
                            onClick={() => window.open(workingProcessImage, '_blank')}
                          />
@@ -1083,7 +1083,7 @@ const HomePage: React.FC = () => {
                        </div>
                      </div>
                      
-                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer ">
                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-100 transition-colors duration-300 mobile-icon-touch">
                          <Heart className="w-5 h-5 text-gray-600 group-hover:text-green-600 transition-colors duration-300" />
                        </div>
@@ -1093,7 +1093,7 @@ const HomePage: React.FC = () => {
                        </div>
                      </div>
                      
-                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer ">
                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors duration-300">
                          <Award className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
                        </div>
@@ -1126,7 +1126,7 @@ const HomePage: React.FC = () => {
                      </div>
                      <div className="relative rounded-lg overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
                        {/* Base Image Container */}
-                       <div className="relative w-full h-80 sm:h-80 mobile-image-container">
+                       <div className="relative w-full h-80 sm:h-80 ">
                          <img 
                            src={operatingImage} 
                            alt="Direct Trade Platform" 
@@ -1166,7 +1166,7 @@ const HomePage: React.FC = () => {
                  
                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
                    <div className="space-y-6 flex flex-col justify-center h-full">
-                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer ">
                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors duration-300">
                          <Zap className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
                        </div>
@@ -1176,7 +1176,7 @@ const HomePage: React.FC = () => {
                        </div>
                      </div>
                      
-                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer mobile-card-touch">
+                     <div className="flex items-start space-x-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100 group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer ">
                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-100 transition-colors duration-300 mobile-icon-touch">
                          <TrendingUp className="w-5 h-5 text-gray-600 group-hover:text-green-600 transition-colors duration-300" />
                        </div>

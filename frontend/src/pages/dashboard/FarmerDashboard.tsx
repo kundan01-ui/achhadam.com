@@ -188,6 +188,36 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // KYC Verification States
+  const [showKYCModal, setShowKYCModal] = useState(false);
+  const [kycCompleted, setKycCompleted] = useState(false);
+  const [kycDismissedThisSession, setKycDismissedThisSession] = useState(false);
+  
+  // KYC Data
+  const [kycData, setKycData] = useState({
+    farmerKYCId: '',
+    panNumber: '',
+    aadharNumber: '',
+    accountHolderName: '',
+    bankAccountNumber: '',
+    ifscCode: '',
+    bankName: '',
+    branchName: ''
+  });
+  
+  const [kycFiles, setKycFiles] = useState({
+    panCardFile: null as File | null,
+    aadharFrontFile: null as File | null,
+    aadharBackFile: null as File | null
+  });
+  
+  // Generate unique farmer ID for KYC
+  const generateFarmerKYCId = () => {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substr(2, 9);
+    return `FARMER_KYC_${timestamp}_${random}`;
+  };
   const [showCropUpload, setShowCropUpload] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -301,6 +331,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     if (!images || images.length === 0) return null;
     if (images.length === 1) return images[0];
     
+    console.log('🔍 Selecting best image from:', images.length, 'images');
+    
     // Enhanced algorithm: prioritize analyzed images with high quality
     const analyzedImages = images.filter(img => img && img.analysis && img.analysis.isAnalyzed);
     if (analyzedImages.length > 0) {
@@ -308,37 +340,51 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       const bestAnalyzed = analyzedImages.reduce((best, current) => 
         (current.analysis?.confidence || 0) > (best.analysis?.confidence || 0) ? current : best
       );
+      console.log('✅ Selected analyzed image:', bestAnalyzed);
       return bestAnalyzed;
     }
     
     // Fallback: choose image with largest file size (usually better quality)
     const validImages = images.filter(img => img && img.fileSize);
-    if (validImages.length === 0) return images[0]; // Return first image if no valid images
+    if (validImages.length === 0) {
+      console.log('⚠️ No valid images, returning first image');
+      return images[0]; // Return first image if no valid images
+    }
     
     const sortedBySize = validImages.sort((a, b) => (b.fileSize || 0) - (a.fileSize || 0));
+    console.log('✅ Selected image by size:', sortedBySize[0]);
     return sortedBySize[0];
   };
 
   // Function to handle image display with fallback
   const getImageUrl = (imageUrl) => {
-    if (!imageUrl) return '/placeholder-crop.jpg';
+    if (!imageUrl) {
+      console.log('⚠️ No image URL provided, using placeholder');
+      return '/placeholder-crop.jpg';
+    }
+    
+    console.log('🖼️ Processing image URL:', imageUrl);
     
     // If it's a blob URL (from file upload), return as is
     if (imageUrl.startsWith('blob:')) {
+      console.log('✅ Using blob URL');
       return imageUrl;
     }
     
     // If it's a data URL, return as is
     if (imageUrl.startsWith('data:')) {
+      console.log('✅ Using data URL');
       return imageUrl;
     }
     
     // Handle file objects
     if (imageUrl instanceof File) {
+      console.log('✅ Creating object URL from File');
       return URL.createObjectURL(imageUrl);
     }
     
     // For other URLs, return as is
+    console.log('✅ Using direct URL');
     return imageUrl;
   };
 
@@ -470,10 +516,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   };
 
   // Enhanced crop data structure with proper image management
-  const createCropData = async (formData, images) => {
-    const cropId = `crop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const createCropData = async (formData, images, existingCropId = null) => {
+    const cropId = existingCropId || `crop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     console.log(`🌾 Creating crop data for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
+    console.log(`🆔 Using crop ID: ${cropId} (existing: ${!!existingCropId})`);
     
     // Process images safely with async handling
     const imagePromises = images.map(file => createImageMetadata(file, cropId, userProfile.id));
@@ -1026,6 +1073,20 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     }
   };
 
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showUserMenu && !(event.target as Element).closest('.relative')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
+
   // Update user profile when user data changes - USER SPECIFIC with PERSISTENT ID
   useEffect(() => {
     if (user) {
@@ -1104,6 +1165,27 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     }
   }, [user]);
 
+  // Check KYC status on component mount
+  useEffect(() => {
+    // Check for any farmer KYC data in localStorage
+    const allKeys = Object.keys(localStorage);
+    const kycKeys = allKeys.filter(key => key.startsWith('farmer_kyc_') || key.startsWith('farmer_pan_') || key.startsWith('farmer_aadhar_'));
+    
+    const sessionKycDismissed = sessionStorage.getItem('kyc_dismissed_this_session');
+    
+    if (kycKeys.length > 0) {
+      setKycCompleted(true);
+      console.log('✅ KYC already completed - Found keys:', kycKeys);
+    } else {
+      setKycCompleted(false);
+      console.log('❌ KYC not completed - No KYC data found');
+      if (sessionKycDismissed === 'true') {
+        setKycDismissedThisSession(true);
+        console.log('📝 KYC dismissed this session');
+      }
+    }
+  }, []);
+  
   // Load crops from storage when component mounts - USER SPECIFIC with PERSISTENCE
   useEffect(() => {
     if (userProfile.id) {
@@ -1778,9 +1860,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       const isEditMode = cropFormData.id;
                       
                       if (isEditMode) {
-                        // Update existing crop
-                        const updatedCrop = await createCropData(cropFormData, cropFormData.images);
-                        updatedCrop.id = cropFormData.id; // Keep the original ID
+                        // Update existing crop - use existing ID to prevent duplicates
+                        const updatedCrop = await createCropData(cropFormData, cropFormData.images, cropFormData.id);
                         updatedCrop.uploadedAt = cropFormData.uploadedAt; // Keep original upload date
                         
                         // Update in database
@@ -1866,11 +1947,73 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Smart Crop Listing</h2>
-            <p className="text-gray-600 mt-1">Upload your crops with AI-powered features</p>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Smart Crop Listing</h2>
+              <p className="text-gray-600 mt-1">Upload your crops with AI-powered features</p>
+              {!kycCompleted && (
+                <div className="mt-2 flex items-center space-x-2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <span className="text-sm text-yellow-700">
+                    KYC verification required to list crops
+                  </span>
+                </div>
+              )}
+              {kycCompleted && (
+                <div className="mt-2 flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-700">
+                    KYC verification completed
+                  </span>
+                </div>
+              )}
+              
+              {/* Debug Info */}
+              <div className="mt-2 text-xs text-gray-500">
+                <p>Debug: KYC Completed: {kycCompleted ? 'Yes' : 'No'}</p>
+                <p>Session Dismissed: {kycDismissedThisSession ? 'Yes' : 'No'}</p>
+                <button 
+                  onClick={() => {
+                    const allKeys = Object.keys(localStorage);
+                    const kycKeys = allKeys.filter(key => key.startsWith('farmer_kyc_') || key.startsWith('farmer_pan_') || key.startsWith('farmer_aadhar_'));
+                    console.log('🔍 All localStorage keys:', allKeys);
+                    console.log('🔍 KYC keys found:', kycKeys);
+                    alert(`KYC Keys: ${kycKeys.length > 0 ? kycKeys.join(', ') : 'None found'}`);
+                  }}
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  Check KYC Data
+                </button>
+              </div>
+            </div>
           </div>
           <button 
-            onClick={() => setShowCropUploadModal(true)}
+            onClick={() => {
+              console.log('🔍 New Listing button clicked');
+              
+              // Check if KYC is completed
+              const allKeys = Object.keys(localStorage);
+              const kycKeys = allKeys.filter(key => key.startsWith('farmer_kyc_') || key.startsWith('farmer_pan_') || key.startsWith('farmer_aadhar_'));
+              const kycCompleted = kycKeys.length > 0;
+              
+              console.log('🔍 KYC Status Check:', {
+                kycCompleted,
+                kycKeys,
+                sessionDismissed: sessionStorage.getItem('kyc_dismissed_this_session')
+              });
+              
+              if (!kycCompleted) {
+                // Check if KYC was dismissed this session
+                if (sessionStorage.getItem('kyc_dismissed_this_session') === 'true') {
+                  alert('🔐 KYC verification is required to list crops. Please complete your KYC verification first.');
+                  return;
+                }
+                console.log('📋 Showing KYC modal');
+                setShowKYCModal(true);
+              } else {
+                console.log('✅ KYC completed, opening crop upload');
+                setShowCropUploadModal(true);
+              }
+            }}
             className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
           >
             <Plus className="h-5 w-5" />
@@ -1942,8 +2085,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       src={getImageUrl(selectBestImage(crop.images)?.imageUrl)} 
                       alt={crop.name}
                       className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                      onLoad={() => {
+                        console.log('✅ Image loaded successfully for crop:', crop.name);
+                      }}
                       onError={(e) => {
-                        console.log('Image failed to load, using placeholder');
+                        console.log('❌ Image failed to load for crop:', crop.name);
+                        console.log('🖼️ Crop images:', crop.images);
+                        console.log('🔍 Selected image:', selectBestImage(crop.images));
                         e.currentTarget.src = '/placeholder-crop.jpg';
                       }}
                       onClick={() => {
@@ -3571,232 +3719,429 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       {/* Image Gallery Modal */}
       {renderImageGalleryModal()}
       
       {/* Crop Upload Modal */}
       {renderCropUploadModal()}
       
-      {/* Mobile Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
-        <div className="px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <Menu className="h-5 w-5 text-gray-600" />
-              </button>
-              
-              {/* Desktop Sidebar Toggle */}
-              <button
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="hidden lg:block p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <Menu className="h-5 w-5 text-gray-600" />
-              </button>
-              
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Farmer Dashboard</h1>
-            </div>
-            
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Debug buttons - remove in production */}
-              <button
-                onClick={() => testUserSpecificData()}
-                className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Test Data
-              </button>
-              <button
-                onClick={() => validateUserData()}
-                className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
-              >
-                Validate
-              </button>
-              <button
-                onClick={() => clearAllData()}
-                className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                Clear My Data
-              </button>
-              
-              {/* Search - Hidden on mobile */}
-              <div className="hidden sm:block relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
-                />
-              </div>
-              
-              {/* Notifications */}
-              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
-                <Bell className="h-5 w-5 text-gray-600" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
-              </button>
-              
-              {/* User Profile - Mobile Optimized */}
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                {/* User Info - Hidden on mobile */}
-                <div className="hidden sm:block text-right">
-                  <p className="text-sm font-medium text-gray-900 truncate max-w-32">{userProfile.name}</p>
-                  <p className="text-xs text-gray-500 truncate max-w-32">{userProfile.email}</p>
-                  <p className="text-xs text-green-600 font-medium">FARMER</p>
+      {/* KYC Verification Modal */}
+      {showKYCModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">🔐 KYC Verification Required</h2>
+                  <p className="text-gray-600 mt-1">Complete your profile to start listing crops</p>
                 </div>
-                
-                {/* User Avatar & Menu */}
-                <div className="relative">
+                <button
+                  onClick={() => setShowKYCModal(false)}
+                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Warning Message */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3" />
+                  <div>
+                    <h3 className="text-sm font-medium text-yellow-800">KYC Verification Required</h3>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      You need to complete your KYC verification and bank details to start listing crops on our platform.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* KYC Form */}
+              <div className="space-y-6">
+                {/* PAN Card Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">📄 PAN Card Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        PAN Card Number *
+                      </label>
+                      <input
+                        type="text"
+                        value={kycData.panNumber}
+                        onChange={(e) => setKycData(prev => ({ ...prev, panNumber: e.target.value }))}
+                        placeholder="ABCDE1234F"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        maxLength={10}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Upload PAN Card *
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => setKycFiles(prev => ({ ...prev, panCardFile: e.target.files?.[0] || null }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Aadhar Card Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">🆔 Aadhar Card Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Aadhar Card Number *
+                      </label>
+                      <input
+                        type="text"
+                        value={kycData.aadharNumber}
+                        onChange={(e) => setKycData(prev => ({ ...prev, aadharNumber: e.target.value }))}
+                        placeholder="1234 5678 9012"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        maxLength={12}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Upload Aadhar Front *
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => setKycFiles(prev => ({ ...prev, aadharFrontFile: e.target.files?.[0] || null }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Upload Aadhar Back *
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => setKycFiles(prev => ({ ...prev, aadharBackFile: e.target.files?.[0] || null }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bank Details Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">🏦 Bank Account Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Account Holder Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={kycData.accountHolderName}
+                        onChange={(e) => setKycData(prev => ({ ...prev, accountHolderName: e.target.value }))}
+                        placeholder="Enter full name as per bank records"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Bank Account Number *
+                      </label>
+                      <input
+                        type="text"
+                        value={kycData.bankAccountNumber}
+                        onChange={(e) => setKycData(prev => ({ ...prev, bankAccountNumber: e.target.value }))}
+                        placeholder="Enter bank account number"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        IFSC Code *
+                      </label>
+                      <input
+                        type="text"
+                        value={kycData.ifscCode}
+                        onChange={(e) => setKycData(prev => ({ ...prev, ifscCode: e.target.value.toUpperCase() }))}
+                        placeholder="SBIN0001234"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        maxLength={11}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Bank Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={kycData.bankName}
+                        onChange={(e) => setKycData(prev => ({ ...prev, bankName: e.target.value }))}
+                        placeholder="State Bank of India"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Branch Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={kycData.branchName}
+                        onChange={(e) => setKycData(prev => ({ ...prev, branchName: e.target.value }))}
+                        placeholder="Enter branch name"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-xl">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-500">
+                  <p>🔐 Complete KYC verification to start listing crops</p>
+                </div>
+                <div className="flex space-x-3">
                   <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    onClick={() => {
+                      // Set session flag to not show KYC popup again this session
+                      sessionStorage.setItem('kyc_dismissed_this_session', 'true');
+                      setKycDismissedThisSession(true);
+                      setShowKYCModal(false);
+                      console.log('📝 KYC dismissed for this session');
+                    }}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold text-sm">F</span>
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-gray-600 hidden sm:block" />
+                    Complete Later
                   </button>
-                  
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100 sm:hidden">
-                        <p className="text-sm font-medium text-gray-900">{userProfile.name}</p>
-                        <p className="text-xs text-gray-500">{userProfile.email}</p>
-                        <p className="text-xs text-green-600 font-medium">FARMER</p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setShowProfileModal(true);
-                          setShowUserMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                      >
-                        <User className="h-4 w-4" />
-                        <span>View Profile</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowProfileModal(true);
-                          setShowUserMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span>Edit Profile</span>
-                      </button>
-                      <hr className="my-2" />
-                      {onLogout && (
-                        <button
-                          onClick={() => {
-                            onLogout();
-                            setShowUserMenu(false);
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
-                        >
-                          <span>Logout</span>
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  <button
+                    onClick={() => {
+                      // Generate unique farmer KYC ID
+                      const farmerKYCId = generateFarmerKYCId();
+                      
+                      // Validate required fields
+                      if (!kycData.panNumber || !kycData.bankAccountNumber || !kycData.ifscCode) {
+                        alert('Please fill all required fields');
+                        return;
+                      }
+                      
+                      if (!kycFiles.panCardFile || !kycFiles.aadharFrontFile || !kycFiles.aadharBackFile) {
+                        alert('Please upload all required documents');
+                        return;
+                      }
+                      
+                      // Save KYC data to localStorage
+                      const kycDataToSave = {
+                        farmerKYCId,
+                        panNumber: kycData.panNumber,
+                        bankAccountNumber: kycData.bankAccountNumber,
+                        ifscCode: kycData.ifscCode,
+                        completedAt: new Date().toISOString()
+                      };
+                      localStorage.setItem('farmer_kyc_data', JSON.stringify(kycDataToSave));
+                      
+                      // Save PAN card data separately
+                      const panCardData = {
+                        farmerKYCId,
+                        panNumber: kycData.panNumber,
+                        fileName: kycFiles.panCardFile?.name,
+                        uploadedAt: new Date().toISOString()
+                      };
+                      localStorage.setItem(`farmer_pan_${farmerKYCId}`, JSON.stringify(panCardData));
+                      
+                      // Save Aadhar card data separately
+                      const aadharCardData = {
+                        farmerKYCId,
+                        aadharNumber: kycData.aadharNumber,
+                        aadharFrontFile: kycFiles.aadharFrontFile?.name,
+                        aadharBackFile: kycFiles.aadharBackFile?.name,
+                        uploadedAt: new Date().toISOString()
+                      };
+                      localStorage.setItem(`farmer_aadhar_${farmerKYCId}`, JSON.stringify(aadharCardData));
+                      
+                      setKycCompleted(true);
+                      setKycDismissedThisSession(false);
+                      setShowKYCModal(false);
+                      setShowCropUploadModal(true);
+                      
+                      // Clear session flag since KYC is now completed
+                      sessionStorage.removeItem('kyc_dismissed_this_session');
+                      
+                      alert(`✅ KYC verification completed! Your KYC ID: ${farmerKYCId}\nYou can now list crops.`);
+                    }}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Complete KYC
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </header>
+      )}
+      
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center">
+                <h1 className="text-3xl font-bold text-gray-900">Farmer Dashboard</h1>
+              </div>
+              <div className="flex items-center space-x-4">
+                {/* Profile Section */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-gray-900">{userProfile.name}</p>
+                      <p className="text-xs text-gray-500">Farmer</p>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                  </button>
+                  
+                  {/* User Menu Dropdown */}
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                      <button
+                        onClick={() => {
+                          setShowProfileModal(true);
+                          setShowUserMenu(false);
+                        }}
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                      >
+                        <User className="h-4 w-4 mr-3" />
+                        Profile Settings
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (onLogout) {
+                            onLogout();
+                          } else {
+                            localStorage.removeItem('farmer_user_id');
+                            localStorage.removeItem('farmer_user_key');
+                            window.location.reload();
+                          }
+                        }}
+                        className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                      >
+                        <X className="h-4 w-4 mr-3" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                >
+                  <Menu className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
 
-      <div className="flex">
-        {/* Desktop Sidebar */}
-        <aside className={`hidden lg:block ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-sm border-r border-gray-200 transition-all duration-300`}>
-          <nav className="p-4">
-            <ul className="space-y-2">
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <li key={item.id}>
+        <div className="flex">
+          {/* Sidebar */}
+          <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-sm transition-all duration-300`}>
+            <nav className="mt-5 px-2">
+              <div className="space-y-1">
+                {[
+                  { id: 'overview', name: 'Overview', icon: LayoutDashboard },
+                  { id: 'crop-upload', name: 'Upload Crop', icon: Plus },
+                  { id: 'marketplace', name: 'Marketplace', icon: Package },
+                  { id: 'orders', name: 'Orders', icon: ShoppingCart },
+                  { id: 'analytics', name: 'Analytics', icon: TrendingUp },
+                  { id: 'services', name: 'Services', icon: Leaf },
+                  { id: 'financial', name: 'Financial', icon: DollarSign },
+                  { id: 'weather', name: 'Weather', icon: Sun },
+                  { id: 'settings', name: 'Settings', icon: Settings }
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
                     <button
+                      key={item.id}
                       onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                      className={`w-full flex items-center px-3 py-3 text-base font-medium rounded-md ${
                         activeTab === item.id
-                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                          ? 'bg-gray-100 text-gray-900'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
-                      <Icon className={`h-5 w-5 ${sidebarCollapsed ? 'mx-auto' : ''}`} />
-                      {!sidebarCollapsed && <span className="font-medium">{item.label}</span>}
+                      <Icon className="mr-3 h-5 w-5" />
+                      {!sidebarCollapsed && item.name}
                     </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        </aside>
+                  );
+                })}
+              </div>
+            </nav>
+          </div>
 
-        {/* Mobile Sidebar Overlay */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden fixed inset-0 z-50 flex">
-            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setMobileMenuOpen(false)}></div>
-            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+          {/* Main Content */}
+          <div className="flex-1 p-6">
+            {/* Debug Section */}
+            <div className="p-4 bg-yellow-50 border-b border-yellow-200 mb-6">
+              <div className="flex items-center space-x-4">
                 <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  onClick={() => testUserSpecificData()}
+                  className="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
-                  <X className="h-5 w-5 text-gray-600" />
+                  Test Data
+                </button>
+                <button
+                  onClick={() => validateUserData()}
+                  className="px-4 py-2 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                >
+                  Validate
+                </button>
+                <button
+                  onClick={() => clearAllData()}
+                  className="px-4 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Clear My Data
                 </button>
               </div>
-              <nav className="flex-1 p-4">
-                <ul className="space-y-2">
-                  {navigationItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <li key={item.id}>
-                        <button
-                          onClick={() => {
-                            setActiveTab(item.id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors ${
-                            activeTab === item.id
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                          }`}
-                        >
-                          <Icon className="h-5 w-5" />
-                          <span className="font-medium">{item.label}</span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </nav>
             </div>
+
+            {/* Main Content */}
+            <main className="flex-1">
+              {renderContent()}
+            </main>
           </div>
-        )}
+        </div>
 
-        {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-6">
-          {renderContent()}
-        </main>
+        {/* Profile Modal */}
+        <ProfileModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          user={userProfile}
+          onUpdate={handleUpdateProfile}
+          onDeleteAccount={handleDeleteAccount}
+          onLogout={() => {
+            setShowProfileModal(false);
+            if (onLogout) onLogout();
+          }}
+        />
       </div>
-
-      {/* Profile Modal */}
-      <ProfileModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        user={userProfile}
-        onUpdate={handleUpdateProfile}
-        onDeleteAccount={handleDeleteAccount}
-        onLogout={() => {
-          setShowProfileModal(false);
-          if (onLogout) onLogout();
-        }}
-      />
-    </div>
+    </>
   );
 };
 
