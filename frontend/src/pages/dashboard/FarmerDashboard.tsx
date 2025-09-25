@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { saveToMongoDB, saveToPostgreSQL, uploadImagesToCloud, loadCropsFromDatabase, deleteCropFromDatabase, updateCropInDatabase } from '../../services/databaseService';
 import { testUserSpecificData, clearAllFarmerData } from '../../utils/userSpecificTest';
+import '../../../src/styles/animations.css';
 import { 
   LayoutDashboard, 
   Leaf, 
@@ -1944,24 +1945,24 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   const renderCropUpload = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Smart Crop Listing</h2>
-              <p className="text-gray-600 mt-1">Upload your crops with AI-powered features</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Smart Crop Listing</h2>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">Upload your crops with AI-powered features</p>
               {!kycCompleted && (
                 <div className="mt-2 flex items-center space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                  <span className="text-sm text-yellow-700">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm text-yellow-700">
                     KYC verification required to list crops
                   </span>
                 </div>
               )}
               {kycCompleted && (
                 <div className="mt-2 flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-sm text-green-700">
+                  <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm text-green-700">
                     KYC verification completed
                   </span>
                 </div>
@@ -2014,7 +2015,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                 setShowCropUploadModal(true);
               }
             }}
-            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+            className="w-full sm:w-auto bg-green-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center sm:justify-start space-x-2"
           >
             <Plus className="h-5 w-5" />
             <span>New Listing</span>
@@ -2024,40 +2025,40 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
       {/* Current Listings */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Your Active Listings</h3>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
+        <div className="p-4 sm:p-6 border-b border-gray-100">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Your Active Listings</h3>
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+              <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                 Your Crops: <span className="font-semibold text-green-600">{uploadedCrops.length}</span>
               </span>
-              <span className="text-sm text-gray-600">
+              <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                 Total Listings: <span className="font-semibold text-blue-600">{uploadedCrops.length + cropListings.length}</span>
               </span>
             </div>
           </div>
         </div>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Show message if no crops uploaded */}
           {uploadedCrops.length === 0 && (
-            <div className="text-center py-8 mb-6">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Leaf className="h-8 w-8 text-gray-400" />
+            <div className="text-center py-6 sm:py-8 mb-4 sm:mb-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Leaf className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
               </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">No Crops Uploaded Yet</h4>
-              <p className="text-gray-600 mb-4">Start by uploading your first crop to see it here!</p>
+              <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">No Crops Uploaded Yet</h4>
+              <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">Start by uploading your first crop to see it here!</p>
               <button 
                 onClick={() => setShowCropUploadModal(true)}
-                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 mx-auto"
+                className="bg-green-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 mx-auto text-sm sm:text-base"
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span>Upload Your First Crop</span>
               </button>
             </div>
           )}
 
           {/* Show uploaded crops first, then mock data */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {/* User's uploaded crops */}
             {uploadedCrops.map((crop) => (
               <div key={crop.id} className="border border-green-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-green-50">
@@ -2908,7 +2909,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   const renderOverview = () => (
     <div className="space-y-4">
       {/* Stats Grid - Perfect Mobile Design */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {/* Total Crops */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <div className="flex flex-col items-center text-center">
@@ -3728,33 +3729,33 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       
       {/* KYC Verification Modal */}
       {showKYCModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideInUp">
             {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 rounded-t-xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">🔐 KYC Verification Required</h2>
-                  <p className="text-gray-600 mt-1">Complete your profile to start listing crops</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">🔐 KYC Verification Required</h2>
+                  <p className="text-sm sm:text-base text-gray-600 mt-1">Complete your profile to start listing crops</p>
                 </div>
                 <button
                   onClick={() => setShowKYCModal(false)}
                   className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                 >
-                  <X className="h-6 w-6" />
+                  <X className="h-5 sm:h-6 w-5 sm:w-6" />
                 </button>
               </div>
             </div>
 
             {/* Content */}
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {/* Warning Message */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 animate-pulse">
                 <div className="flex items-start">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3" />
+                  <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 mr-2 sm:mr-3 flex-shrink-0" />
                   <div>
                     <h3 className="text-sm font-medium text-yellow-800">KYC Verification Required</h3>
-                    <p className="text-sm text-yellow-700 mt-1">
+                    <p className="text-xs sm:text-sm text-yellow-700 mt-1">
                       You need to complete your KYC verification and bank details to start listing crops on our platform.
                     </p>
                   </div>
@@ -3762,13 +3763,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               </div>
 
               {/* KYC Form */}
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* PAN Card Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">📄 PAN Card Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="space-y-3 sm:space-y-4 animate-fadeIn">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">📄 PAN Card Details</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         PAN Card Number *
                       </label>
                       <input
@@ -3776,30 +3777,30 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                         value={kycData.panNumber}
                         onChange={(e) => setKycData(prev => ({ ...prev, panNumber: e.target.value }))}
                         placeholder="ABCDE1234F"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
                         maxLength={10}
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Upload PAN Card *
                       </label>
                       <input
                         type="file"
                         accept="image/*,.pdf"
                         onChange={(e) => setKycFiles(prev => ({ ...prev, panCardFile: e.target.files?.[0] || null }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs sm:text-sm transition-all duration-300 hover:border-green-300"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Aadhar Card Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">🆔 Aadhar Card Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="space-y-3 sm:space-y-4 animate-fadeIn" style={{animationDelay: '0.2s'}}>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">🆔 Aadhar Card Details</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Aadhar Card Number *
                       </label>
                       <input
@@ -3807,41 +3808,41 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                         value={kycData.aadharNumber}
                         onChange={(e) => setKycData(prev => ({ ...prev, aadharNumber: e.target.value }))}
                         placeholder="1234 5678 9012"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
                         maxLength={12}
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Upload Aadhar Front *
                       </label>
                       <input
                         type="file"
                         accept="image/*,.pdf"
                         onChange={(e) => setKycFiles(prev => ({ ...prev, aadharFrontFile: e.target.files?.[0] || null }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs sm:text-sm transition-all duration-300 hover:border-green-300"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="sm:col-span-2 transition-all duration-300 hover:shadow-md rounded-lg p-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Upload Aadhar Back *
                       </label>
                       <input
                         type="file"
                         accept="image/*,.pdf"
                         onChange={(e) => setKycFiles(prev => ({ ...prev, aadharBackFile: e.target.files?.[0] || null }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs sm:text-sm transition-all duration-300 hover:border-green-300"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Bank Details Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">🏦 Bank Account Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="space-y-3 sm:space-y-4 animate-fadeIn" style={{animationDelay: '0.4s'}}>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">🏦 Bank Account Details</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Account Holder Name *
                       </label>
                       <input
@@ -3849,11 +3850,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                         value={kycData.accountHolderName}
                         onChange={(e) => setKycData(prev => ({ ...prev, accountHolderName: e.target.value }))}
                         placeholder="Enter full name as per bank records"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Bank Account Number *
                       </label>
                       <input
@@ -3861,11 +3862,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                         value={kycData.bankAccountNumber}
                         onChange={(e) => setKycData(prev => ({ ...prev, bankAccountNumber: e.target.value }))}
                         placeholder="Enter bank account number"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         IFSC Code *
                       </label>
                       <input
@@ -3873,12 +3874,12 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                         value={kycData.ifscCode}
                         onChange={(e) => setKycData(prev => ({ ...prev, ifscCode: e.target.value.toUpperCase() }))}
                         placeholder="SBIN0001234"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
                         maxLength={11}
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Bank Name *
                       </label>
                       <input
@@ -3886,11 +3887,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                         value={kycData.bankName}
                         onChange={(e) => setKycData(prev => ({ ...prev, bankName: e.target.value }))}
                         placeholder="State Bank of India"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
                       />
                     </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="sm:col-span-2 transition-all duration-300 hover:shadow-md rounded-lg p-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Branch Name *
                       </label>
                       <input
@@ -3898,7 +3899,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                         value={kycData.branchName}
                         onChange={(e) => setKycData(prev => ({ ...prev, branchName: e.target.value }))}
                         placeholder="Enter branch name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
                       />
                     </div>
                   </div>
@@ -3907,12 +3908,12 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-xl">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-500">
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 sm:p-6 rounded-b-xl shadow-lg animate-fadeIn" style={{animationDelay: '0.6s'}}>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+                <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
                   <p>🔐 Complete KYC verification to start listing crops</p>
                 </div>
-                <div className="flex space-x-3">
+                <div className="flex flex-col sm:flex-row w-full sm:w-auto space-y-2 sm:space-y-0 sm:space-x-3">
                   <button
                     onClick={() => {
                       // Set session flag to not show KYC popup again this session
@@ -3921,7 +3922,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       setShowKYCModal(false);
                       console.log('📝 KYC dismissed for this session');
                     }}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                    className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-300 border border-gray-200 rounded-lg hover:bg-gray-50 hover:shadow-md text-sm"
                   >
                     Complete Later
                   </button>
@@ -3980,7 +3981,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       
                       alert(`✅ KYC verification completed! Your KYC ID: ${farmerKYCId}\nYou can now list crops.`);
                     }}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="w-full sm:w-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300 hover:shadow-md text-sm"
                   >
                     Complete KYC
                   </button>
@@ -3992,76 +3993,182 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       )}
       
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
+        {/* Mobile Header */}
         <header className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
-              <div className="flex items-center">
-                <h1 className="text-3xl font-bold text-gray-900">Farmer Dashboard</h1>
-              </div>
-              <div className="flex items-center space-x-4">
-                {/* Profile Section */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                      <User className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-gray-900">{userProfile.name}</p>
-                      <p className="text-xs text-gray-500">Farmer</p>
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
-                  </button>
-                  
-                  {/* User Menu Dropdown */}
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                      <button
-                        onClick={() => {
-                          setShowProfileModal(true);
-                          setShowUserMenu(false);
-                        }}
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                      >
-                        <User className="h-4 w-4 mr-3" />
-                        Profile Settings
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (onLogout) {
-                            onLogout();
-                          } else {
-                            localStorage.removeItem('farmer_user_id');
-                            localStorage.removeItem('farmer_user_key');
-                            window.location.reload();
-                          }
-                        }}
-                        className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
-                      >
-                        <X className="h-4 w-4 mr-3" />
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-                
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-3 md:py-4">
+              <div className="flex items-center space-x-2 md:space-x-4">
+                {/* Mobile Menu Button */}
                 <button
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="md:hidden p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                 >
                   <Menu className="h-6 w-6" />
                 </button>
+                
+                {/* Desktop Sidebar Toggle - Moved to left */}
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="hidden md:block p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                >
+                  <Menu className="h-6 w-6" />
+                </button>
+                
+                <div className="flex items-center">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Farmer Dashboard</h1>
+                </div>
+              </div>
+              
+              {/* Profile Section - Moved to right */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center space-x-2 md:space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                    <User className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="hidden sm:block text-left">
+                    <p className="text-sm font-medium text-gray-900 truncate max-w-[100px] md:max-w-full">{userProfile.name}</p>
+                    <p className="text-xs text-gray-500">Farmer</p>
+                  </div>
+                </button>
+                
+                {/* Enhanced User Menu Dropdown */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200 animate-fadeIn">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">{userProfile.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{userProfile.email || userProfile.phone}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowProfileModal(true);
+                        setShowUserMenu(false);
+                      }}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      <User className="h-4 w-4 mr-3" />
+                      Profile Settings
+                    </button>
+                    <button
+                      onClick={() => {
+                        alert("Farm analytics dashboard will be available soon!");
+                        setShowUserMenu(false);
+                      }}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      <BarChart3 className="h-4 w-4 mr-3" />
+                      Farm Analytics
+                    </button>
+                    <button
+                      onClick={() => {
+                        alert("Notification preferences will be available soon!");
+                        setShowUserMenu(false);
+                      }}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      <Bell className="h-4 w-4 mr-3" />
+                      Notification Settings
+                    </button>
+                    <button
+                      onClick={() => {
+                        alert("Digital farm management tools will be available soon!");
+                        setShowUserMenu(false);
+                      }}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      <Sprout className="h-4 w-4 mr-3" />
+                      Digital Farm Tools
+                    </button>
+                    <div className="border-t border-gray-100 mt-1"></div>
+                    <button
+                      onClick={() => {
+                        if (onLogout) {
+                          onLogout();
+                        } else {
+                          localStorage.removeItem('farmer_user_id');
+                          localStorage.removeItem('farmer_user_key');
+                          window.location.reload();
+                        }
+                      }}
+                      className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                    >
+                      <X className="h-4 w-4 mr-3" />
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </header>
 
+        {/* Mobile Sidebar */}
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-40 flex md:hidden">
+            {/* Overlay */}
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setMobileMenuOpen(false)}></div>
+            
+            {/* Sidebar */}
+            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+              <div className="absolute top-0 right-0 -mr-12 pt-2">
+                <button 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                >
+                  <X className="h-6 w-6 text-white" />
+                </button>
+              </div>
+              
+              <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
+                <div className="flex-shrink-0 flex items-center px-4">
+                  <h2 className="text-xl font-bold text-green-600">Achhadam</h2>
+                </div>
+                <nav className="mt-5 px-2 space-y-1">
+                  {[
+                    { id: 'overview', name: 'Overview', icon: LayoutDashboard },
+                    { id: 'crop-upload', name: 'Upload Crop', icon: Plus },
+                    { id: 'marketplace', name: 'Marketplace', icon: Package },
+                    { id: 'orders', name: 'Orders', icon: ShoppingCart },
+                    { id: 'analytics', name: 'Analytics', icon: TrendingUp },
+                    { id: 'services', name: 'Services', icon: Leaf },
+                    { id: 'financial', name: 'Financial', icon: DollarSign },
+                    { id: 'weather', name: 'Weather', icon: Sun },
+                    { id: 'settings', name: 'Settings', icon: Settings }
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveTab(item.id);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center px-3 py-3 text-base font-medium rounded-md ${
+                          activeTab === item.id
+                            ? 'bg-gray-100 text-gray-900'
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        }`}
+                      >
+                        <Icon className="mr-3 h-5 w-5" />
+                        {item.name}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+            </div>
+            
+            <div className="flex-shrink-0 w-14" aria-hidden="true">
+              {/* Dummy element to force sidebar to shrink to fit close icon */}
+            </div>
+          </div>
+        )}
+
         <div className="flex">
-          {/* Sidebar */}
-          <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-sm transition-all duration-300`}>
+          {/* Desktop Sidebar */}
+          <div className={`hidden md:block ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-sm transition-all duration-300`}>
             <nav className="mt-5 px-2">
               <div className="space-y-1">
                 {[
@@ -4096,25 +4203,25 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 p-6">
+          <div className="flex-1 p-3 sm:p-4 md:p-6">
             {/* Debug Section */}
-            <div className="p-4 bg-yellow-50 border-b border-yellow-200 mb-6">
-              <div className="flex items-center space-x-4">
+            <div className="p-3 sm:p-4 bg-yellow-50 border-b border-yellow-200 mb-4 sm:mb-6 overflow-x-auto">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                 <button
                   onClick={() => testUserSpecificData()}
-                  className="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-blue-500 text-white rounded hover:bg-blue-600 whitespace-nowrap"
                 >
                   Test Data
                 </button>
                 <button
                   onClick={() => validateUserData()}
-                  className="px-4 py-2 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-green-500 text-white rounded hover:bg-green-600 whitespace-nowrap"
                 >
                   Validate
                 </button>
                 <button
                   onClick={() => clearAllData()}
-                  className="px-4 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-red-500 text-white rounded hover:bg-red-600 whitespace-nowrap"
                 >
                   Clear My Data
                 </button>
