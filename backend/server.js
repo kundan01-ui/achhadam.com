@@ -37,7 +37,9 @@ app.use(cors({
     'http://localhost:5173', 
     'http://localhost:5174', 
     'https://achhadam-frontend.onrender.com',
-    'https://achhadamf.onrender.com'
+    'https://achhadamf.onrender.com',
+    'https://acchadam1.onrender.com',
+    'https://acchadam1-frontend.onrender.com'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
