@@ -1,6 +1,6 @@
 // API service for authentication and user management
 // Render Backend (Production) - Re-enabled
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://achhadam-backend.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://acchadam1-backend.onrender.com';
 
 // Local Backend (Development) - Commented out for production
 // const API_BASE_URL = 'http://localhost:10000';
