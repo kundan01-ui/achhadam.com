@@ -10,6 +10,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const admin = require('firebase-admin');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -51,6 +52,7 @@ app.use(limiter);
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 // Session middleware for OTP storage
 app.use(session({
@@ -600,13 +602,17 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Import auth routes
+// Import routes
 const authRoutes = require('./src/routes/auth/index.js');
 const passwordResetRoutes = require('./routes/auth.js');
+const cookieRoutes = require('./src/routes/cookieRoutes.js');
 
 // Register auth routes
 app.use('/api/auth', otpLimiter, authRoutes);
 app.use('/api/auth', passwordResetRoutes);
+
+// Cookie routes
+app.use('/api/cookies', cookieRoutes);
 
 // Razorpay Routes - Temporarily commented out
 // app.use('/api/razorpay', require('./src/routes/razorpay.js'));
