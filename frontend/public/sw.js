@@ -3,7 +3,8 @@ const CACHE_NAME = 'achhadam-v1';
 const urlsToCache = [
   '/',
   '/manifest.json',
-  '/achhadam-icon-original.jpeg'
+  '/achhadam-icon-original.jpeg',
+  '/achhadam-logo.jpg'
 ];
 
 // Install event

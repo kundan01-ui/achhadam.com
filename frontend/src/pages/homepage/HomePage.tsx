@@ -544,7 +544,7 @@ const HomePage: React.FC = () => {
                      <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 hover-scale animate-glow">
                        <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">
                          <img 
-                           src="/src/assets/achhadam%20logo.jpg" 
+                           src="/achhadam-logo.jpg" 
                            alt="Achhadam Logo" 
                            className="w-full h-full object-cover rounded-full"
                          />

@@ -48,7 +48,7 @@ const ContactUs: React.FC = () => {
             <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 hover-scale animate-glow">
               <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">
                 <img 
-                  src="/src/assets/achhadam%20logo.jpg" 
+                  src="/achhadam-logo.jpg" 
                   alt="Achhadam Logo" 
                   className="w-full h-full object-cover rounded-full"
                 />
