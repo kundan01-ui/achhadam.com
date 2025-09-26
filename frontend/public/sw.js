@@ -1,9 +1,9 @@
 // Service Worker for Achhadam PWA
-const CACHE_NAME = 'achhadam-v1';
+const CACHE_NAME = 'achhadam-v2';
 const urlsToCache = [
   '/',
   '/manifest.json',
-  '/achhadam-icon-original.jpeg',
+  '/achhadam%20logo.jpg',
   '/achhadam-logo.jpg'
 ];
 
