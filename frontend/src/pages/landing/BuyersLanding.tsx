@@ -532,12 +532,14 @@ const BuyersLanding: React.FC = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-gray-900 text-white py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 hover-scale animate-glow">
+          {/* Mobile: Stack layout, Desktop: Grid layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {/* Company Info - Full width on mobile, 2 columns on desktop */}
+            <div className="sm:col-span-2 lg:col-span-1">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mb-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 hover-scale animate-glow">
                   <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">
                     <img 
                       src="/achhadam-logo.jpg" 
@@ -546,7 +548,7 @@ const BuyersLanding: React.FC = () => {
                     />
                   </div>
                 </div>
-                <span className="text-2xl font-bold tracking-wide" 
+                <span className="text-lg sm:text-xl lg:text-2xl font-bold tracking-wide" 
                       style={{
                         textShadow: '1px 1px 2px rgba(0,0,0,0.2)',
                         fontWeight: '900',
@@ -559,52 +561,55 @@ const BuyersLanding: React.FC = () => {
                   A<span className="lowercase">chhadam</span>
                 </span>
               </div>
-              <p className="text-gray-400 mb-4">
+              <p className="text-gray-400 mb-4 text-sm sm:text-base">
                 Connecting businesses with verified farmers for better quality and lower costs.
               </p>
             </div>
             
+            {/* For Buyers */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">For Buyers</h3>
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">For Buyers</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Buy Crops</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Quality Check</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Bulk Orders</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Logistics</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base block py-1">Buy Crops</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base block py-1">Quality Check</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base block py-1">Bulk Orders</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base block py-1">Logistics</a></li>
               </ul>
             </div>
             
+            {/* Support */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Support</h3>
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Support</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base block py-1">Help Center</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base block py-1">Contact Us</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base block py-1">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base block py-1">Terms of Service</a></li>
               </ul>
             </div>
             
+            {/* Contact */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Contact</h3>
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Contact</h3>
               <div className="space-y-2 text-gray-400">
-                <div className="flex items-center">
-                  <Phone className="w-4 h-4 mr-2" />
-                  +91 1800-ACHHADAM
+                <div className="flex items-center text-sm sm:text-base">
+                  <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>+91 1800-ACHHADAM</span>
                 </div>
-                <div className="flex items-center">
-                  <Mail className="w-4 h-4 mr-2" />
-                  support@achhadam.com
+                <div className="flex items-center text-sm sm:text-base">
+                  <Mail className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>support@achhadam.com</span>
                 </div>
-                <div className="flex items-center">
-                  <MapPin className="w-4 h-4 mr-2" />
-                  Pan India Coverage
+                <div className="flex items-center text-sm sm:text-base">
+                  <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Pan India Coverage</span>
                 </div>
               </div>
             </div>
           </div>
           
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 ACHHADAM Digital Farming Platform. All rights reserved.</p>
+          <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-gray-400">
+            <p className="text-sm sm:text-base">&copy; 2024 ACHHADAM Digital Farming Platform. All rights reserved.</p>
           </div>
         </div>
       </footer>

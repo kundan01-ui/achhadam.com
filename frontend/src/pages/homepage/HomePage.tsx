@@ -1391,13 +1391,14 @@ const HomePage: React.FC = () => {
              </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 sm:py-16">
+      <footer className="bg-gray-900 text-white py-8 sm:py-12 lg:py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Company Info */}
-            <div className="lg:col-span-2 animate-fade-in-left">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 hover-scale animate-glow">
+          {/* Mobile: Stack layout, Desktop: Grid layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {/* Company Info - Full width on mobile, 2 columns on desktop */}
+            <div className="sm:col-span-2 lg:col-span-2 animate-fade-in-left">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mb-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 hover-scale animate-glow">
                   <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">
                     <img 
                       src="/achhadam-logo.jpg" 
@@ -1406,7 +1407,7 @@ const HomePage: React.FC = () => {
                     />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold tracking-wide" 
+                <h3 className="text-lg sm:text-xl font-bold tracking-wide" 
                     style={{
                       textShadow: '1px 1px 2px rgba(0,0,0,0.2)',
                       fontWeight: '900',
@@ -1419,57 +1420,57 @@ const HomePage: React.FC = () => {
                   A<span className="lowercase">chhadam</span>
                 </h3>
               </div>
-              <p className="text-gray-400 mb-6 max-w-md">
+              <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base max-w-md">
                 {t('revolutionizingAgriculture')}
               </p>
               <div className="flex space-x-4">
-                <a href="tel:+919905441890" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale">
-                  <Phone className="w-5 h-5" />
+                <a href="tel:+919905441890" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale p-2 bg-gray-800 rounded-full">
+                  <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
                 </a>
-                <a href="mailto:shampawarp3@gmail.com" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale">
-                  <Mail className="w-5 h-5" />
+                <a href="mailto:shampawarp3@gmail.com" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale p-2 bg-gray-800 rounded-full">
+                  <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
                 </a>
               </div>
             </div>
 
-            {/* For Farmers */}
+            {/* For Farmers - Mobile: Full width, Desktop: 1 column */}
             <div className="animate-fade-in-up stagger-1">
-              <h4 className="text-lg font-semibold mb-4">{t('forFarmers')}</h4>
+              <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{t('forFarmers')}</h4>
               <ul className="space-y-2">
-                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('smartFarmingFooter')}</button></li>
-                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('marketAccess')}</button></li>
-                <li><button onClick={() => setCurrentPage('blog')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('cropAdvisory')}</button></li>
-                <li><button onClick={() => setCurrentPage('blog')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('weatherUpdates')}</button></li>
+                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left text-sm sm:text-base block w-full py-1">{t('smartFarmingFooter')}</button></li>
+                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left text-sm sm:text-base block w-full py-1">{t('marketAccess')}</button></li>
+                <li><button onClick={() => setCurrentPage('blog')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left text-sm sm:text-base block w-full py-1">{t('cropAdvisory')}</button></li>
+                <li><button onClick={() => setCurrentPage('blog')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left text-sm sm:text-base block w-full py-1">{t('weatherUpdates')}</button></li>
               </ul>
             </div>
 
-            {/* For Buyers */}
+            {/* For Buyers - Mobile: Full width, Desktop: 1 column */}
             <div className="animate-fade-in-up stagger-2">
-              <h4 className="text-lg font-semibold mb-4">{t('forBuyers')}</h4>
+              <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{t('forBuyers')}</h4>
               <ul className="space-y-2">
-                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('qualityProduce')}</button></li>
-                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('directSourcing')}</button></li>
-                <li><button onClick={() => setCurrentPage('blog')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('marketIntelligenceFooter')}</button></li>
-                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('logisticsSupport')}</button></li>
-              </ul>
-            </div>
-
-            {/* Legal & Support */}
-            <div className="animate-fade-in-up stagger-3">
-              <h4 className="text-lg font-semibold mb-4">Legal & Support</h4>
-              <ul className="space-y-2">
-                <li><Link to="/privacy-policy" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Privacy Policy</Link></li>
-                <li><Link to="/terms-conditions" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Terms & Conditions</Link></li>
-                <li><Link to="/cancellation-refund" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Refund Policy</Link></li>
-                <li><Link to="/shipping-delivery" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Shipping Policy</Link></li>
-                <li><Link to="/contact-us" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Contact Us</Link></li>
-                <li><Link to="/legal-compliance" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Legal & Compliance</Link></li>
+                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left text-sm sm:text-base block w-full py-1">{t('qualityProduce')}</button></li>
+                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left text-sm sm:text-base block w-full py-1">{t('directSourcing')}</button></li>
+                <li><button onClick={() => setCurrentPage('blog')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left text-sm sm:text-base block w-full py-1">{t('marketIntelligenceFooter')}</button></li>
+                <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left text-sm sm:text-base block w-full py-1">{t('logisticsSupport')}</button></li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center animate-fade-in-up">
-            <p className="text-gray-400">{t('madeWithLove')}</p>
+          {/* Legal & Support - Full width section */}
+          <div className="mt-6 sm:mt-8 animate-fade-in-up stagger-3">
+            <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Legal & Support</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
+              <Link to="/privacy-policy" className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-sm sm:text-base py-1 block">Privacy Policy</Link>
+              <Link to="/terms-conditions" className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-sm sm:text-base py-1 block">Terms & Conditions</Link>
+              <Link to="/cancellation-refund" className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-sm sm:text-base py-1 block">Refund Policy</Link>
+              <Link to="/shipping-delivery" className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-sm sm:text-base py-1 block">Shipping Policy</Link>
+              <Link to="/contact-us" className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-sm sm:text-base py-1 block">Contact Us</Link>
+              <Link to="/legal-compliance" className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-sm sm:text-base py-1 block">Legal & Compliance</Link>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center animate-fade-in-up">
+            <p className="text-gray-400 text-sm sm:text-base">{t('madeWithLove')}</p>
           </div>
         </div>
       </footer>
