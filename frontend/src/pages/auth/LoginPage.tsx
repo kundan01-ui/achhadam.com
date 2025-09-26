@@ -52,14 +52,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
     setGoogleLoading(false);
   };
 
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginAttempt, setLoginAttempt] = useState(0);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoginError(null);
     
     try {
       // Validate required fields
       if (!formData.phone || !formData.password) {
-        alert('Please fill in all required fields');
+        setLoginError('Please fill in all required fields');
         setIsLoading(false);
         return;
       }
@@ -70,9 +74,25 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
         password: formData.password,
       };
       
-      // Call API service
-      const response = await apiService.login(loginData);
+      console.time('Login Process');
       
+      // Use cached token for repeat login attempts with same credentials
+      const cachedKey = `login_${formData.phone}_${formData.password}`;
+      const cachedResponse = sessionStorage.getItem(cachedKey);
+      
+      let response;
+      
+      if (cachedResponse && loginAttempt > 0) {
+        console.log('Using cached login response');
+        response = JSON.parse(cachedResponse);
+      } else {
+        // Call API service
+        response = await apiService.login(loginData);
+        // Cache the successful response
+        sessionStorage.setItem(cachedKey, JSON.stringify(response));
+      }
+      
+      console.timeEnd('Login Process');
       console.log('Login successful:', response);
       
       // Store token in localStorage
@@ -82,9 +102,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
       // Redirect based on user type and pass user data
       onUserTypeSelect(response.user.userType, response.user);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
-      alert(`Login failed: ${error instanceof Error ? error.message : 'Invalid credentials'}`);
+      setLoginError(error instanceof Error ? error.message : 'Invalid credentials');
+      setLoginAttempt(prev => prev + 1);
     } finally {
       setIsLoading(false);
     }
@@ -174,12 +195,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
                     }
                   }
                 }}
-                className="text-xs sm:text-sm text-green-600 hover:text-green-700 underline cursor-pointer hover:text-green-800 transition-colors"
+                className="text-xs sm:text-sm text-green-600 hover:text-green-800 underline cursor-pointer transition-colors"
               >
                 {t('forgotPassword')}?
               </button>
             </div>
 
+            {/* Error Message */}
+            {loginError && (
+              <div className="bg-red-50 text-red-600 p-2 rounded-md text-xs sm:text-sm border border-red-200">
+                {loginError}
+              </div>
+            )}
+            
             {/* Submit Button */}
             <Button
               type="submit"
@@ -225,7 +253,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
               <button
                 type="button"
                 onClick={onSignupClick}
-                className="text-green-600 hover:text-green-700 font-medium underline cursor-pointer hover:text-green-800 transition-colors"
+                className="text-green-600 hover:text-green-800 font-medium underline cursor-pointer transition-colors"
               >
                 {t('signup')}
               </button>

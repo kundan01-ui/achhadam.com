@@ -1,0 +1,259 @@
+import React from 'react';
+
+const CancellationRefundPolicy: React.FC = () => {
+  return (
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 hover-scale animate-glow">
+              <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">
+                <img 
+                  src="/src/assets/achhadam logo.jpg" 
+                  alt="Achhadam Logo" 
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </div>
+            </div>
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Cancellation and Refund Policy</h1>
+            <p className="text-gray-600">Last updated: {new Date().toLocaleDateString()}</p>
+          </div>
+
+          <div className="prose prose-lg max-w-none">
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Overview</h2>
+              <p className="text-gray-700 mb-4">
+                This Cancellation and Refund Policy outlines the terms and conditions for canceling orders 
+                and requesting refunds on the Achhadam digital farming platform. We are committed to 
+                providing fair and transparent refund processes for all our users.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Cancellation Policy</h2>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">2.1 Order Cancellation</h3>
+                  <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                    <h4 className="font-semibold text-blue-900 mb-2">Buyer Cancellation Rights:</h4>
+                    <ul className="list-disc pl-6 text-blue-800 space-y-1">
+                      <li>Cancel within 24 hours of order placement - Full refund</li>
+                      <li>Cancel within 48 hours if crop not dispatched - 90% refund</li>
+                      <li>Cancel after dispatch but before delivery - 70% refund</li>
+                      <li>Cancel after delivery - No refund (dispute resolution available)</li>
+                    </ul>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-green-900 mb-2">Seller Cancellation Rights:</h4>
+                    <ul className="list-disc pl-6 text-green-800 space-y-1">
+                      <li>Cancel before order confirmation - No penalty</li>
+                      <li>Cancel after confirmation but before dispatch - 10% penalty</li>
+                      <li>Cancel after dispatch - 25% penalty</li>
+                      <li>Force majeure situations - No penalty</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">2.2 Service Cancellation</h3>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                    <li>Digital farming tools subscription - Cancel anytime with 30-day notice</li>
+                    <li>Analytics services - Cancel within 7 days for full refund</li>
+                    <li>Training programs - Cancel before start date for full refund</li>
+                    <li>Consultation services - Cancel 24 hours before appointment</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Refund Policy</h2>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">3.1 Refund Eligibility</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-green-900 mb-2">✅ Eligible for Refund:</h4>
+                      <ul className="list-disc pl-6 text-green-800 space-y-1 text-sm">
+                        <li>Order cancelled within allowed timeframe</li>
+                        <li>Product not as described</li>
+                        <li>Damaged goods during transit</li>
+                        <li>Wrong product delivered</li>
+                        <li>Service not provided as promised</li>
+                        <li>Technical issues preventing service delivery</li>
+                      </ul>
+                    </div>
+                    <div className="bg-red-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-red-900 mb-2">❌ Not Eligible for Refund:</h4>
+                      <ul className="list-disc pl-6 text-red-800 space-y-1 text-sm">
+                        <li>Change of mind after delivery</li>
+                        <li>Product used or consumed</li>
+                        <li>Custom orders or personalized services</li>
+                        <li>Digital products after download</li>
+                        <li>Services already rendered</li>
+                        <li>Violation of terms and conditions</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">3.2 Refund Processing</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-900 mb-2">Processing Timeline:</h4>
+                    <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                      <li><strong>Refund Request Review:</strong> 1-2 business days</li>
+                      <li><strong>Approval and Processing:</strong> 3-5 business days</li>
+                      <li><strong>Bank Transfer:</strong> 2-7 business days (depending on bank)</li>
+                      <li><strong>UPI/Card Refund:</strong> 1-3 business days</li>
+                      <li><strong>Total Timeline:</strong> 7-14 business days</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Refund Methods</h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold text-blue-900 mb-2">Original Payment Method</h3>
+                  <p className="text-blue-800 text-sm">
+                    Refunds will be processed through the same payment method used for the original transaction.
+                  </p>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold text-purple-900 mb-2">Alternative Methods</h3>
+                  <p className="text-purple-800 text-sm">
+                    If original method is unavailable, we may offer bank transfer or platform credit.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Special Circumstances</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-2">5.1 Force Majeure</h3>
+                  <p className="text-gray-700 mb-2">
+                    In case of natural disasters, government restrictions, or other force majeure events 
+                    affecting crop delivery or service provision:
+                  </p>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-1">
+                    <li>Full refund for undelivered orders</li>
+                    <li>Partial refund for partially affected services</li>
+                    <li>Alternative delivery arrangements when possible</li>
+                    <li>Extended cancellation windows</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-2">5.2 Quality Issues</h3>
+                  <p className="text-gray-700 mb-2">
+                    For quality-related issues with agricultural products:
+                  </p>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-1">
+                    <li>Photo evidence required within 24 hours of delivery</li>
+                    <li>Quality assessment by our team</li>
+                    <li>Full or partial refund based on assessment</li>
+                    <li>Replacement products when available</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Dispute Resolution</h2>
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-yellow-900 mb-2">Resolution Process:</h3>
+                <ol className="list-decimal pl-6 text-yellow-800 space-y-2">
+                  <li><strong>Initial Contact:</strong> Contact customer support within 48 hours</li>
+                  <li><strong>Documentation:</strong> Provide order details and evidence</li>
+                  <li><strong>Investigation:</strong> Our team reviews the case (2-3 days)</li>
+                  <li><strong>Resolution:</strong> We propose a solution within 5 business days</li>
+                  <li><strong>Appeal:</strong> If unsatisfied, escalate to management</li>
+                  <li><strong>Final Decision:</strong> Management review and final resolution</li>
+                </ol>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Platform Fees and Charges</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-2">7.1 Transaction Fees</h3>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                    <li>Platform fees are non-refundable after successful transaction</li>
+                    <li>Payment gateway charges are non-refundable</li>
+                    <li>Processing fees may apply to refunds</li>
+                    <li>Currency conversion fees are non-refundable</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-2">7.2 Penalty Charges</h3>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                    <li>Late cancellation penalties as per policy</li>
+                    <li>No-show charges for appointments</li>
+                    <li>Administrative fees for complex refunds</li>
+                    <li>Chargeback fees if applicable</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Contact for Refunds</h2>
+              <div className="bg-gray-100 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">How to Request a Refund:</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-gray-800 mb-2">Online Support:</h4>
+                    <p className="text-gray-700 text-sm">Use our in-app support chat</p>
+                    <p className="text-gray-700 text-sm">Email: shampawarp3@gmail.com</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-800 mb-2">Phone Support:</h4>
+                    <p className="text-gray-700 text-sm">Call: +91 9905441890</p>
+                    <p className="text-gray-700 text-sm">Available: 9 AM - 6 PM (Mon-Sat)</p>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <h4 className="font-medium text-gray-800 mb-2">Required Information:</h4>
+                  <ul className="list-disc pl-6 text-gray-700 text-sm space-y-1">
+                    <li>Order/Transaction ID</li>
+                    <li>Reason for refund</li>
+                    <li>Supporting documents/photos</li>
+                    <li>Preferred refund method</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Policy Updates</h2>
+              <p className="text-gray-700 mb-4">
+                We reserve the right to modify this Cancellation and Refund Policy at any time. 
+                Changes will be effective immediately upon posting on our platform. Continued use 
+                of our services after changes constitutes acceptance of the new policy.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Contact Information</h2>
+              <div className="bg-gray-100 p-6 rounded-lg">
+                <p className="text-gray-700 mb-2"><strong>Company:</strong> Achhadam Private Limited</p>
+                <p className="text-gray-700 mb-2"><strong>Email:</strong> shampawarp3@gmail.com</p>
+                <p className="text-gray-700 mb-2"><strong>Phone:</strong> +91 9905441890</p>
+                <p className="text-gray-700"><strong>Address:</strong> Maharashtra, India, Jharkhand</p>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CancellationRefundPolicy;

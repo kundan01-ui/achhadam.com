@@ -11,20 +11,24 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const admin = require('firebase-admin');
 const cookieParser = require('cookie-parser');
+const dotenv = require('dotenv');
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000 // limit each IP to 1000 requests per windowMs (increased for development)
+  windowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000, // 15 minutes
+  max: process.env.RATE_LIMIT_MAX_REQUESTS || 1000 // limit each IP to 1000 requests per windowMs (increased for development)
 });
 
 // OTP specific rate limiting (more lenient)
 const otpLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 10, // limit each IP to 10 OTP requests per minute
+  windowMs: process.env.OTP_RATE_LIMIT_WINDOW_MS || 1 * 60 * 1000, // 1 minute
+  max: process.env.OTP_RATE_LIMIT_MAX_REQUESTS || 10, // limit each IP to 10 OTP requests per minute
   message: {
     error: 'Too many OTP requests. Please wait 1 minute before trying again.',
     retryAfter: 60
@@ -60,7 +64,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // Set to true in production with HTTPS
+    secure: process.env.NODE_ENV === 'production', // Set to true in production with HTTPS
     maxAge: 10 * 60 * 1000 // 10 minutes
   }
 }));
@@ -79,7 +83,7 @@ try {
   // For now, we'll use application default credentials
   // In production, add your service account key
   admin.initializeApp({
-    projectId: "digital-farming-platform"
+    projectId: process.env.FIREBASE_PROJECT_ID || "digital-farming-platform"
   });
   console.log('✅ Firebase Admin initialized successfully!');
 } catch (error) {
@@ -94,7 +98,7 @@ let postgresConnection = null;
 // MongoDB Connection
 async function connectMongoDB() {
   try {
-    const mongoURI = 'mongodb+srv://kamleshthink:Kamlesh%40%232005@cluster0.u1vgt.mongodb.net/krishi?retryWrites=true&w=majority&appName=Cluster0';
+    const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://kamleshthink:Kamlesh%40%232005@cluster0.u1vgt.mongodb.net/krishi?retryWrites=true&w=majority&appName=Cluster0';
     mongoConnection = await mongoose.connect(mongoURI);
     console.log('✅ MongoDB connected successfully!');
   } catch (error) {
@@ -105,7 +109,7 @@ async function connectMongoDB() {
 // PostgreSQL Connection
 async function connectPostgreSQL() {
   try {
-    const postgresURI = 'postgresql://neondb_owner:npg_Ozpa3sFKwS0d@ep-jolly-mode-a156f3rx-pooler.ap-southeast-1.aws.neon.tech/krishi1?sslmode=require&channel_binding=require';
+    const postgresURI = process.env.POSTGRES_URI || 'postgresql://neondb_owner:npg_Ozpa3sFKwS0d@ep-jolly-mode-a156f3rx-pooler.ap-southeast-1.aws.neon.tech/krishi1?sslmode=require&channel_binding=require';
     postgresConnection = new Pool({
       connectionString: postgresURI,
       ssl: { rejectUnauthorized: false }
@@ -524,50 +528,62 @@ app.post('/api/auth/signup', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
   try {
+    console.time('Login Request');
     const { phone, password } = req.body;
 
     // Validation
     if (!phone || !password) {
+      console.timeEnd('Login Request');
       return res.status(400).json({ 
         error: 'Phone and password are required' 
       });
     }
 
-    // Find user
-    const user = await User.findOne({ phone });
+    // Find user - with lean() for better performance
+    console.time('Find User');
+    const user = await User.findOne({ phone }).lean();
+    console.timeEnd('Find User');
+    
     if (!user) {
+      console.timeEnd('Login Request');
       return res.status(401).json({ 
         error: 'Invalid credentials' 
       });
     }
 
     // Check password
+    console.time('Password Verification');
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.timeEnd('Password Verification');
+    
     if (!isPasswordValid) {
+      console.timeEnd('Login Request');
       return res.status(401).json({ 
         error: 'Invalid credentials' 
       });
     }
 
     // Generate JWT token
+    console.time('JWT Generation');
     const token = jwt.sign(
       { 
         userId: user._id, 
         userType: user.userType,
         phone: user.phone 
       },
-      'your-secret-key-change-in-production',
-      { expiresIn: '24h' }
+      process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+      { expiresIn: process.env.JWT_EXPIRY || '24h' }
     );
+    console.timeEnd('JWT Generation');
 
     // Remove password from response
-    const userResponse = user.toObject();
-    delete userResponse.password;
+    delete user.password;
 
+    console.timeEnd('Login Request');
     res.json({
       message: 'Login successful',
       token,
-      user: userResponse
+      user: user
     });
 
   } catch (error) {
@@ -581,23 +597,36 @@ app.post('/api/auth/login', async (req, res) => {
 // Protected route middleware
 const authenticateToken = async (req, res, next) => {
   try {
+    console.time('Token Authentication');
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
+      console.timeEnd('Token Authentication');
       return res.status(401).json({ error: 'Access token required' });
     }
 
-    const decoded = jwt.verify(token, 'your-secret-key-change-in-production');
-    const user = await User.findById(decoded.userId);
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+    
+    // Store decoded info directly
+    req.userId = decoded.userId;
+    req.userType = decoded.userType;
+    req.userPhone = decoded.phone;
+    
+    // Use lean() for better performance and only fetch if needed
+    const user = await User.findById(decoded.userId).lean();
     
     if (!user) {
+      console.timeEnd('Token Authentication');
       return res.status(401).json({ error: 'Invalid token' });
     }
 
     req.user = user;
+    console.timeEnd('Token Authentication');
     next();
   } catch (error) {
+    console.error('Token authentication error:', error);
     return res.status(403).json({ error: 'Invalid or expired token' });
   }
 };
@@ -620,10 +649,31 @@ app.use('/api/cookies', cookieRoutes);
 // Get current user profile
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
   try {
-    const userResponse = req.user.toObject();
-    delete userResponse.password;
+    console.time('Get User Profile');
+    // If user is already loaded from authenticateToken middleware, use it directly
+    let userResponse;
+    if (req.user) {
+      if (typeof req.user.toObject === 'function') {
+        userResponse = req.user.toObject();
+      } else {
+        // If it's already a plain object
+        userResponse = { ...req.user };
+      }
+      delete userResponse.password;
+    } else {
+      // Fallback to finding user again if needed
+      const user = await User.findById(req.userId).lean();
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      userResponse = user;
+      delete userResponse.password;
+    }
+    
+    console.timeEnd('Get User Profile');
     res.json({ user: userResponse });
   } catch (error) {
+    console.error('Error fetching user profile:', error);
     res.status(500).json({ error: 'Error fetching user profile' });
   }
 });

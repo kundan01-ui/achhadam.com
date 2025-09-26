@@ -211,11 +211,26 @@ const InvestorPage: React.FC<InvestorPageProps> = ({ onBackToHome }) => {
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo */}
             <div className="flex items-center space-x-1.5 animate-fade-in-left">
-              <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-green-800 rounded-lg flex items-center justify-center hover-scale animate-glow shadow-lg">
-                <Leaf className="w-4 h-4 text-white" />
-              </div>
-              <h1 className="text-lg sm:text-xl font-black text-gray-800 tracking-wide">
-                ACHHADAM
+                   <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 hover-scale animate-glow">
+                     <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">
+                       <img 
+                         src="/src/assets/achhadam logo.jpg" 
+                         alt="Achhadam Logo" 
+                         className="w-full h-full object-cover rounded-full"
+                       />
+                     </div>
+                   </div>
+              <h1 className="text-lg sm:text-xl font-black tracking-wide" 
+                  style={{
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.2)',
+                    fontWeight: '900',
+                    letterSpacing: '0.05em',
+                    background: 'linear-gradient(135deg, #4ade80 0%, #38bdf8 50%, #22d3ee 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    filter: 'none'
+                  }}>
+                A<span className="lowercase">chhadam</span>
               </h1>
             </div>
 

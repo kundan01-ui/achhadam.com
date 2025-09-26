@@ -1,9 +1,16 @@
 // API service for authentication and user management
-// Render Backend (Production) - Re-enabled
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://acchadam1-backend.onrender.com';
-
 // Local Backend (Development) - Commented out for production
-// const API_BASE_URL = 'http://localhost:10000';
+// const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
+
+// Render Backend (Production) - Active for production
+const API_BASE_URL = 'https://acchadam1-backend.onrender.com';
+
+// API Response interface
+export interface ApiResponse {
+  success: boolean;
+  message: string;
+  [key: string]: any;
+}
 
 export interface User {
   id: string;
@@ -91,7 +98,18 @@ class ApiService {
     };
 
     try {
+      // Add timeout to fetch requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
+      config.signal = controller.signal;
+      
+      console.time(`API Request: ${endpoint}`);
       const response = await fetch(url, config);
+      console.timeEnd(`API Request: ${endpoint}`);
+      
+      // Clear timeout since request completed
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -106,8 +124,13 @@ class ApiService {
       }
       
       return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
+    } catch (error: any) {
+      console.error(`API request failed for ${endpoint}:`, error);
+      
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. Please check your internet connection and try again.');
+      }
+      
       throw error;
     }
   }

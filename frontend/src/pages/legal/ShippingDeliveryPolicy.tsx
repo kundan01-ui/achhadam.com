@@ -1,0 +1,360 @@
+import React from 'react';
+
+const ShippingDeliveryPolicy: React.FC = () => {
+  return (
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 hover-scale animate-glow">
+              <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">
+                <img 
+                  src="/src/assets/achhadam logo.jpg" 
+                  alt="Achhadam Logo" 
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </div>
+            </div>
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Shipping and Delivery Policy</h1>
+            <p className="text-gray-600">Last updated: {new Date().toLocaleDateString()}</p>
+          </div>
+
+          <div className="prose prose-lg max-w-none">
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Overview</h2>
+              <p className="text-gray-700 mb-4">
+                This Shipping and Delivery Policy outlines the terms and conditions for the delivery of 
+                agricultural products and services through the Achhadam digital farming platform. 
+                We are committed to ensuring timely and safe delivery of all products.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Delivery Areas</h2>
+              <div className="space-y-4">
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h3 className="text-xl font-medium text-green-900 mb-2">2.1 Primary Delivery Zones</h3>
+                  <ul className="list-disc pl-6 text-green-800 space-y-1">
+                    <li>Maharashtra - All districts</li>
+                    <li>Jharkhand - All districts</li>
+                    <li>Delhi NCR - All areas</li>
+                    <li>Mumbai Metropolitan Region</li>
+                    <li>Pune Metropolitan Region</li>
+                  </ul>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="text-xl font-medium text-blue-900 mb-2">2.2 Extended Delivery Zones</h3>
+                  <ul className="list-disc pl-6 text-blue-800 space-y-1">
+                    <li>Gujarat - Major cities</li>
+                    <li>Rajasthan - Major cities</li>
+                    <li>Madhya Pradesh - Major cities</li>
+                    <li>Uttar Pradesh - Major cities</li>
+                    <li>Karnataka - Major cities</li>
+                  </ul>
+                </div>
+                <div className="bg-yellow-50 p-4 rounded-lg">
+                  <h3 className="text-xl font-medium text-yellow-900 mb-2">2.3 Special Delivery Zones</h3>
+                  <ul className="list-disc pl-6 text-yellow-800 space-y-1">
+                    <li>Remote areas - Subject to availability</li>
+                    <li>High-altitude regions - Special handling</li>
+                    <li>Island territories - Extended delivery time</li>
+                    <li>International shipping - On request</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Delivery Timeframes</h2>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">3.1 Standard Delivery</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-gray-900 mb-2">Local Delivery (Same State)</h4>
+                      <ul className="list-disc pl-6 text-gray-700 space-y-1 text-sm">
+                        <li>Same day delivery - 6-8 hours</li>
+                        <li>Next day delivery - 24-48 hours</li>
+                        <li>Standard delivery - 2-3 days</li>
+                        <li>Economy delivery - 4-5 days</li>
+                      </ul>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-gray-900 mb-2">Inter-State Delivery</h4>
+                      <ul className="list-disc pl-6 text-gray-700 space-y-1 text-sm">
+                        <li>Express delivery - 1-2 days</li>
+                        <li>Standard delivery - 3-4 days</li>
+                        <li>Economy delivery - 5-7 days</li>
+                        <li>Remote areas - 7-10 days</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">3.2 Special Delivery Options</h3>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="bg-red-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-red-900 mb-2">🚚 Express Delivery</h4>
+                      <p className="text-red-800 text-sm">Same day or next day</p>
+                      <p className="text-red-800 text-sm font-semibold">Extra charges apply</p>
+                    </div>
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-blue-900 mb-2">📦 Scheduled Delivery</h4>
+                      <p className="text-blue-800 text-sm">Choose your preferred date</p>
+                      <p className="text-blue-800 text-sm font-semibold">Free service</p>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-green-900 mb-2">🏠 Home Delivery</h4>
+                      <p className="text-green-800 text-sm">Direct to your doorstep</p>
+                      <p className="text-green-800 text-sm font-semibold">Standard service</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Shipping Methods</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">4.1 Transportation Options</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <h4 className="font-semibold text-blue-900">🚛 Road Transport</h4>
+                        <p className="text-blue-800 text-sm">Most common method for agricultural products</p>
+                      </div>
+                      <div className="bg-green-50 p-3 rounded-lg">
+                        <h4 className="font-semibold text-green-900">🚚 Refrigerated Trucks</h4>
+                        <p className="text-green-800 text-sm">For perishable items and temperature-sensitive products</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="bg-purple-50 p-3 rounded-lg">
+                        <h4 className="font-semibold text-purple-900">✈️ Air Cargo</h4>
+                        <p className="text-purple-800 text-sm">For urgent deliveries and high-value products</p>
+                      </div>
+                      <div className="bg-orange-50 p-3 rounded-lg">
+                        <h4 className="font-semibold text-orange-900">🚂 Rail Transport</h4>
+                        <p className="text-orange-800 text-sm">Economical option for bulk shipments</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Packaging and Handling</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">5.1 Packaging Standards</h3>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                    <li>Food-grade packaging for edible products</li>
+                    <li>Temperature-controlled packaging for perishables</li>
+                    <li>Protective packaging for fragile items</li>
+                    <li>Eco-friendly packaging materials</li>
+                    <li>Proper labeling with product information</li>
+                    <li>Handling instructions clearly marked</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">5.2 Special Handling</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-red-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-red-900 mb-2">❄️ Cold Chain</h4>
+                      <ul className="list-disc pl-6 text-red-800 space-y-1 text-sm">
+                        <li>Temperature monitoring</li>
+                        <li>Refrigerated storage</li>
+                        <li>Quick transit times</li>
+                        <li>Specialized vehicles</li>
+                      </ul>
+                    </div>
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-blue-900 mb-2">📦 Fragile Items</h4>
+                      <ul className="list-disc pl-6 text-blue-800 space-y-1 text-sm">
+                        <li>Extra cushioning</li>
+                        <li>Careful handling</li>
+                        <li>Specialized packaging</li>
+                        <li>Insurance coverage</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Delivery Charges</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">6.1 Shipping Costs</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse border border-gray-300">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="border border-gray-300 px-4 py-2 text-left">Distance</th>
+                          <th className="border border-gray-300 px-4 py-2 text-left">Weight Range</th>
+                          <th className="border border-gray-300 px-4 py-2 text-left">Standard Rate</th>
+                          <th className="border border-gray-300 px-4 py-2 text-left">Express Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="border border-gray-300 px-4 py-2">Local (0-50 km)</td>
+                          <td className="border border-gray-300 px-4 py-2">0-10 kg</td>
+                          <td className="border border-gray-300 px-4 py-2">₹50-100</td>
+                          <td className="border border-gray-300 px-4 py-2">₹100-150</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-gray-300 px-4 py-2">Regional (50-200 km)</td>
+                          <td className="border border-gray-300 px-4 py-2">0-10 kg</td>
+                          <td className="border border-gray-300 px-4 py-2">₹100-200</td>
+                          <td className="border border-gray-300 px-4 py-2">₹200-300</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-gray-300 px-4 py-2">National (200+ km)</td>
+                          <td className="border border-gray-300 px-4 py-2">0-10 kg</td>
+                          <td className="border border-gray-300 px-4 py-2">₹200-400</td>
+                          <td className="border border-gray-300 px-4 py-2">₹400-600</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">6.2 Free Shipping</h3>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                    <li>Orders above ₹2000 - Free standard delivery</li>
+                    <li>Premium members - Free delivery on all orders</li>
+                    <li>Bulk orders (50+ kg) - Free delivery</li>
+                    <li>First-time buyers - Free delivery on first order</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Delivery Tracking</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">7.1 Real-time Tracking</h3>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                    <li>Live GPS tracking of delivery vehicles</li>
+                    <li>SMS and email notifications at each stage</li>
+                    <li>Estimated delivery time updates</li>
+                    <li>Delivery person contact information</li>
+                    <li>Photo confirmation upon delivery</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">7.2 Delivery Status Updates</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span className="text-sm">Order Confirmed</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm">Packed and Ready</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        <span className="text-sm">Out for Delivery</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                        <span className="text-sm">Delivered</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Delivery Issues and Solutions</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">8.1 Common Issues</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-red-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-red-900 mb-2">🚫 Failed Delivery</h4>
+                      <ul className="list-disc pl-6 text-red-800 space-y-1 text-sm">
+                        <li>Recipient not available</li>
+                        <li>Wrong address provided</li>
+                        <li>Access restrictions</li>
+                        <li>Weather conditions</li>
+                      </ul>
+                    </div>
+                    <div className="bg-yellow-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-yellow-900 mb-2">⚠️ Delayed Delivery</h4>
+                      <ul className="list-disc pl-6 text-yellow-800 space-y-1 text-sm">
+                        <li>Traffic congestion</li>
+                        <li>Vehicle breakdown</li>
+                        <li>Weather delays</li>
+                        <li>Route optimization</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">8.2 Resolution Process</h3>
+                  <ol className="list-decimal pl-6 text-gray-700 space-y-2">
+                    <li>Immediate notification to customer</li>
+                    <li>Alternative delivery arrangements</li>
+                    <li>Rescheduling to convenient time</li>
+                    <li>Compensation for delays (if applicable)</li>
+                    <li>Escalation to management if needed</li>
+                  </ol>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. International Shipping</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">9.1 Available Countries</h3>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                    <li>Nepal - Standard delivery 7-10 days</li>
+                    <li>Bangladesh - Standard delivery 5-7 days</li>
+                    <li>United Arab Emirates - Express delivery 3-5 days</li>
+                    <li>United States - Standard delivery 10-15 days</li>
+                    <li>United Kingdom - Standard delivery 8-12 days</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-gray-800 mb-3">9.2 International Requirements</h3>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                    <li>Customs documentation required</li>
+                    <li>Import permits for agricultural products</li>
+                    <li>Phytosanitary certificates</li>
+                    <li>Additional shipping charges apply</li>
+                    <li>Extended delivery timelines</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Contact Information</h2>
+              <div className="bg-gray-100 p-6 rounded-lg">
+                <p className="text-gray-700 mb-2"><strong>Company:</strong> Achhadam Private Limited</p>
+                <p className="text-gray-700 mb-2"><strong>Email:</strong> shampawarp3@gmail.com</p>
+                <p className="text-gray-700 mb-2"><strong>Phone:</strong> +91 9905441890</p>
+                <p className="text-gray-700"><strong>Address:</strong> Maharashtra, India, Jharkhand</p>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ShippingDeliveryPolicy;

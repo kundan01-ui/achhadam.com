@@ -541,11 +541,26 @@ const HomePage: React.FC = () => {
                  <div className="flex items-center justify-between h-14 sm:h-16">
                    {/* Logo */}
                    <div className="flex items-center space-x-1.5 animate-fade-in-left">
-                     <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-green-800 rounded-lg flex items-center justify-center hover-scale animate-glow shadow-lg">
-                       <Leaf className="w-4 h-4 text-white" />
+                     <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 hover-scale animate-glow">
+                       <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">
+                         <img 
+                           src="/src/assets/achhadam logo.jpg" 
+                           alt="Achhadam Logo" 
+                           className="w-full h-full object-cover rounded-full"
+                         />
+                       </div>
                      </div>
-                     <h1 className="text-lg sm:text-xl font-black text-gray-800 tracking-wide">
-                       ACHHADAM
+                     <h1 className="text-lg sm:text-xl font-black tracking-wide" 
+                         style={{
+                           textShadow: '1px 1px 2px rgba(0,0,0,0.2)',
+                           fontWeight: '900',
+                           letterSpacing: '0.05em',
+                           background: 'linear-gradient(135deg, #4ade80 0%, #38bdf8 50%, #22d3ee 100%)',
+                           WebkitBackgroundClip: 'text',
+                           WebkitTextFillColor: 'transparent',
+                           filter: 'none'
+                         }}>
+                       A<span className="lowercase">chhadam</span>
                      </h1>
                    </div>
 
@@ -1382,19 +1397,36 @@ const HomePage: React.FC = () => {
             {/* Company Info */}
             <div className="lg:col-span-2 animate-fade-in-left">
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-green-800 rounded-lg flex items-center justify-center hover-scale animate-glow">
-                  <Leaf className="w-6 h-6 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 hover-scale animate-glow">
+                  <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">
+                    <img 
+                      src="/src/assets/achhadam logo.jpg" 
+                      alt="Achhadam Logo" 
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold gradient-text">ACHHADAM</h3>
+                <h3 className="text-xl font-bold tracking-wide" 
+                    style={{
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.2)',
+                      fontWeight: '900',
+                      letterSpacing: '0.05em',
+                      background: 'linear-gradient(135deg, #4ade80 0%, #38bdf8 50%, #22d3ee 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      filter: 'none'
+                    }}>
+                  A<span className="lowercase">chhadam</span>
+                </h3>
               </div>
               <p className="text-gray-400 mb-6 max-w-md">
                 {t('revolutionizingAgriculture')}
               </p>
               <div className="flex space-x-4">
-                <a href="tel:+919876543210" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale">
+                <a href="tel:+919905441890" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale">
                   <Phone className="w-5 h-5" />
                 </a>
-                <a href="mailto:info@achhadam.com" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale">
+                <a href="mailto:shampawarp3@gmail.com" className="text-gray-400 hover:text-white transition-all duration-300 hover-scale">
                   <Mail className="w-5 h-5" />
                 </a>
               </div>
@@ -1419,6 +1451,19 @@ const HomePage: React.FC = () => {
                 <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('directSourcing')}</button></li>
                 <li><button onClick={() => setCurrentPage('blog')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('marketIntelligenceFooter')}</button></li>
                 <li><button onClick={() => setCurrentPage('features')} className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-left">{t('logisticsSupport')}</button></li>
+              </ul>
+            </div>
+
+            {/* Legal & Support */}
+            <div className="animate-fade-in-up stagger-3">
+              <h4 className="text-lg font-semibold mb-4">Legal & Support</h4>
+              <ul className="space-y-2">
+                <li><a href="/privacy-policy" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Privacy Policy</a></li>
+                <li><a href="/terms-conditions" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Terms & Conditions</a></li>
+                <li><a href="/cancellation-refund" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Refund Policy</a></li>
+                <li><a href="/shipping-delivery" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Shipping Policy</a></li>
+                <li><a href="/contact-us" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Contact Us</a></li>
+                <li><a href="/legal-compliance" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Legal & Compliance</a></li>
               </ul>
             </div>
           </div>

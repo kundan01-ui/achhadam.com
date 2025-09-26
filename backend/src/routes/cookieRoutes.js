@@ -17,3 +17,6 @@ router.post('/preferences', cookieController.savePreferences);
 router.get('/preferences', cookieController.getPreferences);
 
 module.exports = router;
+
+
+

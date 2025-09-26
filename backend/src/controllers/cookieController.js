@@ -21,7 +21,7 @@ const cookieController = {
       if (!userId) {
         userId = `anon_${uuidv4()}`;
         res.cookie('anonymous_id', userId, { 
-          maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+          maxAge: parseInt(process.env.COOKIE_MAX_AGE) || 365 * 24 * 60 * 60 * 1000, // 1 year by default
           httpOnly: true,
           sameSite: 'strict',
           secure: process.env.NODE_ENV === 'production'
@@ -62,40 +62,31 @@ const cookieController = {
       }
       
       // Set cookies based on preferences
+      const cookieMaxAge = parseInt(process.env.COOKIE_MAX_AGE) || 365 * 24 * 60 * 60 * 1000; // 1 year by default
+      const cookieOptions = {
+        maxAge: cookieMaxAge,
+        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production'
+      };
+      
       if (necessary !== false) {
-        res.cookie('necessary_cookies', 'true', { 
-          maxAge: 365 * 24 * 60 * 60 * 1000,
-          sameSite: 'strict',
-          secure: process.env.NODE_ENV === 'production'
-        });
+        res.cookie('necessary_cookies', 'true', cookieOptions);
       }
       
       if (analytics === true) {
-        res.cookie('analytics_cookies', 'true', { 
-          maxAge: 365 * 24 * 60 * 60 * 1000,
-          sameSite: 'strict',
-          secure: process.env.NODE_ENV === 'production'
-        });
+        res.cookie('analytics_cookies', 'true', cookieOptions);
       } else {
         res.clearCookie('analytics_cookies');
       }
       
       if (marketing === true) {
-        res.cookie('marketing_cookies', 'true', { 
-          maxAge: 365 * 24 * 60 * 60 * 1000,
-          sameSite: 'strict',
-          secure: process.env.NODE_ENV === 'production'
-        });
+        res.cookie('marketing_cookies', 'true', cookieOptions);
       } else {
         res.clearCookie('marketing_cookies');
       }
       
       if (personalization === true) {
-        res.cookie('personalization_cookies', 'true', { 
-          maxAge: 365 * 24 * 60 * 60 * 1000,
-          sameSite: 'strict',
-          secure: process.env.NODE_ENV === 'production'
-        });
+        res.cookie('personalization_cookies', 'true', cookieOptions);
       } else {
         res.clearCookie('personalization_cookies');
       }
@@ -192,3 +183,4 @@ const cookieController = {
 };
 
 module.exports = cookieController;
+

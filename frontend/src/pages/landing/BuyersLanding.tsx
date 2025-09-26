@@ -171,8 +171,27 @@ const BuyersLanding: React.FC = () => {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <Users className="w-8 h-8 text-blue-600" />
-                <span className="text-2xl font-bold text-blue-800">ACHHADAM</span>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 hover-scale animate-glow">
+                  <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">
+                    <img 
+                      src="/src/assets/achhadam logo.jpg" 
+                      alt="Achhadam Logo" 
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  </div>
+                </div>
+                <span className="text-2xl font-bold tracking-wide" 
+                      style={{
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.2)',
+                        fontWeight: '900',
+                        letterSpacing: '0.05em',
+                        background: 'linear-gradient(135deg, #4ade80 0%, #38bdf8 50%, #22d3ee 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        filter: 'none'
+                      }}>
+                  A<span className="lowercase">chhadam</span>
+                </span>
               </div>
             </div>
             
@@ -518,8 +537,27 @@ const BuyersLanding: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Users className="w-8 h-8 text-blue-400" />
-                <span className="text-2xl font-bold">ACHHADAM</span>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 hover-scale animate-glow">
+                  <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">
+                    <img 
+                      src="/src/assets/achhadam logo.jpg" 
+                      alt="Achhadam Logo" 
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  </div>
+                </div>
+                <span className="text-2xl font-bold tracking-wide" 
+                      style={{
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.2)',
+                        fontWeight: '900',
+                        letterSpacing: '0.05em',
+                        background: 'linear-gradient(135deg, #4ade80 0%, #38bdf8 50%, #22d3ee 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        filter: 'none'
+                      }}>
+                  A<span className="lowercase">chhadam</span>
+                </span>
               </div>
               <p className="text-gray-400 mb-4">
                 Connecting businesses with verified farmers for better quality and lower costs.

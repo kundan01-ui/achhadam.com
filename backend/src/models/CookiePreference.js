@@ -68,3 +68,6 @@ cookiePreferenceSchema.pre('save', function(next) {
 const CookiePreference = mongoose.model('CookiePreference', cookiePreferenceSchema);
 
 module.exports = CookiePreference;
+
+
+
