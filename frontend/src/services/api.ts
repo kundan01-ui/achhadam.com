@@ -174,10 +174,26 @@ class ApiService {
   }
 
   async login(data: LoginRequest): Promise<LoginResponse> {
-    return this.request<LoginResponse>('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    try {
+      console.log('🔄 Attempting login for phone:', data.phone);
+      const response = await this.request<LoginResponse>('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      console.log('✅ Login successful');
+      return response;
+    } catch (error: any) {
+      console.error('❌ Login failed:', error);
+      if (error.status === 401) {
+        throw new Error('Invalid phone number or password');
+      } else if (error.status === 404) {
+        throw new Error('User not found. Please sign up first.');
+      } else if (error.status >= 500) {
+        throw new Error('Server error. Please try again later.');
+      } else {
+        throw new Error(error.message || 'Login failed');
+      }
+    }
   }
 
   async getCurrentUser(token: string): Promise<User> {

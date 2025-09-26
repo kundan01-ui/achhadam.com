@@ -38,6 +38,9 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
           onError(result.error || 'Google Sign-in failed');
         }
       } else {
+        // Add delay to prevent multiple popup requests
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         result = await googleAuthService.signInWithPopup();
         if (result.success && result.user) {
           onSuccess(result.user);

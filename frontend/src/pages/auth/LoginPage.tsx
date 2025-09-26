@@ -74,6 +74,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
         password: formData.password,
       };
       
+      // Clear any existing timer
+      if (window.loginTimer) {
+        clearTimeout(window.loginTimer);
+      }
+      
       console.time('Login Process');
       
       // Use cached token for repeat login attempts with same credentials

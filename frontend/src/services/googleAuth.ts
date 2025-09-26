@@ -10,6 +10,7 @@ import type { GoogleUserData } from '../types/auth';
 
 export class GoogleAuthService {
   private provider: GoogleAuthProvider;
+  private isPopupOpen: boolean = false;
 
   constructor() {
     this.provider = new GoogleAuthProvider();
@@ -27,6 +28,13 @@ export class GoogleAuthService {
   async signInWithPopup(): Promise<{ success: boolean; user?: GoogleUserData; error?: string }> {
     try {
       console.log('🔄 Starting Google Sign-in with popup...');
+      
+      // Check if there's already a pending popup
+      if (this.isPopupOpen) {
+        throw new Error('A sign-in popup is already open');
+      }
+      
+      this.isPopupOpen = true;
       
       const result = await signInWithPopup(auth, this.provider);
       const user = result.user;
@@ -63,6 +71,8 @@ export class GoogleAuthService {
         success: false,
         error: errorMessage
       };
+    } finally {
+      this.isPopupOpen = false;
     }
   }
 
