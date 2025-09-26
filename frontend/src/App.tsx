@@ -11,11 +11,20 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import CookieConsent from './components/CookieConsent';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { initCookieConsent } from './services/cookieService';
+import { handleRouteFallback, checkRouteAccessibility } from './utils/routeFallback';
 
 const App: React.FC = () => {
   useEffect(() => {
     // Initialize cookie consent system when app loads
     initCookieConsent();
+    
+    // Handle route fallback for legal pages
+    handleRouteFallback();
+    
+    // Check route accessibility
+    if (checkRouteAccessibility()) {
+      console.log('Legal page route detected, ensuring proper navigation');
+    }
   }, []);
 
   return (

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="hi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/jpeg" href="/achhadam-icon-original.jpeg" />
+    <link rel="apple-touch-icon" href="/achhadam-icon-original.jpeg" />
+    <link rel="apple-touch-icon" sizes="72x72" href="/achhadam-icon-original.jpeg" />
+    <link rel="apple-touch-icon" sizes="96x96" href="/achhadam-icon-original.jpeg" />
+    <link rel="apple-touch-icon" sizes="128x128" href="/achhadam-icon-original.jpeg" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/achhadam-icon-original.jpeg" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/achhadam-icon-original.jpeg" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/achhadam-icon-original.jpeg" />
+    <link rel="apple-touch-icon" sizes="384x384" href="/achhadam-icon-original.jpeg" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/achhadam-icon-original.jpeg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#10b981" />
+    <meta name="description" content="Achhadam - Direct farmer-to-consumer platform eliminating middlemen in agriculture" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Achhadam" />
+    <title>Achhadam - Smart Agriculture Platform</title>
+    
+    <!-- SPA Routing Fallback Script -->
+    <script>
+      // Handle SPA routing for production
+      if (window.location.pathname !== '/' && !window.location.pathname.includes('.')) {
+        // This is a client-side route, let React Router handle it
+        console.log('SPA Route detected:', window.location.pathname);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  </body>
+</html>
