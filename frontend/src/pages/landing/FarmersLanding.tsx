@@ -434,10 +434,10 @@ const FarmersLanding: React.FC = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Mobile: Stack layout, Desktop: Grid layout */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          {/* Mobile: 2-column layout, Desktop: 4-column layout */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {/* Company Info - Full width on mobile, 2 columns on desktop */}
-            <div className="sm:col-span-2 lg:col-span-1">
+            <div className="col-span-2 lg:col-span-1">
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mb-4">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 hover-scale animate-glow">
                   <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">

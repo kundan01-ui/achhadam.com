@@ -1393,10 +1393,10 @@ const HomePage: React.FC = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-8 sm:py-12 lg:py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Mobile: Stack layout, Desktop: Grid layout */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          {/* Mobile: 2-column layout, Desktop: 4-column layout */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {/* Company Info - Full width on mobile, 2 columns on desktop */}
-            <div className="sm:col-span-2 lg:col-span-2 animate-fade-in-left">
+            <div className="col-span-2 lg:col-span-2 animate-fade-in-left">
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mb-4">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 hover-scale animate-glow">
                   <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-blue-100 p-1 shadow-lg">
@@ -1433,7 +1433,7 @@ const HomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* For Farmers - Mobile: Full width, Desktop: 1 column */}
+            {/* For Farmers - Mobile: 1 column, Desktop: 1 column */}
             <div className="animate-fade-in-up stagger-1">
               <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{t('forFarmers')}</h4>
               <ul className="space-y-2">
@@ -1444,7 +1444,7 @@ const HomePage: React.FC = () => {
               </ul>
             </div>
 
-            {/* For Buyers - Mobile: Full width, Desktop: 1 column */}
+            {/* For Buyers - Mobile: 1 column, Desktop: 1 column */}
             <div className="animate-fade-in-up stagger-2">
               <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{t('forBuyers')}</h4>
               <ul className="space-y-2">
@@ -1456,10 +1456,10 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Legal & Support - Full width section */}
+          {/* Legal & Support - Full width section with better mobile layout */}
           <div className="mt-6 sm:mt-8 animate-fade-in-up stagger-3">
             <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Legal & Support</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
               <Link to="/privacy-policy" className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-sm sm:text-base py-1 block">Privacy Policy</Link>
               <Link to="/terms-conditions" className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-sm sm:text-base py-1 block">Terms & Conditions</Link>
               <Link to="/cancellation-refund" className="footer-link text-gray-400 hover:text-white transition-colors duration-300 text-sm sm:text-base py-1 block">Refund Policy</Link>
