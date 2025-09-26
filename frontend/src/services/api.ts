@@ -212,6 +212,27 @@ class ApiService {
     return this.request<{ status: string; timestamp: string }>('/api/health');
   }
 
+  // Generic GET method
+  async get<T>(url: string, options?: RequestInit): Promise<T> {
+    return this.request<T>(url, {
+      method: 'GET',
+      ...options,
+    });
+  }
+
+  // Generic POST method
+  async post<T>(url: string, data?: any, options?: RequestInit): Promise<T> {
+    return this.request<T>(url, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+      ...options,
+    });
+  }
+
   // Password Reset APIs
   async sendResetOTP(phone: string): Promise<ApiResponse> {
     return this.request<ApiResponse>('/api/auth/send-reset-otp', {

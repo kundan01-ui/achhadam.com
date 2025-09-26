@@ -92,8 +92,8 @@ export const getCookiePreferences = async (): Promise<CookiePreferences> => {
   try {
     // Try to get preferences from backend
     const response = await api.get('/api/cookies/preferences');
-    if (response.data && response.data.success && response.data.data.preferences) {
-      return response.data.data.preferences;
+    if (response && response.success && response.data && response.data.preferences) {
+      return response.data.preferences;
     }
   } catch (error) {
     console.error('Error getting cookie preferences from server:', error);
