@@ -1,2 +1,10 @@
-# Netlify/Vercel redirects for SPA routing
+# Netlify redirects for SPA routing
 /*    /index.html   200
+
+# Specific routes for legal pages
+/privacy-policy    /index.html   200
+/terms-conditions    /index.html   200
+/cancellation-refund    /index.html   200
+/shipping-delivery    /index.html   200
+/contact-us    /index.html   200
+/legal-compliance    /index.html   200

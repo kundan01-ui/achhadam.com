@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -1458,12 +1459,12 @@ const HomePage: React.FC = () => {
             <div className="animate-fade-in-up stagger-3">
               <h4 className="text-lg font-semibold mb-4">Legal & Support</h4>
               <ul className="space-y-2">
-                <li><a href="/privacy-policy" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Privacy Policy</a></li>
-                <li><a href="/terms-conditions" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Terms & Conditions</a></li>
-                <li><a href="/cancellation-refund" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Refund Policy</a></li>
-                <li><a href="/shipping-delivery" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Shipping Policy</a></li>
-                <li><a href="/contact-us" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Contact Us</a></li>
-                <li><a href="/legal-compliance" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Legal & Compliance</a></li>
+                <li><Link to="/privacy-policy" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Privacy Policy</Link></li>
+                <li><Link to="/terms-conditions" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Terms & Conditions</Link></li>
+                <li><Link to="/cancellation-refund" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Refund Policy</Link></li>
+                <li><Link to="/shipping-delivery" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Shipping Policy</Link></li>
+                <li><Link to="/contact-us" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Contact Us</Link></li>
+                <li><Link to="/legal-compliance" className="footer-link text-gray-400 hover:text-white transition-colors duration-300">Legal & Compliance</Link></li>
               </ul>
             </div>
           </div>

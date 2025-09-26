@@ -4,5 +4,31 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "routes": [
+    {
+      "src": "/privacy-policy",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/terms-conditions",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/cancellation-refund",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/shipping-delivery",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/contact-us",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/legal-compliance",
+      "dest": "/index.html"
+    }
   ]
 }
