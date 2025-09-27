@@ -90,13 +90,20 @@ export const saveCookiePreferences = async (preferences: CookiePreferences): Pro
  */
 export const getCookiePreferences = async (): Promise<CookiePreferences> => {
   try {
-    // Try to get preferences from backend
+    // Try to get preferences from backend with timeout
     const response = await api.get('/api/cookies/preferences');
     if (response && response.success && response.data && response.data.preferences) {
       return response.data.preferences;
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error getting cookie preferences from server:', error);
+    
+    // Handle specific error types
+    if (error.message && error.message.includes('Request timed out')) {
+      console.log('🔄 Cookie preferences request timed out, using localStorage fallback');
+    } else if (error.message && error.message.includes('Request was cancelled')) {
+      console.log('🔄 Cookie preferences request was cancelled, using localStorage fallback');
+    }
   }
   
   // Fallback to localStorage

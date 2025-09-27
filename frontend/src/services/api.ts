@@ -1,9 +1,9 @@
 // API service for authentication and user management
-// Local Backend (Development) - Commented out for production
+// Local Backend (Development) - Commented out for production deployment
 // const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 
-// Render Backend (Production) - Active for production
-const API_BASE_URL = 'https://acchadam1-backend.onrender.com';
+// Render Backend (Production) - Active for production deployment
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://acchadam1-backend.onrender.com';
 
 // API Response interface
 export interface ApiResponse {
@@ -83,11 +83,22 @@ export interface SignupResponse {
 }
 
 class ApiService {
+  private requestCache: Map<string, Promise<any>> = new Map();
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    
+    // Create cache key for GET requests only
+    const cacheKey = options.method === 'GET' ? `${endpoint}_${JSON.stringify(options.body || '')}` : null;
+    
+    // Check if request is already in progress (for GET requests)
+    if (cacheKey && this.requestCache.has(cacheKey)) {
+      console.log(`🔄 Using cached request for ${endpoint}`);
+      return this.requestCache.get(cacheKey);
+    }
     
     const config: RequestInit = {
       headers: {
@@ -100,16 +111,27 @@ class ApiService {
     try {
       // Add timeout to fetch requests
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      const timeoutId = setTimeout(() => {
+        console.log(`⏰ Request timeout for ${endpoint}`);
+        controller.abort();
+      }, 15000); // 15 second timeout
       
       config.signal = controller.signal;
       
-      console.time(`API Request: ${endpoint}`);
+      // Check if timer already exists to prevent conflicts
+      const timerKey = `API Request: ${endpoint}`;
+      if (console.time && console.timeEnd) {
+        console.time(timerKey);
+      }
+      
       const response = await fetch(url, config);
-      console.timeEnd(`API Request: ${endpoint}`);
       
       // Clear timeout since request completed
       clearTimeout(timeoutId);
+      
+      if (console.time && console.timeEnd) {
+        console.timeEnd(timerKey);
+      }
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -123,15 +145,52 @@ class ApiService {
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
       
-      return await response.json();
+      const result = await response.json();
+      
+      // Cache successful GET requests
+      if (cacheKey) {
+        this.requestCache.set(cacheKey, result);
+        // Clear cache after 5 seconds to prevent stale data
+        setTimeout(() => {
+          this.requestCache.delete(cacheKey);
+        }, 5000);
+      }
+      
+      return result;
     } catch (error: any) {
       console.error(`API request failed for ${endpoint}:`, error);
       
+      // Clear cache on error
+      if (cacheKey) {
+        this.requestCache.delete(cacheKey);
+      }
+      
+      // Handle specific error types
       if (error.name === 'AbortError') {
+        if (error.message && error.message.includes('signal is aborted without reason')) {
+          console.log(`🔄 Request aborted for ${endpoint}, this might be due to rapid requests`);
+          throw new Error('Request was cancelled. Please try again.');
+        }
         throw new Error('Request timed out. Please check your internet connection and try again.');
       }
       
-      throw error;
+      // Handle network errors
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Network error. Please check your internet connection and try again.');
+      }
+      
+      // Handle timeout errors
+      if (error.message && error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your internet connection and try again.');
+      }
+      
+      // Re-throw the error if it's already an Error object
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      // Convert other errors to Error objects
+      throw new Error(error.message || 'An unexpected error occurred');
     }
   }
 

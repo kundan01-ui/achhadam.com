@@ -151,7 +151,13 @@ const FarmerSignupPage: React.FC<FarmerSignupPageProps> = ({ onBackToLogin, onSw
           
           console.log(`❌ MOBILE NUMBER ALREADY EXISTS: ${formData.phone} is already registered as ${existingUserType}`);
           
-          setOtpError(`❌ यह मोबाइल नंबर पहले से ही रजिस्टर्ड है!\n\n📱 Mobile Number: ${formData.phone}\n👤 User Type: ${existingUserType}\n📅 Registered: ${registeredAt ? new Date(registeredAt).toLocaleDateString() : 'Unknown'}\n\nकृपया कोई अलग मोबाइल नंबर use करें या login करने की कोशिश करें।`);
+          // 🚫 CRITICAL: Don't show OTP dashboard, show popup instead
+          setOtpSent(false);
+          setShowOTP(false);
+          setOtpError('');
+          
+          // Show popup alert instead of OTP dashboard
+          alert(`❌ यह मोबाइल नंबर पहले से ही रजिस्टर्ड है!\n\n📱 Mobile Number: ${formData.phone}\n👤 User Type: ${existingUserType}\n📅 Registered: ${registeredAt ? new Date(registeredAt).toLocaleDateString() : 'Unknown'}\n\nकृपया कोई अलग मोबाइल नंबर use करें या login करने की कोशिश करें।`);
           
           // Reset form phone field
           setFormData(prev => ({ ...prev, phone: '' }));
