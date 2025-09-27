@@ -94,6 +94,9 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
     // Initialize empty array to ensure we always return an array
     let allCrops: MarketplaceCrop[] = [];
     
+    // Add try-catch wrapper for the entire function to prevent crashes
+    try {
+    
     // Try to load from database first
     try {
       const response = await fetch('/api/crops/marketplace', {
@@ -281,14 +284,25 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
     console.log(`🎉 Final result: ${sortedCrops.length} marketplace crops ready`);
     return sortedCrops;
     
+    } catch (innerError) {
+      console.error('❌ Inner function error, returning empty array:', innerError);
+      return [];
+    }
+    
   } catch (error) {
-    console.error('Error loading farmer crops:', error);
+    console.error('❌ Outer function error, returning empty array:', error);
     return [];
   }
 };
 
 // Filter crops by category
 export const filterCropsByCategory = (crops: MarketplaceCrop[], category: string): MarketplaceCrop[] => {
+  // Defensive programming: ensure crops is an array
+  if (!Array.isArray(crops)) {
+    console.error('❌ filterCropsByCategory: crops is not an array:', typeof crops, crops);
+    return [];
+  }
+  
   if (!category || category === 'all') return crops;
   
   return crops.filter(crop => {
@@ -314,6 +328,12 @@ export const filterCropsByCategory = (crops: MarketplaceCrop[], category: string
 
 // Search crops by name or type
 export const searchCrops = (crops: MarketplaceCrop[], query: string): MarketplaceCrop[] => {
+  // Defensive programming: ensure crops is an array
+  if (!Array.isArray(crops)) {
+    console.error('❌ searchCrops: crops is not an array:', typeof crops, crops);
+    return [];
+  }
+  
   if (!query.trim()) return crops;
   
   const searchTerm = query.toLowerCase();
@@ -328,6 +348,12 @@ export const searchCrops = (crops: MarketplaceCrop[], query: string): Marketplac
 
 // Sort crops by different criteria
 export const sortCrops = (crops: MarketplaceCrop[], sortBy: string): MarketplaceCrop[] => {
+  // Defensive programming: ensure crops is an array
+  if (!Array.isArray(crops)) {
+    console.error('❌ sortCrops: crops is not an array:', typeof crops, crops);
+    return [];
+  }
+  
   const sortedCrops = [...crops];
   
   switch (sortBy) {
@@ -349,8 +375,15 @@ export const sortCrops = (crops: MarketplaceCrop[], sortBy: string): Marketplace
 };
 
 // Get crop categories for filtering
-export const getCropCategories = (): { value: string; label: string; count: number }[] => {
-  const crops = loadAllFarmerCrops();
+export const getCropCategories = async (): Promise<{ value: string; label: string; count: number }[]> => {
+  const crops = await loadAllFarmerCrops();
+  
+  // Defensive programming: ensure crops is an array
+  if (!Array.isArray(crops)) {
+    console.error('❌ getCropCategories: crops is not an array:', typeof crops, crops);
+    return [];
+  }
+  
   const categories = new Map<string, number>();
   
   crops.forEach(crop => {
@@ -380,14 +413,27 @@ export const getCropCategories = (): { value: string; label: string; count: numb
 };
 
 // Get marketplace statistics
-export const getMarketplaceStats = () => {
-  const crops = loadAllFarmerCrops();
+export const getMarketplaceStats = async () => {
+  const crops = await loadAllFarmerCrops();
+  
+  // Defensive programming: ensure crops is an array
+  if (!Array.isArray(crops)) {
+    console.error('❌ getMarketplaceStats: crops is not an array:', typeof crops, crops);
+    return {
+      totalCrops: 0,
+      totalFarmers: 0,
+      averagePrice: 0,
+      categories: [],
+      topSellingCrops: [],
+      priceRange: { min: 0, max: 0 }
+    };
+  }
   
   return {
     totalCrops: crops.length,
     totalFarmers: new Set(crops.map(crop => crop.farmerId)).size,
     averagePrice: crops.length > 0 ? crops.reduce((sum, crop) => sum + crop.price, 0) / crops.length : 0,
-    categories: getCropCategories(),
+    categories: await getCropCategories(),
     topSellingCrops: getTopSellingCrops(crops),
     priceRange: {
       min: crops.length > 0 ? Math.min(...crops.map(crop => crop.price)) : 0,
@@ -462,7 +508,7 @@ export const recoverFarmerData = () => {
 };
 
 // Force refresh marketplace data
-export const forceRefreshMarketplace = () => {
+export const forceRefreshMarketplace = async () => {
   console.log('🔄 Force refreshing marketplace data...');
   
   // Clear any cached data
@@ -471,7 +517,14 @@ export const forceRefreshMarketplace = () => {
   cacheKeys.forEach(key => localStorage.removeItem(key));
   
   // Reload all farmer data
-  const crops = loadAllFarmerCrops();
+  const crops = await loadAllFarmerCrops();
+  
+  // Defensive programming: ensure crops is an array
+  if (!Array.isArray(crops)) {
+    console.error('❌ forceRefreshMarketplace: crops is not an array:', typeof crops, crops);
+    return [];
+  }
+  
   console.log(`🔄 Marketplace refreshed with ${crops.length} crops`);
   
   return crops;
@@ -525,6 +578,12 @@ export const restoreFarmerData = (backupData: any) => {
 
 // Get top selling crops
 const getTopSellingCrops = (crops: MarketplaceCrop[]) => {
+  // Defensive programming: ensure crops is an array
+  if (!Array.isArray(crops)) {
+    console.error('❌ getTopSellingCrops: crops is not an array:', typeof crops, crops);
+    return [];
+  }
+  
   const cropCounts = new Map<string, number>();
   
   crops.forEach(crop => {
