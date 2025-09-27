@@ -1225,12 +1225,12 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         </div>
       )}
 
-      {/* Crop Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Crop Grid - Mobile Responsive */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {filteredCrops.map((crop, index) => (
           <div key={`${crop.id}_${index}_${crop.farmer.id}`} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-            {/* Crop Image */}
-            <div className="relative h-48 bg-gray-100 cursor-pointer" onClick={() => handleImageClick(crop)}>
+            {/* Crop Image - Mobile Responsive */}
+            <div className="relative h-32 sm:h-40 lg:h-48 bg-gray-100 cursor-pointer" onClick={() => handleImageClick(crop)}>
               {crop.images && crop.images.length > 0 ? (
                 <img
                   src={crop.images[0]?.imageUrl || '/placeholder-crop.jpg'}
@@ -1278,15 +1278,15 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
               </div>
             </div>
 
-            {/* Crop Info */}
-            <div className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-lg">{crop.name}</h3>
-                  <p className="text-sm text-gray-600">{crop.type} • {crop.variety}</p>
+            {/* Crop Info - Mobile Responsive */}
+            <div className="p-2 sm:p-3 lg:p-4">
+              <div className="flex items-start justify-between mb-1 sm:mb-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base lg:text-lg truncate">{crop.name}</h3>
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">{crop.type} • {crop.variety}</p>
                 </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-green-600">
+                <div className="text-right ml-2">
+                  <div className="text-sm sm:text-base lg:text-lg font-bold text-green-600">
                     ₹{crop.price}/{crop.unit === 'kg' ? 'kg' : 'quintal'}
                   </div>
                   <div className="text-xs text-gray-500">
@@ -1295,27 +1295,27 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                 </div>
               </div>
 
-              {/* Farmer Info */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <User className="h-4 w-4 text-green-600" />
+              {/* Farmer Info - Mobile Responsive */}
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <div className="flex items-center space-x-1 sm:space-x-2 min-w-0 flex-1">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                   </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{crop.farmer.name}</div>
-                    <div className="text-xs text-gray-500 flex items-center">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {crop.farmer.location}
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{crop.farmer.name}</div>
+                    <div className="text-xs text-gray-500 flex items-center truncate">
+                      <MapPin className="h-2 w-2 sm:h-3 sm:w-3 mr-1 flex-shrink-0" />
+                      <span className="truncate">{crop.farmer.location}</span>
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right ml-2 flex-shrink-0">
                   <div className="flex items-center text-yellow-500">
-                    <Star className="h-4 w-4 fill-current" />
-                    <span className="text-sm ml-1">{crop.farmer.rating.toFixed(1)}</span>
+                    <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-current" />
+                    <span className="text-xs sm:text-sm ml-1">{crop.farmer.rating.toFixed(1)}</span>
                   </div>
                   <div className="text-xs text-gray-500">
-                    {crop.distance?.toFixed(1)} km away
+                    {crop.distance?.toFixed(1)} km
                   </div>
                 </div>
               </div>
@@ -1355,31 +1355,33 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                 </div>
               )}
 
-                  {/* Action Buttons */}
-                  <div className="flex space-x-2">
+                  {/* Action Buttons - Mobile Responsive */}
+                  <div className="flex flex-wrap gap-1 sm:gap-2">
                     <button
                       onClick={() => handleChatWithFarmer(crop)}
-                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                      className="flex-1 min-w-0 bg-blue-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
                     >
-                      <MessageCircle className="h-4 w-4" />
-                      <span>Chat</span>
+                      <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                      <span className="hidden sm:inline">Chat</span>
                     </button>
                     <button
                       onClick={() => addToCart(crop, 1)}
-                      className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+                      className="flex-1 min-w-0 bg-orange-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
                     >
-                      <ShoppingCart className="h-4 w-4" />
-                      <span>Add to Cart</span>
+                      <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                      <span className="hidden sm:inline">Add to Cart</span>
+                      <span className="sm:hidden">Add</span>
                     </button>
                     <button
                       onClick={() => handleOrderCrop(crop)}
-                      className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                      className="flex-1 min-w-0 bg-green-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
                     >
-                      <Package className="h-4 w-4" />
-                      <span>Buy Now</span>
+                      <Package className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                      <span className="hidden sm:inline">Buy Now</span>
+                      <span className="sm:hidden">Buy</span>
                     </button>
-                    <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Heart className="h-4 w-4" />
+                    <button className="px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center">
+                      <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
                     </button>
                   </div>
             </div>
