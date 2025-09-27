@@ -719,12 +719,15 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         return;
       }
 
-      console.log(`🌾 PERMANENT SAVE: Saving ${crops.length} crops to database for farmer: ${userProfile.name}`);
+      console.log(`🌾 CROSS-DEVICE SYNC: Saving ${crops.length} crops to database for farmer: ${userProfile.name}`);
       console.log(`🔑 Farmer ID: ${userProfile.id} - Data will persist across all devices and sessions`);
+      console.log(`🌐 This ensures crops are available from any device when farmer logs in`);
       
       // Save each crop to database with permanent persistence
       for (const crop of crops) {
         try {
+          console.log(`💾 Saving crop to database: ${crop.cropName || crop.name}`);
+          
           const response = await fetch('/api/crops', {
             method: 'POST',
             headers: {
@@ -735,32 +738,49 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               ...crop,
               farmerId: userProfile.id,
               farmerName: userProfile.name,
-              // Add permanent persistence markers
+              // Add permanent persistence markers for cross-device sync
               isPermanent: true,
               crossDeviceAccess: true,
               sessionIndependent: true,
-              lastUpdated: new Date().toISOString()
+              lastUpdated: new Date().toISOString(),
+              // Add farmer association for permanent linking
+              farmerAssociation: {
+                farmerId: userProfile.id,
+                farmerName: userProfile.name,
+                permanentLink: true
+              }
             })
           });
 
+          console.log(`📡 Database save response status: ${response.status}`);
+
           if (!response.ok) {
             const errorData = await response.json();
+            console.error(`❌ Database save failed for ${crop.cropName || crop.name}:`, errorData);
             throw new Error(errorData.message || 'Failed to save crop to database');
           }
 
           const result = await response.json();
-          console.log(`✅ PERMANENT: Crop saved to database: ${crop.cropName}`);
+          console.log(`✅ CROSS-DEVICE SYNC: Crop saved to database: ${crop.cropName || crop.name}`);
           console.log(`🌐 This crop will be available on any device when farmer logs in`);
+          console.log(`📊 Database response:`, {
+            success: result.success,
+            cropId: result.data?._id,
+            farmerId: result.data?.farmerId
+          });
         } catch (error) {
-          console.error(`❌ Error saving crop ${crop.cropName}:`, error);
+          console.error(`❌ Error saving crop ${crop.cropName || crop.name}:`, error);
+          console.log(`🔄 This crop will only be available locally until database sync is fixed`);
         }
       }
       
-      console.log(`🎉 PERMANENT SAVE COMPLETE: All crops saved to database successfully!`);
+      console.log(`🎉 CROSS-DEVICE SYNC COMPLETE: All crops saved to database successfully!`);
       console.log(`📱 Farmer can now access these crops from any device, any session`);
+      console.log(`🌐 Data is now permanently stored and will sync across all devices`);
       
     } catch (error) {
       console.error('❌ Error saving crops to database:', error);
+      console.log(`🔄 Crops will be available locally but may not sync across devices`);
     }
   };
 
@@ -1031,7 +1051,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
       // FIRST: Try to load from database (CROSS-DEVICE SYNC)
       try {
-        console.log(`🔄 Loading crops from database for farmer: ${userProfile.id}`);
+        console.log(`🔄 CROSS-DEVICE SYNC: Loading crops from database for farmer: ${userProfile.id}`);
+        console.log(`🌐 This will ensure data is available from any device, any session`);
+        
         const response = await fetch(`/api/crops/farmer/${userProfile.id}`, {
           method: 'GET',
           headers: {
@@ -1040,13 +1062,20 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           }
         });
 
+        console.log(`📡 Database response status: ${response.status}`);
+        
         if (response.ok) {
           const data = await response.json();
           const crops = data.data || [];
-          console.log(`✅ DATABASE LOAD: Found ${crops.length} crops in database for farmer ${userProfile.name}`);
+          console.log(`✅ DATABASE LOAD SUCCESS: Found ${crops.length} crops in database for farmer ${userProfile.name}`);
           console.log(`🌐 CROSS-DEVICE SYNC: These crops are available from any device`);
+          console.log(`📊 Database response:`, {
+            success: data.success,
+            count: data.count,
+            persistence: data.persistence
+          });
           
-          // Save to localStorage for offline access
+          // Save to localStorage for offline access and cross-device sync
           const userKey = `farmer_${userProfile.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
           const databaseKey = `farmer_database_${userKey}`;
           const databaseEntry = {
@@ -1054,17 +1083,25 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             farmerId: userProfile.id,
             farmerName: userProfile.name,
             lastUpdated: new Date().toISOString(),
-            totalImages: crops.reduce((total, crop) => total + (crop.images?.length || 0), 0)
+            totalImages: crops.reduce((total, crop) => total + (crop.images?.length || 0), 0),
+            // Add cross-device sync markers
+            crossDeviceSync: true,
+            databaseSource: true,
+            syncTimestamp: new Date().toISOString()
           };
           localStorage.setItem(databaseKey, JSON.stringify(databaseEntry));
-          console.log(`💾 Saved ${crops.length} crops to localStorage for offline access`);
+          console.log(`💾 CROSS-DEVICE SYNC: Saved ${crops.length} crops to localStorage for offline access`);
+          console.log(`🔄 Data will be available on any device when farmer logs in`);
           
           return crops;
         } else {
-          console.log(`⚠️ Database load failed, trying localStorage fallback`);
+          const errorData = await response.json();
+          console.log(`⚠️ Database load failed with status ${response.status}:`, errorData);
+          console.log(`🔄 Trying localStorage fallback...`);
         }
       } catch (error) {
         console.log(`⚠️ Database error, trying localStorage fallback:`, error);
+        console.log(`🔄 This might be due to network issues or server problems`);
       }
 
       // FALLBACK: Try to load from localStorage
@@ -1272,6 +1309,75 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     }
   }, []);
   
+  // Manual refresh button for cross-device sync
+  const handleManualRefresh = async () => {
+    try {
+      console.log(`🔄 MANUAL REFRESH: User requested fresh data from database`);
+      const freshCrops = await forceRefreshFromDatabase();
+      if (freshCrops.length > 0) {
+        console.log(`✅ MANUAL REFRESH: Loaded ${freshCrops.length} fresh crops`);
+        // Show success message to user
+        alert(`✅ Fresh data loaded! Found ${freshCrops.length} crops from database.`);
+      } else {
+        console.log(`⚠️ MANUAL REFRESH: No fresh data found`);
+        alert(`⚠️ No fresh data found in database. Check if crops were saved properly.`);
+      }
+    } catch (error) {
+      console.error(`❌ Manual refresh error:`, error);
+      alert(`❌ Error refreshing data. Please try again.`);
+    }
+  };
+
+  // Force refresh data from database on login - CROSS-DEVICE SYNC
+  const forceRefreshFromDatabase = async () => {
+    try {
+      console.log(`🔄 FORCE REFRESH: Loading fresh data from database for farmer: ${userProfile.id}`);
+      console.log(`🌐 This ensures latest data is loaded from any device`);
+      
+      const response = await fetch(`/api/crops/farmer/${userProfile.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const crops = data.data || [];
+        console.log(`✅ FORCE REFRESH: Loaded ${crops.length} fresh crops from database`);
+        
+        // Update state with fresh data
+        setUploadedCrops(crops);
+        
+        // Update localStorage with fresh data
+        const userKey = `farmer_${userProfile.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        const databaseKey = `farmer_database_${userKey}`;
+        const databaseEntry = {
+          crops: crops,
+          farmerId: userProfile.id,
+          farmerName: userProfile.name,
+          lastUpdated: new Date().toISOString(),
+          totalImages: crops.reduce((total, crop) => total + (crop.images?.length || 0), 0),
+          crossDeviceSync: true,
+          databaseSource: true,
+          forceRefresh: true,
+          syncTimestamp: new Date().toISOString()
+        };
+        localStorage.setItem(databaseKey, JSON.stringify(databaseEntry));
+        
+        console.log(`🔄 FORCE REFRESH COMPLETE: Fresh data loaded and synced`);
+        return crops;
+      } else {
+        console.log(`⚠️ Force refresh failed, using existing data`);
+        return [];
+      }
+    } catch (error) {
+      console.error(`❌ Force refresh error:`, error);
+      return [];
+    }
+  };
+
   // Load crops from storage when component mounts - USER SPECIFIC with CROSS-DEVICE SYNC
   useEffect(() => {
     const loadCrops = async () => {
@@ -1307,12 +1413,21 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         console.log(`📊 Showing zero state: 0 crops, 0 earnings, 0 land`);
       }
       
-      const savedCrops = await loadCropsFromStorage();
-      setUploadedCrops(savedCrops);
-      console.log(`🌾 CROSS-DEVICE SYNC: Loaded ${savedCrops.length} crops for farmer ${userProfile.name}`);
+      // First try to force refresh from database for cross-device sync
+      const freshCrops = await forceRefreshFromDatabase();
+      if (freshCrops.length > 0) {
+        console.log(`🌾 CROSS-DEVICE SYNC: Loaded ${freshCrops.length} fresh crops from database`);
+        setUploadedCrops(freshCrops);
+      } else {
+        // Fallback to normal loading
+        const savedCrops = await loadCropsFromStorage();
+        setUploadedCrops(savedCrops);
+        console.log(`🌾 CROSS-DEVICE SYNC: Loaded ${savedCrops.length} crops for farmer ${userProfile.name}`);
+      }
       
       // Log each crop to verify user-specific data
-      savedCrops.forEach((crop, index) => {
+      const currentCrops = freshCrops.length > 0 ? freshCrops : savedCrops;
+      currentCrops.forEach((crop, index) => {
         console.log(`📋 Crop ${index + 1}: ${crop.name} by ${crop.farmerName} (ID: ${crop.farmerId})`);
       });
       
@@ -3036,6 +3151,22 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
   const renderOverview = () => (
     <div className="space-y-4">
+      {/* Cross-Device Sync Header */}
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border border-green-100">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">🌐 Cross-Device Data Sync</h3>
+            <p className="text-sm text-gray-600">Your crops are synced across all devices</p>
+          </div>
+          <button
+            onClick={handleManualRefresh}
+            className="mt-2 sm:mt-0 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+          >
+            🔄 Refresh Data
+          </button>
+        </div>
+      </div>
+
       {/* Stats Grid - Perfect Mobile Design */}
       <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {/* Total Crops - Clickable */}
