@@ -421,7 +421,9 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       setMarketplaceCrops(crops);
       setFilteredCrops(crops);
       setMarketplaceStats(getMarketplaceStats());
-      console.log(`🛒 Marketplace loaded: ${crops.length} crops from ${new Set(crops.map(c => c.farmerId)).size} farmers`);
+      // Ensure crops is an array before using map
+      const safeCrops = Array.isArray(crops) ? crops : [];
+      console.log(`🛒 Marketplace loaded: ${safeCrops.length} crops from ${safeCrops.length > 0 ? new Set(safeCrops.map(c => c.farmerId)).size : 0} farmers`);
       
       // If no crops found, show debug info and recovery options
       if (crops.length === 0) {
@@ -508,7 +510,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   };
 
   // Real recent orders - loaded from actual data
-  const recentOrders: RecentOrder[] = orders.map(order => ({
+  const recentOrders: RecentOrder[] = Array.isArray(orders) ? orders.map(order => ({
     id: order.id,
     productName: order.crop.name,
     supplier: order.farmer.name,
@@ -517,7 +519,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     status: order.status as 'pending' | 'completed' | 'cancelled',
     orderDate: order.orderDate,
     deliveryDate: order.deliveryDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-  }));
+  })) : [];
 
   // Real suppliers - loaded from actual farmer data
   const suppliers: Supplier[] = [];
@@ -1583,7 +1585,9 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     
     if (existingItem) {
       // Update existing item
-      setCart(cart.map(item => 
+      // Ensure cart is an array before mapping
+      const safeCart = Array.isArray(cart) ? cart : [];
+      setCart(safeCart.map(item => 
         item.crop.id === crop.id 
           ? {
               ...item,
@@ -1619,7 +1623,9 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       return;
     }
     
-    setCart(cart.map(item => 
+    // Ensure cart is an array before mapping
+    const safeCart = Array.isArray(cart) ? cart : [];
+    setCart(safeCart.map(item => 
       item.id === itemId 
         ? {
             ...item,

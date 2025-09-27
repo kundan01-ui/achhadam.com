@@ -2416,22 +2416,22 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
   // Buyer Marketplace Section
   const renderMarketplace = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Live Buyer Marketplace</h2>
-            <p className="text-gray-600 mt-1">Real-time buyer requests and smart matching</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Live Buyer Marketplace</h2>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">Real-time buyer requests and smart matching</p>
           </div>
           <div className="flex items-center space-x-2">
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+            <button className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 text-sm">
               <RefreshCw className="h-4 w-4" />
-              <span>Refresh</span>
+              <span className="hidden sm:inline">Refresh</span>
             </button>
-            <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+            <button className="bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 text-sm">
               <Filter className="h-4 w-4" />
-              <span>Filter</span>
+              <span className="hidden sm:inline">Filter</span>
             </button>
           </div>
         </div>
@@ -2439,21 +2439,21 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
       {/* Buyer Requests */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Real-time Buyer Requests</h3>
+        <div className="p-4 sm:p-6 border-b border-gray-100">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Real-time Buyer Requests</h3>
         </div>
-        <div className="p-6">
-          <div className="space-y-4">
+        <div className="p-4 sm:p-6">
+          <div className="space-y-3 sm:space-y-4">
             {buyerRequests.map((request) => (
-              <div key={request.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-4">
+              <div key={request.id} className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Building className="h-6 w-6 text-blue-600" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Building className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">{request.buyerName}</h4>
-                      <p className="text-sm text-gray-500">{request.cropType} • {request.quantity} {request.unit}</p>
+                      <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{request.buyerName}</h4>
+                      <p className="text-xs sm:text-sm text-gray-500">{request.cropType} • {request.quantity} {request.unit}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -2461,43 +2461,43 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       {request.urgency.toUpperCase()}
                     </span>
                     <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                      <span className="text-sm font-medium">{request.rating}</span>
+                      <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 fill-current" />
+                      <span className="text-xs sm:text-sm font-medium">{request.rating}</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">
                   <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{request.location} ({request.distance})</span>
+                    <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
+                    <span className="text-xs sm:text-sm text-gray-600">{request.location} ({request.distance})</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Max: {formatCurrency(request.maxPrice)}/{request.unit}</span>
+                    <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
+                    <span className="text-xs sm:text-sm text-gray-600">Max: {formatCurrency(request.maxPrice)}/{request.unit}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{request.previousTransactions} transactions</span>
+                  <div className="flex items-center space-x-2 sm:col-span-2 lg:col-span-1">
+                    <Users className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
+                    <span className="text-xs sm:text-sm text-gray-600">{request.previousTransactions} transactions</span>
                   </div>
                 </div>
                 
-                <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-gray-700">{request.message}</p>
+                <div className="bg-gray-50 rounded-lg p-3 mb-3 sm:mb-4">
+                  <p className="text-xs sm:text-sm text-gray-700">{request.message}</p>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                  <div className="flex items-center space-x-4 text-xs sm:text-sm text-gray-600">
                     <span>Payment: {request.preferredPayment}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button className="px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
                       Accept
                     </button>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <button className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
                       Negotiate
                     </button>
-                    <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    <button className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm">
                       View Details
                     </button>
                   </div>
@@ -3935,8 +3935,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       
       {/* KYC Verification Modal */}
       {showKYCModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideInUp">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 rounded-t-xl">
               <div className="flex items-center justify-between">
@@ -3954,7 +3954,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             </div>
 
             {/* Content */}
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto">
               {/* Warning Message */}
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 animate-pulse">
                 <div className="flex items-start">
@@ -4127,6 +4127,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       setKycDismissedThisSession(true);
                       setShowKYCModal(false);
                       console.log('📝 KYC dismissed for this session');
+                      // Allow crop upload after dismissing KYC
+                      setShowCropUploadModal(true);
                     }}
                     className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-300 border border-gray-200 rounded-lg hover:bg-gray-50 hover:shadow-md text-sm"
                   >

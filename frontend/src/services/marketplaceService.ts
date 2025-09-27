@@ -196,13 +196,19 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
             );
             
             console.log(`🌾 Valid crops: ${validCrops.length}/${farmerData.crops.length}`);
-            console.log(`🌾 Farmer crops:`, validCrops.map(crop => ({
-              id: crop.id,
-              name: crop.name,
-              type: crop.type,
-              price: crop.price,
-              farmerName: crop.farmerName
-            })));
+            
+            // Ensure validCrops is an array before mapping
+            if (Array.isArray(validCrops) && validCrops.length > 0) {
+              console.log(`🌾 Farmer crops:`, validCrops.map(crop => ({
+                id: crop.id,
+                name: crop.name,
+                type: crop.type,
+                price: crop.price,
+                farmerName: crop.farmerName
+              })));
+            } else {
+              console.log(`🌾 Farmer crops: No valid crops to display`);
+            }
             
             // Process only valid crops
             validCrops.forEach((crop: CropData, index: number) => {
@@ -405,11 +411,16 @@ export const getCropCategories = async (): Promise<{ value: string; label: strin
     categories.set(category, (categories.get(category) || 0) + 1);
   });
   
-  return Array.from(categories.entries()).map(([value, count]) => ({
-    value,
-    label: value.charAt(0).toUpperCase() + value.slice(1),
-    count
-  }));
+  // Ensure categories is a Map before converting to array
+  if (categories instanceof Map && categories.size > 0) {
+    return Array.from(categories.entries()).map(([value, count]) => ({
+      value,
+      label: value.charAt(0).toUpperCase() + value.slice(1),
+      count
+    }));
+  } else {
+    return [];
+  }
 };
 
 // Get marketplace statistics
@@ -429,15 +440,18 @@ export const getMarketplaceStats = async () => {
     };
   }
   
+  // Ensure crops is an array before using map functions
+  const safeCrops = Array.isArray(crops) ? crops : [];
+  
   return {
-    totalCrops: crops.length,
-    totalFarmers: new Set(crops.map(crop => crop.farmerId)).size,
-    averagePrice: crops.length > 0 ? crops.reduce((sum, crop) => sum + crop.price, 0) / crops.length : 0,
+    totalCrops: safeCrops.length,
+    totalFarmers: safeCrops.length > 0 ? new Set(safeCrops.map(crop => crop.farmerId)).size : 0,
+    averagePrice: safeCrops.length > 0 ? safeCrops.reduce((sum, crop) => sum + crop.price, 0) / safeCrops.length : 0,
     categories: await getCropCategories(),
-    topSellingCrops: getTopSellingCrops(crops),
+    topSellingCrops: getTopSellingCrops(safeCrops),
     priceRange: {
-      min: crops.length > 0 ? Math.min(...crops.map(crop => crop.price)) : 0,
-      max: crops.length > 0 ? Math.max(...crops.map(crop => crop.price)) : 0
+      min: safeCrops.length > 0 ? Math.min(...safeCrops.map(crop => crop.price)) : 0,
+      max: safeCrops.length > 0 ? Math.max(...safeCrops.map(crop => crop.price)) : 0
     }
   };
 };
@@ -591,10 +605,15 @@ const getTopSellingCrops = (crops: MarketplaceCrop[]) => {
     cropCounts.set(name, (cropCounts.get(name) || 0) + 1);
   });
   
-  return Array.from(cropCounts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name, count]) => ({ name, count }));
+  // Ensure cropCounts is a Map before converting to array
+  if (cropCounts instanceof Map && cropCounts.size > 0) {
+    return Array.from(cropCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => ({ name, count }));
+  } else {
+    return [];
+  }
 };
 
 export type { MarketplaceCrop, FarmerData, CropData };
