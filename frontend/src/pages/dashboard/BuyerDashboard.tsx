@@ -202,7 +202,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     const loadCartData = async () => {
       try {
         // Load cart from database first (PERMANENT DATA)
-        const cartResponse = await fetch(`/api/cart/buyer/${userProfile.id}`, {
+        const cartResponse = await fetch(`/api/cart/buyer/${userProfile?.id || user?.id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -287,7 +287,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     const loadBuyerData = async () => {
       try {
         // Load orders from database first (PERMANENT DATA)
-        const ordersResponse = await fetch(`/api/orders/buyer/${userProfile.id}`, {
+        const ordersResponse = await fetch(`/api/orders/buyer/${userProfile?.id || user?.id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -418,7 +418,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   // Load marketplace data - REAL FARMER DATA
   useEffect(() => {
     const loadMarketplaceData = async () => {
-      console.log('🛒 Loading marketplace data for buyer:', userProfile.name);
+      console.log('🛒 Loading marketplace data for buyer:', userProfile?.name || 'Buyer');
       
       // Debug localStorage data first
       const farmerCount = debugLocalStorageData();
@@ -467,7 +467,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     // Refresh data every 10 seconds for real-time updates
     const interval = setInterval(loadMarketplaceData, 10000);
     return () => clearInterval(interval);
-  }, [userProfile.name]);
+  }, [userProfile?.name]);
 
   // Filter and search crops
   useEffect(() => {
@@ -605,7 +605,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   // PERMANENT DATABASE SAVE - MongoDB Integration for Buyer Data
   const saveOrdersToDatabase = async (orders) => {
     try {
-      if (!userProfile.id) {
+      if (!userProfile?.id && !user?.id) {
         console.error('Cannot save orders: No user ID available');
         return;
       }
@@ -658,7 +658,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   // PERMANENT CART DATABASE SAVE - MongoDB Integration
   const saveCartToDatabase = async (cart) => {
     try {
-      if (!userProfile.id) {
+      if (!userProfile?.id && !user?.id) {
         console.error('Cannot save cart: No user ID available');
         return;
       }
