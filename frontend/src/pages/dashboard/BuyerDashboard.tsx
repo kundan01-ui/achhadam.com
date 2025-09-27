@@ -140,6 +140,31 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   // User-specific data isolation for buyers - MOVED TO TOP
   const [userKey, setUserKey] = useState<string>('');
   
+  // Mock user profile data - MOVED TO TOP TO PREVENT HOISTING ISSUES
+  const [userProfile, setUserProfile] = useState({
+    id: user?.id || '1',
+    name: user?.name || (user?.firstName ? user.firstName + ' ' + (user?.lastName || '') : 'Buyer User'),
+    email: user?.email || 'buyer@achhadam.com',
+    phone: user?.phone || '+91 0000000000',
+    userType: 'buyer' as const,
+    address: user?.address || 'Business Address',
+    city: user?.city || 'City',
+    state: user?.state || 'State',
+    pincode: user?.pincode || '000000',
+    dateOfBirth: user?.dateOfBirth || '1990-01-01',
+    profileImage: user?.profileImage || '',
+    businessName: user?.businessName || 'My Business',
+    businessType: user?.businessType || 'company',
+    kycStatus: user?.kycStatus || 'pending' as const,
+    aadharNumber: user?.aadharNumber || '',
+    panNumber: user?.panNumber || '',
+    bankAccountNumber: user?.bankAccountNumber || '',
+    ifscCode: user?.ifscCode || '',
+    bankName: user?.bankName || '',
+    createdAt: user?.createdAt || new Date().toISOString(),
+    lastLogin: new Date().toISOString()
+  });
+  
   // Generate unique user key for buyer
   useEffect(() => {
     if (user) {
@@ -337,31 +362,6 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       console.log(`💾 Saved orders for buyer ${userKey}:`, orders.length);
     }
   }, [orders, userKey]);
-
-  // Mock user profile data
-  const [userProfile, setUserProfile] = useState({
-    id: user?.id || '1',
-    name: user?.name || user?.firstName + ' ' + user?.lastName || 'Buyer User',
-    email: user?.email || 'buyer@achhadam.com',
-    phone: user?.phone || '+91 0000000000',
-    userType: 'buyer' as const,
-    address: user?.address || 'Business Address',
-    city: user?.city || 'City',
-    state: user?.state || 'State',
-    pincode: user?.pincode || '000000',
-    dateOfBirth: user?.dateOfBirth || '1990-01-01',
-    profileImage: user?.profileImage || '',
-    businessName: user?.businessName || 'My Business',
-    businessType: user?.businessType || 'company',
-    kycStatus: user?.kycStatus || 'pending' as const,
-    aadharNumber: user?.aadharNumber || '',
-    panNumber: user?.panNumber || '',
-    bankAccountNumber: user?.bankAccountNumber || '',
-    ifscCode: user?.ifscCode || '',
-    bankName: user?.bankName || '',
-    createdAt: user?.createdAt || new Date().toISOString(),
-    lastLogin: new Date().toISOString()
-  });
   
   // Load user profile from localStorage - USER SPECIFIC
   useEffect(() => {
