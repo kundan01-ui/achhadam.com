@@ -103,8 +103,11 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
 
       if (response.ok) {
         const result = await response.json();
-        console.log(`✅ Loaded ${result.data.length} crops from database`);
-        return result.data.map((crop: any) => ({
+        console.log(`✅ Loaded ${result.data?.length || 0} crops from database`);
+        
+        // Ensure data is an array before mapping
+        const cropsData = Array.isArray(result.data) ? result.data : [];
+        return cropsData.map((crop: any) => ({
           ...crop,
           farmer: {
             id: crop.farmerId._id,
@@ -157,7 +160,14 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
           
           if (farmerData.crops && Array.isArray(farmerData.crops)) {
             console.log(`📊 Loading ${farmerData.crops.length} crops from farmer ${farmerData.farmerId} (${farmerData.farmerName})`);
-            console.log(`🌾 Farmer crops:`, farmerData.crops.map(crop => ({
+            
+            // Ensure crops is an array and has valid data
+            const validCrops = farmerData.crops.filter(crop => 
+              crop && typeof crop === 'object' && crop.id && crop.name
+            );
+            
+            console.log(`🌾 Valid crops: ${validCrops.length}/${farmerData.crops.length}`);
+            console.log(`🌾 Farmer crops:`, validCrops.map(crop => ({
               id: crop.id,
               name: crop.name,
               type: crop.type,
@@ -165,7 +175,14 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
               farmerName: crop.farmerName
             })));
             
-            farmerData.crops.forEach((crop: CropData, index: number) => {
+            // Process only valid crops
+            validCrops.forEach((crop: CropData, index: number) => {
+              // Validate crop data before processing
+              if (!crop || typeof crop !== 'object' || !crop.id || !crop.name) {
+                console.warn(`⚠️ Skipping invalid crop at index ${index}:`, crop);
+                return;
+              }
+              
               // Create unique ID for each crop to avoid duplicates
               const uniqueCropId = `${farmerData.farmerId}_${crop.id}_${index}_${Date.now()}`;
               
