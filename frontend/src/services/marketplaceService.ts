@@ -86,9 +86,50 @@ const calculateDemandScore = (crop: CropData): number => {
   return Math.min(100, Math.max(0, score));
 };
 
-// Load all farmer crop data from localStorage - REAL DATA
-export const loadAllFarmerCrops = (): MarketplaceCrop[] => {
+// Load all farmer crop data from database - REAL-TIME DATABASE INTEGRATION
+export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
   try {
+    console.log('🌾 Loading crops from database...');
+    
+    // Try to load from database first
+    try {
+      const response = await fetch('/api/crops/marketplace', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`✅ Loaded ${result.data.length} crops from database`);
+        return result.data.map((crop: any) => ({
+          ...crop,
+          farmer: {
+            id: crop.farmerId._id,
+            name: crop.farmerId.profile?.fullName || 'Unknown Farmer',
+            phone: crop.farmerId.phone || '+91-XXXX-XXXX',
+            location: crop.farmerId.address?.current?.city || 'Unknown Location',
+            rating: Math.random() * 2 + 3,
+            totalCrops: 1,
+            joinedDate: new Date().toISOString(),
+            avatar: undefined
+          },
+          distance: Math.random() * 50 + 1,
+          demandScore: Math.random() * 100,
+          priceComparison: {
+            marketAverage: crop.price * (0.8 + Math.random() * 0.4),
+            isAboveAverage: Math.random() > 0.5,
+            percentageDifference: (Math.random() - 0.5) * 40
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('❌ Database load failed, falling back to localStorage:', error);
+    }
+
+    // Fallback to localStorage
     const allCrops: MarketplaceCrop[] = [];
     
     // Get all localStorage keys
@@ -99,6 +140,14 @@ export const loadAllFarmerCrops = (): MarketplaceCrop[] => {
     
     console.log(`🔍 Found ${farmerKeys.length} farmer databases in localStorage`);
     console.log('📋 Farmer database keys:', farmerKeys);
+    
+    // If no farmer data found, show debug info
+    if (farmerKeys.length === 0) {
+      console.warn('⚠️ No farmer data found in localStorage!');
+      console.log('🔍 All localStorage keys:', keys);
+      console.log('💡 Make sure farmers have uploaded crops first');
+      return [];
+    }
     
     farmerKeys.forEach(key => {
       try {
@@ -287,6 +336,133 @@ export const getMarketplaceStats = () => {
       max: crops.length > 0 ? Math.max(...crops.map(crop => crop.price)) : 0
     }
   };
+};
+
+// Debug function to check localStorage data
+export const debugLocalStorageData = () => {
+  console.log('🔍 Debugging localStorage data...');
+  const keys = Object.keys(localStorage);
+  console.log('📋 All localStorage keys:', keys);
+  
+  const farmerKeys = keys.filter(key => key.startsWith('farmer_database_'));
+  console.log('🌾 Farmer database keys:', farmerKeys);
+  
+  farmerKeys.forEach(key => {
+    const data = localStorage.getItem(key);
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        console.log(`📊 Data for ${key}:`, {
+          farmerId: parsed.farmerId,
+          farmerName: parsed.farmerName,
+          totalCrops: parsed.totalCrops,
+          crops: parsed.crops?.length || 0
+        });
+      } catch (e) {
+        console.error(`❌ Error parsing data for ${key}:`, e);
+      }
+    }
+  });
+  
+  return farmerKeys.length;
+};
+
+// Data Recovery Functions
+export const recoverFarmerData = () => {
+  console.log('🔄 Starting farmer data recovery...');
+  const keys = Object.keys(localStorage);
+  const farmerKeys = keys.filter(key => key.startsWith('farmer_database_'));
+  
+  console.log(`🔍 Found ${farmerKeys.length} farmer databases to recover`);
+  
+  const recoveredData = [];
+  
+  farmerKeys.forEach(key => {
+    try {
+      const data = localStorage.getItem(key);
+      if (data) {
+        const parsed = JSON.parse(data);
+        console.log(`✅ Recovered data for farmer: ${parsed.farmerName} (${parsed.farmerId})`);
+        console.log(`📊 Crops found: ${parsed.crops?.length || 0}`);
+        
+        recoveredData.push({
+          key,
+          farmerId: parsed.farmerId,
+          farmerName: parsed.farmerName,
+          totalCrops: parsed.totalCrops,
+          crops: parsed.crops || [],
+          lastUpdated: parsed.lastUpdated
+        });
+      }
+    } catch (error) {
+      console.error(`❌ Error recovering data for ${key}:`, error);
+    }
+  });
+  
+  console.log(`🎉 Recovery complete! Found ${recoveredData.length} farmers with data`);
+  return recoveredData;
+};
+
+// Force refresh marketplace data
+export const forceRefreshMarketplace = () => {
+  console.log('🔄 Force refreshing marketplace data...');
+  
+  // Clear any cached data
+  const keys = Object.keys(localStorage);
+  const cacheKeys = keys.filter(key => key.includes('marketplace_cache') || key.includes('crop_cache'));
+  cacheKeys.forEach(key => localStorage.removeItem(key));
+  
+  // Reload all farmer data
+  const crops = loadAllFarmerCrops();
+  console.log(`🔄 Marketplace refreshed with ${crops.length} crops`);
+  
+  return crops;
+};
+
+// Backup farmer data to JSON
+export const backupFarmerData = () => {
+  console.log('💾 Creating backup of farmer data...');
+  const keys = Object.keys(localStorage);
+  const farmerKeys = keys.filter(key => key.startsWith('farmer_database_'));
+  
+  const backup = {};
+  farmerKeys.forEach(key => {
+    const data = localStorage.getItem(key);
+    if (data) {
+      backup[key] = JSON.parse(data);
+    }
+  });
+  
+  const backupString = JSON.stringify(backup, null, 2);
+  const blob = new Blob([backupString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `farmer_data_backup_${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  console.log('💾 Backup created and downloaded!');
+  return backup;
+};
+
+// Restore farmer data from backup
+export const restoreFarmerData = (backupData: any) => {
+  console.log('🔄 Restoring farmer data from backup...');
+  
+  Object.keys(backupData).forEach(key => {
+    try {
+      localStorage.setItem(key, JSON.stringify(backupData[key]));
+      console.log(`✅ Restored data for ${key}`);
+    } catch (error) {
+      console.error(`❌ Error restoring data for ${key}:`, error);
+    }
+  });
+  
+  console.log('🎉 Data restoration complete!');
 };
 
 // Get top selling crops

@@ -289,7 +289,37 @@ const TransporterSignupPage: React.FC<TransporterSignupPageProps> = ({ onBackToL
         console.log('Signup successful:', response);
         alert('Account created successfully! Please login.');
         onBackToLogin();
-      } catch (apiError) {
+      } catch (apiError: any) {
+        console.log('Real API failed, checking error type:', apiError);
+        
+        // 🔒 CRITICAL: Handle mobile number already exists error
+        if (apiError?.response?.data?.error === 'MOBILE_NUMBER_EXISTS' || 
+            apiError?.message?.includes('mobile number is already registered') ||
+            apiError?.response?.status === 409) {
+          
+          const errorData = apiError?.response?.data?.data;
+          const existingUserType = errorData?.existingUserType || 'user';
+          const registeredAt = errorData?.registeredAt;
+          
+          console.log(`❌ MOBILE NUMBER ALREADY EXISTS: ${formData.phone} is already registered as ${existingUserType}`);
+          
+          alert(`❌ यह मोबाइल नंबर पहले से ही रजिस्टर्ड है!\n\n📱 Mobile Number: ${formData.phone}\n👤 User Type: ${existingUserType}\n📅 Registered: ${registeredAt ? new Date(registeredAt).toLocaleDateString() : 'Unknown'}\n\nकृपया कोई अलग मोबाइल नंबर use करें या login करने की कोशिश करें।`);
+          
+          // Reset form phone field
+          setFormData(prev => ({ ...prev, phone: '' }));
+          setStep(1); // Go back to first step
+          return;
+        }
+        
+        // Handle email already exists error
+        if (apiError?.response?.data?.error === 'EMAIL_EXISTS' || 
+            apiError?.message?.includes('email is already registered')) {
+          
+          console.log(`❌ EMAIL ALREADY EXISTS: ${formData.email} is already registered`);
+          alert(`❌ यह email पहले से ही रजिस्टर्ड है!\n\n📧 Email: ${formData.email}\n\nकृपया कोई अलग email use करें।`);
+          return;
+        }
+        
         console.log('Real API failed, using mock API:', apiError);
         
         // Fallback to mock API for testing

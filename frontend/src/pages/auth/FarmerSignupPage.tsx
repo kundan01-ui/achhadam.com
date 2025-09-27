@@ -85,47 +85,114 @@ const FarmerSignupPage: React.FC<FarmerSignupPageProps> = ({ onBackToLogin, onSw
     setOtpError('');
 
     try {
-      // Check if Firebase is configured
-      if (firebaseOTPService.isFirebaseConfigured()) {
-        console.log('🔥 Using Firebase OTP');
+      // 🔒 CRITICAL: Check mobile number uniqueness BEFORE sending OTP
+      console.log(`🔍 Checking mobile number uniqueness: ${formData.phone}`);
+      
+      try {
+        const uniquenessCheck = await apiService.sendOTP(formData.phone);
         
-        // Initialize Recaptcha
-        const recaptchaInitialized = await firebaseOTPService.initializeRecaptcha();
-        if (!recaptchaInitialized) {
-          throw new Error('Failed to initialize Recaptcha');
-        }
+        // If we get here, mobile number is unique and OTP was sent
+        console.log(`✅ MOBILE NUMBER UNIQUE: ${formData.phone} is available for signup`);
         
-        // Send OTP using Firebase
-        const firebaseResult = await firebaseOTPService.sendOTPToPhone(formData.phone);
-        
-        if (firebaseResult.success) {
-          console.log('🎯 OTP sent successfully, showing OTP section');
+        // Check if Firebase is configured
+        if (firebaseOTPService.isFirebaseConfigured()) {
+          console.log('🔥 Using Firebase OTP');
+          
+          // Initialize Recaptcha
+          const recaptchaInitialized = await firebaseOTPService.initializeRecaptcha();
+          if (!recaptchaInitialized) {
+            throw new Error('Failed to initialize Recaptcha');
+          }
+          
+          // Send OTP using Firebase
+          const firebaseResult = await firebaseOTPService.sendOTPToPhone(formData.phone);
+          
+          if (firebaseResult.success) {
+            console.log('🎯 OTP sent successfully, showing OTP section');
+            setOtpSent(true);
+            setShowOTP(true);
+            startResendTimer();
+            console.log('✅ Firebase OTP sent successfully');
+            
+            // Try to store in backend (optional for mock OTP)
+            try {
+              const backendResponse = await apiService.sendOTP(formData.phone, firebaseResult.confirmationResult);
+              if (!backendResponse.success) {
+                console.warn('⚠️ Backend OTP storage failed, but continuing with frontend flow');
+              }
+            } catch (backendError) {
+              console.warn('⚠️ Backend OTP storage failed, but continuing with frontend flow:', backendError);
+            }
+          } else {
+            setOtpError(firebaseResult.message || 'Failed to send OTP');
+          }
+        } else {
+          console.log('📱 Using Mock OTP (Firebase not configured)');
+          
+          // Fallback to mock OTP
+          console.log('🎯 Using Mock OTP, showing OTP section');
           setOtpSent(true);
           setShowOTP(true);
           startResendTimer();
-          console.log('✅ Firebase OTP sent successfully');
+          console.log('✅ Mock OTP sent successfully');
+        }
+        
+      } catch (uniquenessError: any) {
+        console.log('Real API failed, checking error type:', uniquenessError);
+        
+        // 🔒 CRITICAL: Handle mobile number already exists error
+        if (uniquenessError?.response?.data?.error === 'MOBILE_NUMBER_EXISTS' || 
+            uniquenessError?.message?.includes('mobile number is already registered') ||
+            uniquenessError?.response?.status === 409) {
           
-          // Try to store in backend (optional for mock OTP)
-          try {
-            const backendResponse = await apiService.sendOTP(formData.phone, firebaseResult.confirmationResult);
-            if (!backendResponse.success) {
-              console.warn('⚠️ Backend OTP storage failed, but continuing with frontend flow');
-            }
-          } catch (backendError) {
-            console.warn('⚠️ Backend OTP storage failed, but continuing with frontend flow:', backendError);
+          const errorData = uniquenessError?.response?.data?.data;
+          const existingUserType = errorData?.existingUserType || 'user';
+          const registeredAt = errorData?.registeredAt;
+          
+          console.log(`❌ MOBILE NUMBER ALREADY EXISTS: ${formData.phone} is already registered as ${existingUserType}`);
+          
+          setOtpError(`❌ यह मोबाइल नंबर पहले से ही रजिस्टर्ड है!\n\n📱 Mobile Number: ${formData.phone}\n👤 User Type: ${existingUserType}\n📅 Registered: ${registeredAt ? new Date(registeredAt).toLocaleDateString() : 'Unknown'}\n\nकृपया कोई अलग मोबाइल नंबर use करें या login करने की कोशिश करें।`);
+          
+          // Reset form phone field
+          setFormData(prev => ({ ...prev, phone: '' }));
+          return;
+        }
+        
+        // If it's not a uniqueness error, continue with normal flow
+        console.log('Not a uniqueness error, continuing with normal OTP flow:', uniquenessError);
+        
+        // Check if Firebase is configured
+        if (firebaseOTPService.isFirebaseConfigured()) {
+          console.log('🔥 Using Firebase OTP');
+          
+          // Initialize Recaptcha
+          const recaptchaInitialized = await firebaseOTPService.initializeRecaptcha();
+          if (!recaptchaInitialized) {
+            throw new Error('Failed to initialize Recaptcha');
+          }
+          
+          // Send OTP using Firebase
+          const firebaseResult = await firebaseOTPService.sendOTPToPhone(formData.phone);
+          
+          if (firebaseResult.success) {
+            console.log('🎯 OTP sent successfully, showing OTP section');
+            setOtpSent(true);
+            setShowOTP(true);
+            startResendTimer();
+            console.log('✅ Firebase OTP sent successfully');
+          } else {
+            setOtpError(firebaseResult.message || 'Failed to send OTP');
           }
         } else {
-          setOtpError(firebaseResult.message || 'Failed to send OTP');
+          console.log('📱 Using Mock OTP (Firebase not configured)');
+          
+          // Fallback to mock OTP
+          console.log('🎯 Using Mock OTP, showing OTP section');
+          setOtpSent(true);
+          setShowOTP(true);
+          startResendTimer();
+          console.log('✅ Mock OTP sent successfully');
         }
-      } else {
-        console.log('📱 Using Mock OTP (Firebase not configured)');
-        
-        // Fallback to mock OTP
-        console.log('🎯 Using Mock OTP, showing OTP section');
-        setOtpSent(true);
-        setShowOTP(true);
-        startResendTimer();
-        console.log('✅ Mock OTP sent successfully');
       }
     } catch (error: any) {
       console.error('Send OTP error:', error);
@@ -250,7 +317,37 @@ const FarmerSignupPage: React.FC<FarmerSignupPageProps> = ({ onBackToLogin, onSw
         console.log('Signup successful:', response);
         alert('Account created successfully! Please login.');
         onBackToLogin();
-      } catch (apiError) {
+      } catch (apiError: any) {
+        console.log('Real API failed, checking error type:', apiError);
+        
+        // 🔒 CRITICAL: Handle mobile number already exists error
+        if (apiError?.response?.data?.error === 'MOBILE_NUMBER_EXISTS' || 
+            apiError?.message?.includes('mobile number is already registered') ||
+            apiError?.response?.status === 409) {
+          
+          const errorData = apiError?.response?.data?.data;
+          const existingUserType = errorData?.existingUserType || 'user';
+          const registeredAt = errorData?.registeredAt;
+          
+          console.log(`❌ MOBILE NUMBER ALREADY EXISTS: ${formData.phone} is already registered as ${existingUserType}`);
+          
+          alert(`❌ यह मोबाइल नंबर पहले से ही रजिस्टर्ड है!\n\n📱 Mobile Number: ${formData.phone}\n👤 User Type: ${existingUserType}\n📅 Registered: ${registeredAt ? new Date(registeredAt).toLocaleDateString() : 'Unknown'}\n\nकृपया कोई अलग मोबाइल नंबर use करें या login करने की कोशिश करें।`);
+          
+          // Reset form phone field
+          setFormData(prev => ({ ...prev, phone: '' }));
+          setStep(1); // Go back to first step
+          return;
+        }
+        
+        // Handle email already exists error
+        if (apiError?.response?.data?.error === 'EMAIL_EXISTS' || 
+            apiError?.message?.includes('email is already registered')) {
+          
+          console.log(`❌ EMAIL ALREADY EXISTS: ${formData.email} is already registered`);
+          alert(`❌ यह email पहले से ही रजिस्टर्ड है!\n\n📧 Email: ${formData.email}\n\nकृपया कोई अलग email use करें।`);
+          return;
+        }
+        
         console.log('Real API failed, using mock API:', apiError);
         
         // Fallback to mock API for testing

@@ -131,22 +131,22 @@ const ProductsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header - Mobile Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Products</h2>
-          <p className="text-gray-600">Discover and order agricultural products</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Products</h2>
+          <p className="text-sm sm:text-base text-gray-600">Discover and order agricultural products</p>
         </div>
-        <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button className="flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
           <Plus className="h-4 w-4" />
           <span>Request Product</span>
         </button>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-64">
+      {/* Search and Filters - Mobile Responsive */}
+      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -154,13 +154,13 @@ const ProductsPage: React.FC = () => {
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
             </div>
           </div>
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="flex items-center justify-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
           >
             <Filter className="h-4 w-4" />
             <span>Filters</span>
@@ -212,12 +212,12 @@ const ProductsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {/* Products Grid - Mobile Responsive */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {filteredProducts.map((product) => (
           <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow overflow-hidden">
             {/* Product Image */}
-            <div className="relative h-48 bg-gradient-to-br from-green-100 to-blue-100">
+            <div className="relative h-40 sm:h-48 bg-gradient-to-br from-green-100 to-blue-100">
               <div className="absolute inset-0 flex items-center justify-center">
                 <Package className="h-16 w-16 text-gray-400" />
               </div>
@@ -240,18 +240,18 @@ const ProductsPage: React.FC = () => {
               )}
             </div>
 
-            {/* Product Info */}
-            <div className="p-4">
+            {/* Product Info - Mobile Responsive */}
+            <div className="p-3 sm:p-4">
               <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold text-gray-900 text-lg">{product.name}</h3>
+                <h3 className="font-semibold text-gray-900 text-base sm:text-lg">{product.name}</h3>
                 <div className="flex items-center space-x-1">
-                  <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                  <span className="text-sm text-gray-600">{product.rating}</span>
-                  <span className="text-sm text-gray-400">({product.reviews})</span>
+                  <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 fill-current" />
+                  <span className="text-xs sm:text-sm text-gray-600">{product.rating}</span>
+                  <span className="text-xs sm:text-sm text-gray-400">({product.reviews})</span>
                 </div>
               </div>
 
-              <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+              <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2">{product.description}</p>
 
               <div className="space-y-2 mb-4">
                 <div className="flex items-center text-sm text-gray-500">

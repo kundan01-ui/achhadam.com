@@ -635,6 +635,15 @@ const authenticateToken = async (req, res, next) => {
 const authRoutes = require('./src/routes/auth/index.js');
 const passwordResetRoutes = require('./routes/auth.js');
 const cookieRoutes = require('./src/routes/cookieRoutes.js');
+const cropRoutes = require('./src/routes/crops.js');
+const orderRoutes = require('./src/routes/orders.js');
+
+// Clear mongoose models to prevent overwrite errors
+if (mongoose.models) {
+  Object.keys(mongoose.models).forEach(modelName => {
+    delete mongoose.models[modelName];
+  });
+}
 
 // Register auth routes
 app.use('/api/auth', otpLimiter, authRoutes);
@@ -642,6 +651,12 @@ app.use('/api/auth', passwordResetRoutes);
 
 // Cookie routes
 app.use('/api/cookies', cookieRoutes);
+
+// Crop routes - Real-time database integration
+app.use('/api/crops', cropRoutes);
+
+// Order routes - PERMANENT PERSISTENCE for buyer data
+app.use('/api/orders', orderRoutes);
 
 // Razorpay Routes - Temporarily commented out
 // app.use('/api/razorpay', require('./src/routes/razorpay.js'));

@@ -18,7 +18,7 @@ if (!admin.apps.length) {
   });
 }
 
-// Send OTP endpoint
+// Send OTP endpoint - MOBILE NUMBER UNIQUENESS CHECK
 router.post('/send-otp', async (req, res) => {
   try {
     const { phoneNumber, recaptchaToken } = req.body;
@@ -39,6 +39,26 @@ router.post('/send-otp', async (req, res) => {
       });
     }
 
+    // 🔒 CRITICAL: Check if mobile number already exists in database
+    console.log(`🔍 Checking mobile number uniqueness: ${phoneNumber}`);
+    
+    const existingUser = await User.findOne({ phone: phoneNumber });
+    if (existingUser) {
+      console.log(`❌ MOBILE NUMBER ALREADY EXISTS: ${phoneNumber} is already registered`);
+      return res.status(409).json({
+        success: false,
+        message: 'This mobile number is already registered. Please use a different number or try logging in.',
+        error: 'MOBILE_NUMBER_EXISTS',
+        data: {
+          phoneNumber: phoneNumber,
+          userType: existingUser.userType,
+          registeredAt: existingUser.createdAt
+        }
+      });
+    }
+
+    console.log(`✅ MOBILE NUMBER AVAILABLE: ${phoneNumber} is unique and can be used for signup`);
+    
     // For now, we'll simulate OTP sending
     // In production, you would integrate with Firebase Auth or SMS service
     console.log(`📱 OTP would be sent to: ${phoneNumber}`);
@@ -327,6 +347,153 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+// Register endpoint - MOBILE NUMBER UNIQUENESS ENFORCEMENT
+router.post('/register', async (req, res) => {
+  try {
+    const { 
+      firstName, 
+      lastName, 
+      email, 
+      phone, 
+      password, 
+      userType,
+      otp,
+      recaptchaToken 
+    } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !phone || !password || !userType) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required'
+      });
+    }
+
+    // 🔒 CRITICAL: Double-check mobile number uniqueness before registration
+    console.log(`🔍 FINAL CHECK: Verifying mobile number uniqueness: ${phone}`);
+    
+    const existingUserByPhone = await User.findOne({ phone: phone });
+    if (existingUserByPhone) {
+      console.log(`❌ REGISTRATION BLOCKED: Mobile number ${phone} already exists`);
+      return res.status(409).json({
+        success: false,
+        message: 'This mobile number is already registered. Please use a different number.',
+        error: 'MOBILE_NUMBER_EXISTS',
+        data: {
+          phoneNumber: phone,
+          existingUserType: existingUserByPhone.userType,
+          registeredAt: existingUserByPhone.createdAt
+        }
+      });
+    }
+
+    // Verify OTP
+    if (!req.session || !req.session.otp || req.session.otp !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid OTP'
+      });
+    }
+
+    // Check if OTP is expired
+    if (Date.now() > req.session.otpExpiry) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP has expired'
+      });
+    }
+
+    // Check if email already exists (separate from phone check)
+    const existingUserByEmail = await User.findOne({ email: email });
+    if (existingUserByEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already exists. Please use a different email.',
+        error: 'EMAIL_EXISTS'
+      });
+    }
+
+    console.log(`✅ MOBILE NUMBER UNIQUE: ${phone} is available for registration`);
+
+    // Hash password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Generate unique userId
+    const userId = `${userType}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Create user with UNIQUE mobile number
+    const user = new User({
+      userId,
+      userType,
+      email,
+      phone, // This will be unique due to schema constraint
+      password: hashedPassword,
+      profile: {
+        firstName,
+        lastName,
+        fullName: `${firstName} ${lastName}`
+      },
+      verification: {
+        phoneVerified: true,
+        emailVerified: false
+      }
+    });
+
+    await user.save();
+
+    console.log(`🎉 USER REGISTERED: ${userType} with unique mobile number ${phone}`);
+
+    // Clear OTP from session
+    delete req.session.otp;
+    delete req.session.phoneNumber;
+    delete req.session.otpExpiry;
+
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully with unique mobile number',
+      data: {
+        userId: user.userId,
+        userType: user.userType,
+        email: user.email,
+        phone: user.phone,
+        profile: user.profile,
+        uniqueness: {
+          mobileNumberUnique: true,
+          emailUnique: true
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Registration error:', error);
+    
+    // Handle MongoDB duplicate key error
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      if (field === 'phone') {
+        return res.status(409).json({
+          success: false,
+          message: 'This mobile number is already registered. Please use a different number.',
+          error: 'MOBILE_NUMBER_EXISTS'
+        });
+      } else if (field === 'email') {
+        return res.status(409).json({
+          success: false,
+          message: 'This email is already registered. Please use a different email.',
+          error: 'EMAIL_EXISTS'
+        });
+      }
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: 'Registration failed',
+      error: error.message
+    });
+  }
+});
+
 // Health check
 router.get('/', (req, res) => {
   res.json({ 
@@ -334,6 +501,7 @@ router.get('/', (req, res) => {
     endpoints: [
       'POST /auth/send-otp',
       'POST /auth/verify-otp',
+      'POST /auth/register',
       'POST /auth/send-reset-otp',
       'POST /auth/verify-reset-otp',
       'POST /auth/reset-password'

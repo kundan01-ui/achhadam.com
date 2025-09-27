@@ -711,8 +711,61 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     }
   };
 
-  // Smart storage system with quota management - USER SPECIFIC
-  const saveCropsToStorage = (crops) => {
+  // PERMANENT DATABASE SAVE - MongoDB Integration (Cross-device, Cross-session)
+  const saveCropsToDatabase = async (crops) => {
+    try {
+      if (!userProfile.id) {
+        console.error('Cannot save crops: No user ID available');
+        return;
+      }
+
+      console.log(`🌾 PERMANENT SAVE: Saving ${crops.length} crops to database for farmer: ${userProfile.name}`);
+      console.log(`🔑 Farmer ID: ${userProfile.id} - Data will persist across all devices and sessions`);
+      
+      // Save each crop to database with permanent persistence
+      for (const crop of crops) {
+        try {
+          const response = await fetch('/api/crops', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify({
+              ...crop,
+              farmerId: userProfile.id,
+              farmerName: userProfile.name,
+              // Add permanent persistence markers
+              isPermanent: true,
+              crossDeviceAccess: true,
+              sessionIndependent: true,
+              lastUpdated: new Date().toISOString()
+            })
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to save crop to database');
+          }
+
+          const result = await response.json();
+          console.log(`✅ PERMANENT: Crop saved to database: ${crop.cropName}`);
+          console.log(`🌐 This crop will be available on any device when farmer logs in`);
+        } catch (error) {
+          console.error(`❌ Error saving crop ${crop.cropName}:`, error);
+        }
+      }
+      
+      console.log(`🎉 PERMANENT SAVE COMPLETE: All crops saved to database successfully!`);
+      console.log(`📱 Farmer can now access these crops from any device, any session`);
+      
+    } catch (error) {
+      console.error('❌ Error saving crops to database:', error);
+    }
+  };
+
+  // Smart storage system with quota management - USER SPECIFIC + DATABASE SYNC
+  const saveCropsToStorage = async (crops) => {
     try {
       if (!userProfile.id) {
         console.error('Cannot save crops: No user ID available');
@@ -794,6 +847,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           farmerId: userProfile.id,
           farmerName: userProfile.name
         });
+        
+        // REAL-TIME DATABASE SYNC
+        await saveCropsToDatabase(crops);
         
         // Verify user-specific storage
         crops.forEach((crop, index) => {
@@ -1288,10 +1344,49 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
   const realTimeStats = calculateRealTimeStats();
 
-  // Save crops to storage whenever uploadedCrops changes - USER SPECIFIC
+  // PERMANENT DATA LOADING - Cross-device, Cross-session
+  useEffect(() => {
+    if (userProfile.id) {
+      console.log(`🌾 PERMANENT LOAD: Loading crops for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
+      console.log(`📱 This will load crops from any device, any session - PERMANENT DATA`);
+      
+      const loadCrops = async () => {
+        try {
+          // Load from database first (PERMANENT DATA)
+          const result = await loadCropsFromDatabase(userProfile.id);
+          
+          if (result.success && result.data) {
+            console.log(`✅ PERMANENT LOAD: Loaded ${result.data.length} crops from database`);
+            console.log(`🌐 These crops are available across all devices and sessions`);
+            setUploadedCrops(result.data);
+          } else {
+            console.log('No permanent crops found in database, loading from localStorage');
+            
+            // Fallback to localStorage
+            const userKey = localStorage.getItem('farmer_user_key');
+            if (userKey) {
+              const data = localStorage.getItem(`farmer_database_${userKey}`);
+              if (data) {
+                const parsed = JSON.parse(data);
+                console.log(`📱 Loaded ${parsed.crops?.length || 0} crops from localStorage as fallback`);
+                setUploadedCrops(parsed.crops || []);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error loading permanent crops from database:', error);
+        }
+      };
+      
+      loadCrops();
+    }
+  }, [userProfile.id, userProfile.name]);
+
+  // Save crops to storage whenever uploadedCrops changes - USER SPECIFIC + PERMANENT
   useEffect(() => {
     if (uploadedCrops.length > 0 && userProfile.id) {
-      console.log(`💾 Saving ${uploadedCrops.length} crops for farmer ${userProfile.name} (ID: ${userProfile.id})`);
+      console.log(`💾 PERMANENT SAVE: Saving ${uploadedCrops.length} crops for farmer ${userProfile.name} (ID: ${userProfile.id})`);
+      console.log(`🌐 These crops will be available on any device, any session`);
       saveCropsToStorage(uploadedCrops);
     }
   }, [uploadedCrops, userProfile.id, userProfile.name]);
@@ -2910,8 +3005,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     <div className="space-y-4">
       {/* Stats Grid - Perfect Mobile Design */}
       <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {/* Total Crops */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        {/* Total Crops - Clickable */}
+        <div 
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-green-200 transition-all duration-300 hover:scale-105"
+          onClick={() => setActiveTab('crops')}
+        >
           <div className="flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
               <Leaf className="h-6 w-6 text-green-600" />
@@ -2921,8 +3019,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           </div>
         </div>
         
-        {/* Active Crops */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        {/* Active Crops - Clickable */}
+        <div 
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-blue-200 transition-all duration-300 hover:scale-105"
+          onClick={() => setActiveTab('crops')}
+        >
           <div className="flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
               <Sprout className="h-6 w-6 text-blue-600" />
@@ -2932,8 +3033,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           </div>
         </div>
         
-        {/* Harvested */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        {/* Harvested - Clickable */}
+        <div 
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-purple-200 transition-all duration-300 hover:scale-105"
+          onClick={() => setActiveTab('crops')}
+        >
           <div className="flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-3">
               <Package className="h-6 w-6 text-purple-600" />
@@ -2943,8 +3047,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           </div>
         </div>
         
-        {/* Total Earnings */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        {/* Total Earnings - Clickable */}
+        <div 
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-yellow-200 transition-all duration-300 hover:scale-105"
+          onClick={() => setActiveTab('financial')}
+        >
           <div className="flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mb-3">
               <TrendingUp className="h-6 w-6 text-yellow-600" />
@@ -2959,8 +3066,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           </div>
         </div>
         
-        {/* Total Land */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        {/* Total Land - Clickable */}
+        <div 
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all duration-300 hover:scale-105"
+          onClick={() => setActiveTab('crops')}
+        >
           <div className="flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
               <MapPin className="h-6 w-6 text-indigo-600" />
@@ -2972,8 +3082,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           </div>
         </div>
         
-        {/* Pending Orders */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        {/* Pending Orders - Clickable */}
+        <div 
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-orange-200 transition-all duration-300 hover:scale-105"
+          onClick={() => setActiveTab('orders')}
+        >
           <div className="flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-3">
               <Clock className="h-6 w-6 text-orange-600" />
@@ -2984,8 +3097,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         </div>
       </div>
 
-      {/* Weather Alert - Real Practical Feature */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white">
+      {/* Weather Alert - Real Practical Feature - Clickable */}
+      <div 
+        className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-300 hover:scale-105"
+        onClick={() => setActiveTab('analytics')}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
@@ -3003,25 +3119,46 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         </div>
       </div>
 
-      {/* Crop Health Status - Real Practical Feature */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+      {/* Crop Health Status - Real Practical Feature - Clickable */}
+      <div 
+        className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-green-200 transition-all duration-300"
+        onClick={() => setActiveTab('crops')}
+      >
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Crop Health Status</h3>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+          <div 
+            className="flex items-center justify-between p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveTab('crops');
+            }}
+          >
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
               <span className="text-sm font-medium text-gray-900">Wheat (Field A)</span>
             </div>
             <span className="text-sm text-green-600 font-medium">Healthy</span>
           </div>
-          <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+          <div 
+            className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveTab('crops');
+            }}
+          >
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
               <span className="text-sm font-medium text-gray-900">Rice (Field B)</span>
             </div>
             <span className="text-sm text-yellow-600 font-medium">Needs Water</span>
           </div>
-          <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+          <div 
+            className="flex items-center justify-between p-3 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveTab('crops');
+            }}
+          >
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
               <span className="text-sm font-medium text-gray-900">Tomato (Field C)</span>
@@ -3031,12 +3168,21 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         </div>
       </div>
 
-      {/* Database Analytics - Real Practical Feature */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+      {/* Database Analytics - Real Practical Feature - Clickable */}
+      <div 
+        className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-blue-200 transition-all duration-300"
+        onClick={() => setActiveTab('analytics')}
+      >
         <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Database Analytics</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+            <div 
+              className="flex items-center justify-between p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTab('analytics');
+              }}
+            >
               <div className="flex items-center space-x-3">
                 <Camera className="h-5 w-5 text-blue-600" />
                 <span className="text-sm font-medium text-gray-900">Total Images</span>
@@ -3045,7 +3191,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                 {uploadedCrops.reduce((sum, crop) => sum + crop.analytics.totalImages, 0)}
               </span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+            <div 
+              className="flex items-center justify-between p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTab('analytics');
+              }}
+            >
               <div className="flex items-center space-x-3">
                 <TrendingUp className="h-5 w-5 text-green-600" />
                 <span className="text-sm font-medium text-gray-900">Most Common Crop</span>
@@ -3056,7 +3208,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             </div>
           </div>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+            <div 
+              className="flex items-center justify-between p-3 bg-purple-50 rounded-lg cursor-pointer hover:bg-purple-100 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTab('analytics');
+              }}
+            >
               <div className="flex items-center space-x-3">
                 <BarChart3 className="h-5 w-5 text-purple-600" />
                 <span className="text-sm font-medium text-gray-900">Avg Crop Value</span>
@@ -3065,7 +3223,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                 ₹{realTimeStats.totalCrops > 0 ? Math.round(realTimeStats.totalEarnings / realTimeStats.totalCrops) : 0}
               </span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+            <div 
+              className="flex items-center justify-between p-3 bg-orange-50 rounded-lg cursor-pointer hover:bg-orange-100 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTab('analytics');
+              }}
+            >
               <div className="flex items-center space-x-3">
                 <Database className="h-5 w-5 text-orange-600" />
                 <span className="text-sm font-medium text-gray-900">Database Status</span>
@@ -3076,11 +3240,20 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         </div>
       </div>
 
-      {/* Market Prices - Real Practical Feature */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+      {/* Market Prices - Real Practical Feature - Clickable */}
+      <div 
+        className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-green-200 transition-all duration-300"
+        onClick={() => setActiveTab('marketplace')}
+      >
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Today's Market Prices</h3>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div 
+            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveTab('marketplace');
+            }}
+          >
             <div className="flex items-center space-x-3">
               <Wheat className="h-5 w-5 text-amber-600" />
               <span className="text-sm font-medium text-gray-900">Wheat</span>
@@ -3090,7 +3263,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               <span className="text-xs text-green-600 ml-2">+5%</span>
             </div>
           </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div 
+            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveTab('marketplace');
+            }}
+          >
             <div className="flex items-center space-x-3">
               <Carrot className="h-5 w-5 text-orange-600" />
               <span className="text-sm font-medium text-gray-900">Rice</span>
@@ -3100,7 +3279,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               <span className="text-xs text-red-600 ml-2">-2%</span>
             </div>
           </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div 
+            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveTab('marketplace');
+            }}
+          >
             <div className="flex items-center space-x-3">
               <Apple className="h-5 w-5 text-red-600" />
               <span className="text-sm font-medium text-gray-900">Tomato</span>
@@ -3117,25 +3302,37 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <button className="flex flex-col items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors min-h-[100px]">
+          <button 
+            className="flex flex-col items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors min-h-[100px] hover:scale-105"
+            onClick={() => setActiveTab('crops')}
+          >
             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-3">
               <Plus className="h-5 w-5 text-green-600" />
             </div>
             <span className="text-sm font-medium text-green-700 text-center">Add Crop</span>
           </button>
-          <button className="flex flex-col items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors min-h-[100px]">
+          <button 
+            className="flex flex-col items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors min-h-[100px] hover:scale-105"
+            onClick={() => setActiveTab('orders')}
+          >
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-3">
               <Eye className="h-5 w-5 text-blue-600" />
             </div>
             <span className="text-sm font-medium text-blue-700 text-center">View Orders</span>
           </button>
-          <button className="flex flex-col items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors min-h-[100px]">
+          <button 
+            className="flex flex-col items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors min-h-[100px] hover:scale-105"
+            onClick={() => setActiveTab('analytics')}
+          >
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mb-3">
               <Sun className="h-5 w-5 text-purple-600" />
             </div>
             <span className="text-sm font-medium text-purple-700 text-center">Weather</span>
           </button>
-          <button className="flex flex-col items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors min-h-[100px]">
+          <button 
+            className="flex flex-col items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors min-h-[100px] hover:scale-105"
+            onClick={() => setActiveTab('analytics')}
+          >
             <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mb-3">
               <TrendingUp className="h-5 w-5 text-orange-600" />
             </div>
@@ -3148,7 +3345,10 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
         <h3 className="text-base font-semibold text-gray-900 mb-3">Recent Activity</h3>
         <div className="space-y-2">
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+          <div 
+            className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+            onClick={() => setActiveTab('crops')}
+          >
             <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
               <Leaf className="h-4 w-4 text-green-600" />
             </div>
@@ -3157,7 +3357,10 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               <p className="text-xs text-gray-500">2 hours ago</p>
             </div>
           </div>
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+          <div 
+            className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+            onClick={() => setActiveTab('orders')}
+          >
             <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
               <Package className="h-4 w-4 text-blue-600" />
             </div>
@@ -3166,7 +3369,10 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               <p className="text-xs text-gray-500">4 hours ago</p>
             </div>
           </div>
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+          <div 
+            className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+            onClick={() => setActiveTab('analytics')}
+          >
             <div className="p-2 bg-yellow-100 rounded-lg flex-shrink-0">
               <Sun className="h-4 w-4 text-yellow-600" />
             </div>

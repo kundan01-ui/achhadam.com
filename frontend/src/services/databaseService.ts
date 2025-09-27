@@ -62,32 +62,30 @@ interface ImageData {
   };
 }
 
-// MongoDB Integration Functions
+// MongoDB Integration Functions - REAL DATABASE SAVE
 export const saveToMongoDB = async (cropData: CropData): Promise<{ success: boolean; data?: any; error?: string }> => {
   try {
-    // TODO: Implement MongoDB connection and save
-    console.log('Saving to MongoDB:', cropData);
+    console.log('🌾 Saving crop to MongoDB:', cropData);
     
-    // Example MongoDB save operation
-    // const response = await fetch('/api/mongodb/crops', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(cropData)
-    // });
+    const response = await fetch('/api/crops', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify(cropData)
+    });
     
-    // if (!response.ok) {
-    //   throw new Error('Failed to save to MongoDB');
-    // }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to save crop to database');
+    }
     
-    // const result = await response.json();
-    // return { success: true, data: result };
-    
-    // For now, return success (will be implemented later)
-    return { success: true, data: cropData };
+    const result = await response.json();
+    console.log('✅ Crop saved to MongoDB successfully:', result);
+    return { success: true, data: result };
   } catch (error) {
-    console.error('MongoDB save error:', error);
+    console.error('❌ MongoDB save error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };
@@ -157,31 +155,29 @@ export const uploadImagesToCloud = async (images: ImageData[]): Promise<{ succes
   }
 };
 
-// Load crops from database
+// Load crops from database - REAL DATABASE LOAD
 export const loadCropsFromDatabase = async (farmerId: string): Promise<{ success: boolean; data?: CropData[]; error?: string }> => {
   try {
-    // TODO: Implement database load operation
-    console.log('Loading crops from database for farmer:', farmerId);
+    console.log('🌾 Loading crops from database for farmer:', farmerId);
     
-    // Example database load operation
-    // const response = await fetch(`/api/crops/${farmerId}`, {
-    //   method: 'GET',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   }
-    // });
+    const response = await fetch(`/api/crops/farmer/${farmerId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    });
     
-    // if (!response.ok) {
-    //   throw new Error('Failed to load crops from database');
-    // }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to load crops from database');
+    }
     
-    // const result = await response.json();
-    // return { success: true, data: result.crops };
-    
-    // For now, return empty array (will be implemented later)
-    return { success: true, data: [] };
+    const result = await response.json();
+    console.log('✅ Crops loaded from database successfully:', result.crops?.length || 0);
+    return { success: true, data: result.crops || [] };
   } catch (error) {
-    console.error('Database load error:', error);
+    console.error('❌ Database load error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };

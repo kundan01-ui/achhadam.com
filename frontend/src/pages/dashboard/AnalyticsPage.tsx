@@ -90,36 +90,38 @@ const AnalyticsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header - Mobile Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
-          <p className="text-gray-600">Track your purchasing patterns and performance</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Analytics</h2>
+          <p className="text-sm sm:text-base text-gray-600">Track your purchasing patterns and performance</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           >
             <option value="3months">Last 3 Months</option>
             <option value="6months">Last 6 Months</option>
             <option value="1year">Last Year</option>
           </select>
-          <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-            <Download className="h-4 w-4" />
-            <span>Export</span>
-          </button>
-          <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-            <RefreshCw className="h-4 w-4" />
-            <span>Refresh</span>
-          </button>
+          <div className="flex space-x-2">
+            <button className="flex items-center justify-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+            <button className="flex items-center justify-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+              <RefreshCw className="h-4 w-4" />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      {/* Key Metrics - Mobile Responsive */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Spent</p>
@@ -140,7 +142,7 @@ const AnalyticsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Orders</p>
@@ -157,7 +159,7 @@ const AnalyticsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
@@ -174,7 +176,7 @@ const AnalyticsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Top Suppliers</p>
@@ -191,7 +193,7 @@ const AnalyticsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Completion Rate</p>
@@ -208,7 +210,7 @@ const AnalyticsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Active Contracts</p>
@@ -226,12 +228,12 @@ const AnalyticsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Charts Section - Mobile Responsive */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Monthly Trends */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Monthly Trends</h3>
+        <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-2 sm:space-y-0">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Monthly Trends</h3>
             <select
               value={selectedMetric}
               onChange={(e) => setSelectedMetric(e.target.value)}
@@ -242,13 +244,13 @@ const AnalyticsPage: React.FC = () => {
               <option value="suppliers">Suppliers</option>
             </select>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {monthlyData.map((data, index) => {
               const value = data[selectedMetric as keyof MonthlyData] as number;
               const percentage = (value / maxValue) * 100;
               return (
-                <div key={data.month} className="flex items-center space-x-4">
-                  <div className="w-12 text-sm font-medium text-gray-600">{data.month}</div>
+                <div key={data.month} className="flex items-center space-x-2 sm:space-x-4">
+                  <div className="w-10 sm:w-12 text-xs sm:text-sm font-medium text-gray-600">{data.month}</div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-medium text-gray-900">
@@ -270,15 +272,15 @@ const AnalyticsPage: React.FC = () => {
         </div>
 
         {/* Category Breakdown */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Spending by Category</h3>
             <PieChart className="h-5 w-5 text-gray-400" />
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {categoryData.map((category, index) => (
-              <div key={category.category} className="flex items-center space-x-4">
-                <div className="w-20 text-sm font-medium text-gray-600">{category.category}</div>
+              <div key={category.category} className="flex items-center space-x-2 sm:space-x-4">
+                <div className="w-16 sm:w-20 text-xs sm:text-sm font-medium text-gray-600">{category.category}</div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium text-gray-900">{formatCurrency(category.spent)}</span>
@@ -300,7 +302,7 @@ const AnalyticsPage: React.FC = () => {
       {/* Detailed Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Top Suppliers */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Suppliers</h3>
           <div className="space-y-3">
             {[
@@ -325,7 +327,7 @@ const AnalyticsPage: React.FC = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
           <div className="space-y-3">
             {[
@@ -350,31 +352,31 @@ const AnalyticsPage: React.FC = () => {
         </div>
 
         {/* Performance Insights */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Insights</h3>
-          <div className="space-y-4">
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+        <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Performance Insights</h3>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
               <div className="flex items-center space-x-2 mb-2">
                 <TrendingUp className="h-4 w-4 text-green-600" />
-                <span className="font-medium text-green-800">Great Progress!</span>
+                <span className="text-sm sm:text-base font-medium text-green-800">Great Progress!</span>
               </div>
-              <p className="text-sm text-green-700">Your order completion rate has improved by 5% this month.</p>
+              <p className="text-xs sm:text-sm text-green-700">Your order completion rate has improved by 5% this month.</p>
             </div>
             
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex items-center space-x-2 mb-2">
                 <Users className="h-4 w-4 text-blue-600" />
-                <span className="font-medium text-blue-800">New Opportunities</span>
+                <span className="text-sm sm:text-base font-medium text-blue-800">New Opportunities</span>
               </div>
-              <p className="text-sm text-blue-700">2 new verified suppliers have joined your region.</p>
+              <p className="text-xs sm:text-sm text-blue-700">2 new verified suppliers have joined your region.</p>
             </div>
             
-            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <div className="p-3 sm:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
               <div className="flex items-center space-x-2 mb-2">
                 <Calendar className="h-4 w-4 text-yellow-600" />
-                <span className="font-medium text-yellow-800">Upcoming</span>
+                <span className="text-sm sm:text-base font-medium text-yellow-800">Upcoming</span>
               </div>
-              <p className="text-sm text-yellow-700">Contract renewal due in 15 days with Golden Grains.</p>
+              <p className="text-xs sm:text-sm text-yellow-700">Contract renewal due in 15 days with Golden Grains.</p>
             </div>
           </div>
         </div>

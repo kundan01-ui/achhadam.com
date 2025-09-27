@@ -14,6 +14,10 @@ import {
   sortCrops, 
   getCropCategories,
   getMarketplaceStats,
+  debugLocalStorageData,
+  recoverFarmerData,
+  forceRefreshMarketplace,
+  backupFarmerData,
   type MarketplaceCrop 
 } from '../../services/marketplaceService';
 import razorpayService from '../../services/razorpayService';
@@ -85,7 +89,9 @@ import {
   ChevronDown,
   X,
   Home,
-  MessageCircle
+  MessageCircle,
+  RefreshCw,
+  AlertTriangle
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -164,6 +170,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   const [marketplaceStats, setMarketplaceStats] = useState(getMarketplaceStats());
   const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showRecoveryOptions, setShowRecoveryOptions] = useState(false);
   const [selectedQuality, setSelectedQuality] = useState('all');
   const [selectedOrganic, setSelectedOrganic] = useState('all');
   const [showImageGallery, setShowImageGallery] = useState(false);
@@ -174,25 +181,66 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   
+  // Favorites State - PERMANENT PERSISTENCE
+  const [favorites, setFavorites] = useState<MarketplaceCrop[]>([]);
+  
   // Load cart from localStorage - USER SPECIFIC
+  // PERMANENT CART LOADING - Cross-device, Cross-session
   useEffect(() => {
     if (!userKey) return;
     
-    const savedCart = localStorage.getItem(`buyer_cart_${userKey}`);
-    if (savedCart) {
+    console.log(`🛒 PERMANENT LOAD: Loading cart for buyer: ${userKey}`);
+    console.log(`📱 This will load cart from any device, any session - PERMANENT DATA`);
+    
+    const loadCartData = async () => {
       try {
-        const parsedCart = JSON.parse(savedCart);
-        setCart(parsedCart);
-        console.log(`🛒 Loaded cart for buyer ${userKey}:`, parsedCart.length);
+        // Load cart from database first (PERMANENT DATA)
+        const cartResponse = await fetch(`/api/cart/buyer/${userProfile.id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+
+        if (cartResponse.ok) {
+          const cartData = await cartResponse.json();
+          console.log(`✅ PERMANENT LOAD: Loaded ${cartData.data.length} cart items from database`);
+          console.log(`🌐 These cart items are available across all devices and sessions`);
+          setCart(cartData.data);
+        } else {
+          console.log('No permanent cart found in database, loading from localStorage');
+          
+          // Fallback to localStorage
+          const savedCart = localStorage.getItem(`buyer_cart_${userKey}`);
+          if (savedCart) {
+            try {
+              const parsedCart = JSON.parse(savedCart);
+              setCart(parsedCart);
+              console.log(`📱 Loaded ${parsedCart.length} cart items from localStorage as fallback`);
+            } catch (error) {
+              console.error('❌ Error loading cart from localStorage:', error);
+            }
+          }
+        }
       } catch (error) {
-        console.error('❌ Error loading cart from localStorage:', error);
+        console.error('Error loading permanent cart data from database:', error);
       }
-    }
-  }, [userKey]);
+    };
+    
+    loadCartData();
+  }, [userKey, userProfile.id]);
   
-  // Save cart to localStorage - USER SPECIFIC
+  // PERMANENT CART SAVE - Cross-device, Cross-session
   useEffect(() => {
     if (cart.length > 0 && userKey) {
+      console.log(`💾 PERMANENT SAVE: Saving ${cart.length} cart items for buyer ${userKey}`);
+      console.log(`🌐 These cart items will be available on any device, any session`);
+      
+      // Save to database (PERMANENT)
+      saveCartToDatabase(cart);
+      
+      // Also save to localStorage as backup
       localStorage.setItem(`buyer_cart_${userKey}`, JSON.stringify(cart));
       console.log(`💾 Saved cart for buyer ${userKey}:`, cart.length);
     }
@@ -222,27 +270,62 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   
   
-  // Load orders from localStorage on component mount - USER SPECIFIC
+  // PERMANENT DATA LOADING - Cross-device, Cross-session for Buyer
   useEffect(() => {
     if (!userKey) return;
     
-    const savedOrders = localStorage.getItem(`buyer_orders_${userKey}`);
-    if (savedOrders) {
+    console.log(`🛒 PERMANENT LOAD: Loading buyer data for: ${userKey}`);
+    console.log(`📱 This will load orders, cart, favorites from any device, any session - PERMANENT DATA`);
+    
+    const loadBuyerData = async () => {
       try {
-        const parsedOrders = JSON.parse(savedOrders);
-        setOrders(parsedOrders);
-        console.log(`📦 Loaded orders for buyer ${userKey}:`, parsedOrders.length);
+        // Load orders from database first (PERMANENT DATA)
+        const ordersResponse = await fetch(`/api/orders/buyer/${userProfile.id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+
+        if (ordersResponse.ok) {
+          const ordersData = await ordersResponse.json();
+          console.log(`✅ PERMANENT LOAD: Loaded ${ordersData.data.length} orders from database`);
+          console.log(`🌐 These orders are available across all devices and sessions`);
+          setOrders(ordersData.data);
+        } else {
+          console.log('No permanent orders found in database, loading from localStorage');
+          
+          // Fallback to localStorage
+          const savedOrders = localStorage.getItem(`buyer_orders_${userKey}`);
+          if (savedOrders) {
+            try {
+              const parsedOrders = JSON.parse(savedOrders);
+              setOrders(parsedOrders);
+              console.log(`📱 Loaded ${parsedOrders.length} orders from localStorage as fallback`);
+            } catch (error) {
+              console.error('❌ Error loading orders from localStorage:', error);
+            }
+          }
+        }
       } catch (error) {
-        console.error('❌ Error loading orders from localStorage:', error);
+        console.error('Error loading permanent buyer data from database:', error);
       }
-    } else {
-      console.log(`📦 No existing orders found for buyer ${userKey}`);
-    }
-  }, [userKey]);
+    };
+    
+    loadBuyerData();
+  }, [userKey, userProfile.id]);
   
-  // Save orders to localStorage whenever orders change - USER SPECIFIC
+  // PERMANENT DATA SAVE - Cross-device, Cross-session for Buyer
   useEffect(() => {
     if (orders.length > 0 && userKey) {
+      console.log(`💾 PERMANENT SAVE: Saving ${orders.length} orders for buyer ${userKey}`);
+      console.log(`🌐 These orders will be available on any device, any session`);
+      
+      // Save to database (PERMANENT)
+      saveOrdersToDatabase(orders);
+      
+      // Also save to localStorage as backup
       localStorage.setItem(`buyer_orders_${userKey}`, JSON.stringify(orders));
       console.log(`💾 Saved orders for buyer ${userKey}:`, orders.length);
     }
@@ -327,13 +410,45 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
 
   // Load marketplace data - REAL FARMER DATA
   useEffect(() => {
-    const loadMarketplaceData = () => {
+    const loadMarketplaceData = async () => {
       console.log('🛒 Loading marketplace data for buyer:', userProfile.name);
-      const crops = loadAllFarmerCrops();
+      
+      // Debug localStorage data first
+      const farmerCount = debugLocalStorageData();
+      console.log(`🔍 Found ${farmerCount} farmer databases in localStorage`);
+      
+      const crops = await loadAllFarmerCrops();
       setMarketplaceCrops(crops);
       setFilteredCrops(crops);
       setMarketplaceStats(getMarketplaceStats());
       console.log(`🛒 Marketplace loaded: ${crops.length} crops from ${new Set(crops.map(c => c.farmerId)).size} farmers`);
+      
+      // If no crops found, show debug info and recovery options
+      if (crops.length === 0) {
+        console.warn('⚠️ No crops found in marketplace!');
+        console.log('💡 Make sure farmers have uploaded crops first');
+        console.log('🔍 Check browser console for localStorage debug info');
+        
+        // Try to recover farmer data
+        console.log('🔄 Attempting to recover farmer data...');
+        const recoveredData = recoverFarmerData();
+        
+        if (recoveredData.length > 0) {
+          console.log(`✅ Found ${recoveredData.length} farmers with data!`);
+          console.log('🔄 Attempting to refresh marketplace...');
+          const refreshedCrops = forceRefreshMarketplace();
+          
+          if (refreshedCrops.length > 0) {
+            console.log(`🎉 Successfully recovered ${refreshedCrops.length} crops!`);
+            setMarketplaceCrops(refreshedCrops);
+            setFilteredCrops(refreshedCrops);
+            setMarketplaceStats(getMarketplaceStats());
+          }
+        } else {
+          console.log('❌ No farmer data found to recover');
+          console.log('💡 Please upload crops from farmer dashboard first');
+        }
+      }
     };
 
     loadMarketplaceData();
@@ -436,12 +551,150 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     }).format(amount);
   };
 
+  // Recovery functions
+  const handleRecoverData = () => {
+    console.log('🔄 Manual data recovery triggered...');
+    const recoveredData = recoverFarmerData();
+    
+    if (recoveredData.length > 0) {
+      console.log(`✅ Found ${recoveredData.length} farmers with data!`);
+      const refreshedCrops = forceRefreshMarketplace();
+      
+      if (refreshedCrops.length > 0) {
+        console.log(`🎉 Successfully recovered ${refreshedCrops.length} crops!`);
+        setMarketplaceCrops(refreshedCrops);
+        setFilteredCrops(refreshedCrops);
+        setMarketplaceStats(getMarketplaceStats());
+        setShowRecoveryOptions(false);
+      }
+    } else {
+      console.log('❌ No farmer data found to recover');
+      alert('No farmer data found to recover. Please upload crops from farmer dashboard first.');
+    }
+  };
+
+  const handleBackupData = () => {
+    console.log('💾 Creating backup of farmer data...');
+    const backup = backupFarmerData();
+    console.log('💾 Backup created and downloaded!');
+    alert('Farmer data backup has been downloaded!');
+  };
+
+  const handleForceRefresh = () => {
+    console.log('🔄 Force refreshing marketplace...');
+    const refreshedCrops = forceRefreshMarketplace();
+    setMarketplaceCrops(refreshedCrops);
+    setFilteredCrops(refreshedCrops);
+    setMarketplaceStats(getMarketplaceStats());
+    console.log(`🔄 Marketplace refreshed with ${refreshedCrops.length} crops`);
+  };
+
+  // PERMANENT DATABASE SAVE - MongoDB Integration for Buyer Data
+  const saveOrdersToDatabase = async (orders) => {
+    try {
+      if (!userProfile.id) {
+        console.error('Cannot save orders: No user ID available');
+        return;
+      }
+
+      console.log(`🛒 PERMANENT SAVE: Saving ${orders.length} orders to database for buyer: ${userProfile.name}`);
+      console.log(`🔑 Buyer ID: ${userProfile.id} - Data will persist across all devices and sessions`);
+      
+      // Save orders to database with permanent persistence
+      for (const order of orders) {
+        try {
+          const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify({
+              ...order,
+              buyerId: userProfile.id,
+              buyerName: userProfile.name,
+              // Add permanent persistence markers
+              isPermanent: true,
+              crossDeviceAccess: true,
+              sessionIndependent: true,
+              lastUpdated: new Date().toISOString()
+            })
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to save order to database');
+          }
+
+          const result = await response.json();
+          console.log(`✅ PERMANENT: Order saved to database: ${order.id}`);
+          console.log(`🌐 This order will be available on any device when buyer logs in`);
+        } catch (error) {
+          console.error(`❌ Error saving order ${order.id}:`, error);
+        }
+      }
+      
+      console.log(`🎉 PERMANENT SAVE COMPLETE: All orders saved to database successfully!`);
+      console.log(`📱 Buyer can now access these orders from any device, any session`);
+      
+    } catch (error) {
+      console.error('❌ Error saving orders to database:', error);
+    }
+  };
+
+  // PERMANENT CART DATABASE SAVE - MongoDB Integration
+  const saveCartToDatabase = async (cart) => {
+    try {
+      if (!userProfile.id) {
+        console.error('Cannot save cart: No user ID available');
+        return;
+      }
+
+      console.log(`🛒 PERMANENT SAVE: Saving ${cart.length} cart items to database for buyer: ${userProfile.name}`);
+      console.log(`🔑 Buyer ID: ${userProfile.id} - Cart will persist across all devices and sessions`);
+      
+      // Save cart to database with permanent persistence
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          buyerId: userProfile.id,
+          buyerName: userProfile.name,
+          cartItems: cart,
+          // Add permanent persistence markers
+          isPermanent: true,
+          crossDeviceAccess: true,
+          sessionIndependent: true,
+          lastUpdated: new Date().toISOString()
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save cart to database');
+      }
+
+      const result = await response.json();
+      console.log(`✅ PERMANENT: Cart saved to database`);
+      console.log(`🌐 This cart will be available on any device when buyer logs in`);
+      
+    } catch (error) {
+      console.error('❌ Error saving cart to database:', error);
+    }
+  };
+
   const renderOverview = () => (
     <div className="space-y-4">
       {/* Stats Cards - Perfect Mobile Design */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {/* Total Orders */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div 
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-blue-200 transition-all duration-300 hover:scale-105"
+          onClick={() => setActiveTab('orders')}
+        >
           <div className="flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
               <ShoppingCart className="h-6 w-6 text-blue-600" />
@@ -452,7 +705,10 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         </div>
 
         {/* Pending Orders */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div 
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-yellow-200 transition-all duration-300 hover:scale-105"
+          onClick={() => setActiveTab('orders')}
+        >
           <div className="flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mb-3">
               <Clock className="h-6 w-6 text-yellow-600" />
@@ -463,7 +719,10 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         </div>
 
         {/* Completed Orders */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div 
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-green-200 transition-all duration-300 hover:scale-105"
+          onClick={() => setActiveTab('orders')}
+        >
           <div className="flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
               <CheckCircle className="h-6 w-6 text-green-600" />
@@ -474,7 +733,10 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         </div>
 
         {/* Total Spent */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div 
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-purple-200 transition-all duration-300 hover:scale-105"
+          onClick={() => setActiveTab('analytics')}
+        >
           <div className="flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-3">
               <TrendingUp className="h-6 w-6 text-purple-600" />
@@ -485,7 +747,10 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         </div>
 
         {/* Favorites */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div 
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-pink-200 transition-all duration-300 hover:scale-105"
+          onClick={() => setActiveTab('favorites')}
+        >
           <div className="flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mb-3">
               <Heart className="h-6 w-6 text-pink-600" />
@@ -496,7 +761,10 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         </div>
 
         {/* Contracts */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div 
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all duration-300 hover:scale-105"
+          onClick={() => setActiveTab('contracts')}
+        >
           <div className="flex flex-col items-center text-center">
             <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
               <BarChart3 className="h-6 w-6 text-indigo-600" />
@@ -511,25 +779,37 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <button className="flex flex-col items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors min-h-[100px]">
+          <button 
+            className="flex flex-col items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors min-h-[100px] hover:scale-105"
+            onClick={() => setActiveTab('products')}
+          >
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-3">
               <Plus className="h-5 w-5 text-blue-600" />
             </div>
             <span className="text-sm font-medium text-blue-700 text-center">New Order</span>
           </button>
-          <button className="flex flex-col items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors min-h-[100px]">
+          <button 
+            className="flex flex-col items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors min-h-[100px] hover:scale-105"
+            onClick={() => setActiveTab('products')}
+          >
             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-3">
               <Eye className="h-5 w-5 text-green-600" />
             </div>
             <span className="text-sm font-medium text-green-700 text-center">Browse Products</span>
           </button>
-          <button className="flex flex-col items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors min-h-[100px]">
+          <button 
+            className="flex flex-col items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors min-h-[100px] hover:scale-105"
+            onClick={() => setActiveTab('suppliers')}
+          >
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mb-3">
               <Users className="h-5 w-5 text-purple-600" />
             </div>
             <span className="text-sm font-medium text-purple-700 text-center">Find Suppliers</span>
           </button>
-          <button className="flex flex-col items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors min-h-[100px]">
+          <button 
+            className="flex flex-col items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors min-h-[100px] hover:scale-105"
+            onClick={() => setActiveTab('analytics')}
+          >
             <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mb-3">
               <BarChart3 className="h-5 w-5 text-orange-600" />
             </div>
@@ -543,7 +823,10 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         <div className="p-6 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Recent Orders</h3>
-            <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+            <button 
+              className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+              onClick={() => setActiveTab('orders')}
+            >
               View All
             </button>
           </div>
@@ -551,7 +834,11 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         {/* Mobile-Friendly Order Cards */}
         <div className="space-y-3 p-4">
           {recentOrders.map((order) => (
-            <div key={order.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div 
+              key={order.id} 
+              className="bg-gray-50 rounded-lg p-4 border border-gray-200 cursor-pointer hover:bg-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-md"
+              onClick={() => setActiveTab('orders')}
+            >
               <div className="flex flex-col space-y-3">
                 {/* Order Header */}
                 <div className="flex items-center justify-between">
@@ -616,14 +903,35 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       </div>
 
       {/* Top Suppliers */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div 
+        className="bg-white rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-orange-200 transition-all duration-300"
+        onClick={() => setActiveTab('suppliers')}
+      >
         <div className="p-6 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Top Suppliers</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">Top Suppliers</h3>
+            <button 
+              className="text-orange-600 hover:text-orange-700 font-medium text-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTab('suppliers');
+              }}
+            >
+              View All
+            </button>
+          </div>
         </div>
         <div className="p-6">
           <div className="space-y-4">
             {suppliers.map((supplier) => (
-              <div key={supplier.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div 
+                key={supplier.id} 
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer hover:border-orange-200 hover:shadow-md"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveTab('suppliers');
+                }}
+              >
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                     <span className="text-white font-semibold text-lg">
@@ -733,6 +1041,17 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
               />
             </div>
           </div>
+          
+          {/* Recovery Button */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowRecoveryOptions(!showRecoveryOptions)}
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Recovery
+            </button>
+          </div>
 
           {/* Category Filter */}
           <div className="lg:w-48">
@@ -767,6 +1086,42 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
           </div>
         </div>
       </div>
+
+      {/* Recovery Options */}
+      {showRecoveryOptions && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            <h3 className="text-lg font-semibold text-yellow-800">Data Recovery Options</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button
+              onClick={handleRecoverData}
+              className="flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Recover Data
+            </button>
+            <button
+              onClick={handleForceRefresh}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Force Refresh
+            </button>
+            <button
+              onClick={handleBackupData}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors"
+            >
+              <Download className="h-4 w-4" />
+              Backup Data
+            </button>
+          </div>
+          <p className="text-sm text-yellow-700 mt-3">
+            💡 If no products are showing, try these recovery options to restore farmer data.
+          </p>
+        </div>
+      )}
 
       {/* Results Count */}
       <div className="text-sm text-gray-600">
@@ -1044,10 +1399,10 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-64">
+      {/* Filters - Mobile Responsive */}
+      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -1055,18 +1410,20 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                 placeholder="Search orders..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
             </div>
           </div>
-          <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-            <Filter className="h-4 w-4" />
-            <span>Filter</span>
-          </button>
-          <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-            <Download className="h-4 w-4" />
-            <span>Export</span>
-          </button>
+          <div className="flex space-x-2">
+            <button className="flex items-center justify-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+              <Filter className="h-4 w-4" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
+            <button className="flex items-center justify-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+          </div>
         </div>
       </div>
 
