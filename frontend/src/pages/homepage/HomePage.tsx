@@ -535,6 +535,30 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* SEO Structured Data */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Achhadam",
+          "alternateName": "Achhadam Private Limited",
+          "url": "https://www.achhadam.com",
+          "description": "India's leading digital farming platform connecting farmers directly with consumers. Buy fresh crops, vegetables, fruits online. Eliminate middlemen, get fair prices.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://www.achhadam.com/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "Achhadam Private Limited",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://www.achhadam.com/achhadam%20logo.jpg"
+            }
+          }
+        })}
+      </script>
                    {/* Professional Navbar Section */}
              <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-white via-sky-50 to-green-50/80 backdrop-blur-md border-b border-sky-200/50 shadow-lg">
                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -720,6 +744,23 @@ const HomePage: React.FC = () => {
                      <p className="text-lg sm:text-xl lg:text-2xl font-semibold mb-6 text-green-100 drop-shadow-lg max-w-2xl mx-auto">
                        {heroSlides[currentSlide].subtitle}
                      </p>
+                     
+                     {/* SEO-friendly hidden content for search engines */}
+                     <div className="sr-only">
+                       <h2>Digital Farming Platform - Achhadam</h2>
+                       <p>Connect farmers directly with consumers. Buy fresh crops, vegetables, fruits online. Eliminate middlemen, get fair prices. Smart agriculture solutions for farmers and buyers across India.</p>
+                       <h3>Key Features:</h3>
+                       <ul>
+                         <li>Direct farmer to consumer platform</li>
+                         <li>Fresh crop marketplace</li>
+                         <li>Smart agriculture technology</li>
+                         <li>Quality verification system</li>
+                         <li>Secure payment processing</li>
+                         <li>Real-time crop analytics</li>
+                         <li>KYC verification for all users</li>
+                         <li>Mobile app for farmers, buyers, transporters</li>
+                       </ul>
+                     </div>
                      <div className="flex flex-col sm:flex-row gap-4 justify-center">
                        <Button
                          onClick={handleSignupClick}
