@@ -91,6 +91,9 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
   try {
     console.log('🌾 Loading crops from database...');
     
+    // Initialize empty array to ensure we always return an array
+    let allCrops: MarketplaceCrop[] = [];
+    
     // Try to load from database first
     try {
       const response = await fetch('/api/crops/marketplace', {
@@ -115,33 +118,42 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
           console.log(`🌾 Processing ${cropsData.length} crops from database`);
         }
         
-        return cropsData.map((crop: any) => ({
-          ...crop,
-          farmer: {
-            id: crop.farmerId._id,
-            name: crop.farmerId.profile?.fullName || 'Unknown Farmer',
-            phone: crop.farmerId.phone || '+91-XXXX-XXXX',
-            location: crop.farmerId.address?.current?.city || 'Unknown Location',
-            rating: Math.random() * 2 + 3,
-            totalCrops: 1,
-            joinedDate: new Date().toISOString(),
-            avatar: undefined
-          },
-          distance: Math.random() * 50 + 1,
-          demandScore: Math.random() * 100,
-          priceComparison: {
-            marketAverage: crop.price * (0.8 + Math.random() * 0.4),
-            isAboveAverage: Math.random() > 0.5,
-            percentageDifference: (Math.random() - 0.5) * 40
-          }
-        }));
+        // Ensure cropsData is valid before mapping
+        if (Array.isArray(cropsData) && cropsData.length > 0) {
+          const mappedCrops = cropsData.map((crop: any) => ({
+            ...crop,
+            farmer: {
+              id: crop.farmerId?._id || 'unknown',
+              name: crop.farmerId?.profile?.fullName || 'Unknown Farmer',
+              phone: crop.farmerId?.phone || '+91-XXXX-XXXX',
+              location: crop.farmerId?.address?.current?.city || 'Unknown Location',
+              rating: Math.random() * 2 + 3,
+              totalCrops: 1,
+              joinedDate: new Date().toISOString(),
+              avatar: undefined
+            },
+            distance: Math.random() * 50 + 1,
+            demandScore: Math.random() * 100,
+            priceComparison: {
+              marketAverage: crop.price * (0.8 + Math.random() * 0.4),
+              isAboveAverage: Math.random() > 0.5,
+              percentageDifference: (Math.random() - 0.5) * 40
+            }
+          }));
+          
+          console.log(`✅ Successfully mapped ${mappedCrops.length} crops from database`);
+          return mappedCrops;
+        } else {
+          console.log('📭 No valid crops found in database response');
+          return [];
+        }
       }
     } catch (error) {
       console.error('❌ Database load failed, falling back to localStorage:', error);
     }
 
     // Fallback to localStorage
-    const allCrops: MarketplaceCrop[] = [];
+    allCrops = [];
     
     // Get all localStorage keys
     const keys = Object.keys(localStorage);
@@ -250,14 +262,14 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
       console.warn('⚠️ allCrops is not an array:', typeof allCrops, allCrops);
     }
     
-    // Ensure allCrops is an array before sorting
+    // Final validation before returning
     if (!Array.isArray(allCrops)) {
-      console.error('❌ allCrops is not an array, returning empty array');
+      console.error('❌ allCrops is not an array in final return, returning empty array');
       return [];
     }
     
     // Sort by demand score and recency
-    return allCrops.sort((a, b) => {
+    const sortedCrops = allCrops.sort((a, b) => {
       // First by demand score (higher is better)
       if (b.demandScore !== a.demandScore) {
         return b.demandScore - a.demandScore;
@@ -265,6 +277,9 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
       // Then by recency (newer is better)
       return new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime();
     });
+    
+    console.log(`🎉 Final result: ${sortedCrops.length} marketplace crops ready`);
+    return sortedCrops;
     
   } catch (error) {
     console.error('Error loading farmer crops:', error);
