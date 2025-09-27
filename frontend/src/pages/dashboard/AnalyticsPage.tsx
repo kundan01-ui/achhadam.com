@@ -120,7 +120,7 @@ const AnalyticsPage: React.FC = () => {
       </div>
 
       {/* Key Metrics - Mobile Responsive */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
@@ -229,7 +229,7 @@ const AnalyticsPage: React.FC = () => {
       </div>
 
       {/* Charts Section - Mobile Responsive */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
         {/* Monthly Trends */}
         <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-2 sm:space-y-0">
@@ -300,7 +300,7 @@ const AnalyticsPage: React.FC = () => {
       </div>
 
       {/* Detailed Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {/* Top Suppliers */}
         <div className="bg-white rounded-xl p-3 sm:p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Suppliers</h3>

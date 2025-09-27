@@ -234,7 +234,7 @@ const ProductsPage: React.FC = () => {
       </div>
 
       {/* Search and Filters - Mobile Responsive */}
-      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
         <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
           {/* Search Bar */}
           <div className="flex-1 min-w-0">
@@ -397,8 +397,8 @@ const ProductsPage: React.FC = () => {
 
       {/* Products Grid/List - Mobile Responsive */}
       <div className={viewMode === 'grid' 
-        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6" 
-        : "space-y-4"
+        ? "grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6" 
+        : "space-y-3 sm:space-y-4"
       }>
         {filteredProducts.map((product) => (
           <div key={product.id} className={`bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden ${
