@@ -107,6 +107,14 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
         
         // Ensure data is an array before mapping
         const cropsData = Array.isArray(result.data) ? result.data : [];
+        
+        // Validate cropsData before mapping
+        if (cropsData.length === 0) {
+          console.log('📭 No crops found in database, falling back to localStorage');
+        } else {
+          console.log(`🌾 Processing ${cropsData.length} crops from database`);
+        }
+        
         return cropsData.map((crop: any) => ({
           ...crop,
           farmer: {
@@ -143,6 +151,12 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
     
     console.log(`🔍 Found ${farmerKeys.length} farmer databases in localStorage`);
     console.log('📋 Farmer database keys:', farmerKeys);
+    
+    // Validate farmerKeys is an array
+    if (!Array.isArray(farmerKeys)) {
+      console.error('❌ farmerKeys is not an array:', typeof farmerKeys, farmerKeys);
+      return [];
+    }
     
     // If no farmer data found, show debug info
     if (farmerKeys.length === 0) {
@@ -222,13 +236,25 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
     });
     
     console.log(`🌾 Total crops loaded for marketplace: ${allCrops.length}`);
-    console.log('🌾 All marketplace crops:', allCrops.map(crop => ({
-      id: crop.id,
-      name: crop.name,
-      farmerName: crop.farmer.name,
-      price: crop.price,
-      type: crop.type
-    })));
+    
+    // Ensure allCrops is an array before logging
+    if (Array.isArray(allCrops)) {
+      console.log('🌾 All marketplace crops:', allCrops.map(crop => ({
+        id: crop.id,
+        name: crop.name,
+        farmerName: crop.farmer?.name || 'Unknown',
+        price: crop.price,
+        type: crop.type
+      })));
+    } else {
+      console.warn('⚠️ allCrops is not an array:', typeof allCrops, allCrops);
+    }
+    
+    // Ensure allCrops is an array before sorting
+    if (!Array.isArray(allCrops)) {
+      console.error('❌ allCrops is not an array, returning empty array');
+      return [];
+    }
     
     // Sort by demand score and recency
     return allCrops.sort((a, b) => {
