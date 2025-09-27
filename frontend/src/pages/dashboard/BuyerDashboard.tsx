@@ -991,36 +991,37 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   const renderMarketplace = () => (
     <div className="space-y-6">
       {/* Marketplace Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 lg:p-6">
+        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3 xl:gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">🌾 Farmer Marketplace</h2>
-            <p className="text-gray-600 mt-1">Discover fresh crops from local farmers</p>
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">🌾 Farmer Marketplace</h2>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">Discover fresh crops from local farmers</p>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-600">
-              <span className="font-semibold text-green-600">{marketplaceStats.totalCrops}</span> crops available
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="text-xs sm:text-sm text-gray-600">
+              <span className="font-semibold text-green-600">{marketplaceStats.totalCrops}</span> crops
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-xs sm:text-sm text-gray-600">
               <span className="font-semibold text-blue-600">{marketplaceStats.totalFarmers}</span> farmers
             </div>
             <button
               onClick={() => setShowCart(true)}
-              className="relative px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm flex items-center space-x-2"
+              className="relative px-2 py-1.5 sm:px-3 sm:py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-xs sm:text-sm flex items-center space-x-1"
             >
-              <ShoppingCart className="h-4 w-4" />
-              <span>Cart</span>
+              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Cart</span>
               {getCartItemCount() > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                   {getCartItemCount()}
                 </span>
               )}
             </button>
             <button
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+              className="px-2 py-1.5 sm:px-3 sm:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs sm:text-sm"
             >
-              {showAdvancedFilters ? 'Hide Filters' : 'Advanced Filters'}
+              <span className="hidden sm:inline">{showAdvancedFilters ? 'Hide Filters' : 'Advanced Filters'}</span>
+              <span className="sm:hidden">Filters</span>
             </button>
             <button
               onClick={async () => {
@@ -1031,48 +1032,49 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                 setMarketplaceStats(stats);
                 console.log('🔄 Marketplace data refreshed manually');
               }}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+              className="px-2 py-1.5 sm:px-3 sm:py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-xs sm:text-sm flex items-center space-x-1"
             >
-              🔄 Refresh
+              <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Refresh</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Search and Filter Bar */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-col lg:flex-row gap-4">
+      {/* Search and Filter Bar - Mobile Responsive */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 lg:p-4">
+        <div className="flex flex-col xl:flex-row gap-2 xl:gap-4">
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search crops, farmers, or locations..."
+                placeholder="Search crops, farmers..."
                 value={marketplaceSearchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full pl-7 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs sm:text-sm"
               />
             </div>
           </div>
           
           {/* Recovery Button */}
-          <div className="flex gap-2">
+          <div className="flex gap-1 sm:gap-2">
             <button
               onClick={() => setShowRecoveryOptions(!showRecoveryOptions)}
-              className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors"
+              className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors"
             >
-              <RefreshCw className="h-4 w-4" />
-              Recovery
+              <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Recovery</span>
             </button>
           </div>
 
           {/* Category Filter */}
-          <div className="lg:w-48">
+          <div className="xl:w-48">
             <select
               value={selectedCategory}
               onChange={(e) => handleCategoryChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs sm:text-sm"
             >
               <option value="all">All Categories</option>
               {marketplaceStats.categories.map(category => (
@@ -1084,11 +1086,11 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
           </div>
 
           {/* Sort */}
-          <div className="lg:w-48">
+          <div className="xl:w-48">
             <select
               value={sortBy}
               onChange={(e) => handleSortChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs sm:text-sm"
             >
               <option value="demand">Sort by Demand</option>
               <option value="price-low">Price: Low to High</option>
@@ -1101,37 +1103,40 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         </div>
       </div>
 
-      {/* Recovery Options */}
+      {/* Recovery Options - Mobile Responsive */}
       {showRecoveryOptions && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="h-5 w-5 text-yellow-600" />
-            <h3 className="text-lg font-semibold text-yellow-800">Data Recovery Options</h3>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
+            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
+            <h3 className="text-sm sm:text-base font-semibold text-yellow-800">Data Recovery Options</h3>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
             <button
               onClick={handleRecoverData}
-              className="flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors text-xs sm:text-sm"
             >
-              <RefreshCw className="h-4 w-4" />
-              Recover Data
+              <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Recover Data</span>
+              <span className="sm:hidden">Recover</span>
             </button>
             <button
               onClick={handleForceRefresh}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors text-xs sm:text-sm"
             >
-              <RefreshCw className="h-4 w-4" />
-              Force Refresh
+              <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Force Refresh</span>
+              <span className="sm:hidden">Refresh</span>
             </button>
             <button
               onClick={handleBackupData}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors text-xs sm:text-sm"
             >
-              <Download className="h-4 w-4" />
-              Backup Data
+              <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Backup Data</span>
+              <span className="sm:hidden">Backup</span>
             </button>
           </div>
-          <p className="text-sm text-yellow-700 mt-3">
+          <p className="text-xs sm:text-sm text-yellow-700 mt-2 sm:mt-3">
             💡 If no products are showing, try these recovery options to restore farmer data.
           </p>
         </div>
