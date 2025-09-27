@@ -167,7 +167,14 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   const [sortBy, setSortBy] = useState('demand');
   const [showChatModal, setShowChatModal] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState<MarketplaceCrop | null>(null);
-  const [marketplaceStats, setMarketplaceStats] = useState(getMarketplaceStats());
+  const [marketplaceStats, setMarketplaceStats] = useState({
+    totalCrops: 0,
+    totalFarmers: 0,
+    averagePrice: 0,
+    categories: [],
+    topSellingCrops: [],
+    priceRange: { min: 0, max: 0 }
+  });
   const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showRecoveryOptions, setShowRecoveryOptions] = useState(false);
@@ -420,7 +427,8 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       const crops = await loadAllFarmerCrops();
       setMarketplaceCrops(crops);
       setFilteredCrops(crops);
-      setMarketplaceStats(getMarketplaceStats());
+      const stats = await getMarketplaceStats();
+      setMarketplaceStats(stats);
       // Ensure crops is an array before using map
       const safeCrops = Array.isArray(crops) ? crops : [];
       console.log(`🛒 Marketplace loaded: ${safeCrops.length} crops from ${safeCrops.length > 0 ? new Set(safeCrops.map(c => c.farmerId)).size : 0} farmers`);
@@ -444,7 +452,8 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
             console.log(`🎉 Successfully recovered ${refreshedCrops.length} crops!`);
             setMarketplaceCrops(refreshedCrops);
             setFilteredCrops(refreshedCrops);
-            setMarketplaceStats(getMarketplaceStats());
+            const stats = await getMarketplaceStats();
+      setMarketplaceStats(stats);
           }
         } else {
           console.log('❌ No farmer data found to recover');
@@ -554,7 +563,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   };
 
   // Recovery functions
-  const handleRecoverData = () => {
+  const handleRecoverData = async () => {
     console.log('🔄 Manual data recovery triggered...');
     const recoveredData = recoverFarmerData();
     
@@ -566,7 +575,8 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         console.log(`🎉 Successfully recovered ${refreshedCrops.length} crops!`);
         setMarketplaceCrops(refreshedCrops);
         setFilteredCrops(refreshedCrops);
-        setMarketplaceStats(getMarketplaceStats());
+        const stats = await getMarketplaceStats();
+      setMarketplaceStats(stats);
         setShowRecoveryOptions(false);
       }
     } else {
@@ -582,12 +592,13 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     alert('Farmer data backup has been downloaded!');
   };
 
-  const handleForceRefresh = () => {
+  const handleForceRefresh = async () => {
     console.log('🔄 Force refreshing marketplace...');
     const refreshedCrops = forceRefreshMarketplace();
     setMarketplaceCrops(refreshedCrops);
     setFilteredCrops(refreshedCrops);
-    setMarketplaceStats(getMarketplaceStats());
+    const stats = await getMarketplaceStats();
+    setMarketplaceStats(stats);
     console.log(`🔄 Marketplace refreshed with ${refreshedCrops.length} crops`);
   };
 
@@ -1012,11 +1023,12 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
               {showAdvancedFilters ? 'Hide Filters' : 'Advanced Filters'}
             </button>
             <button
-              onClick={() => {
-                const crops = loadAllFarmerCrops();
+              onClick={async () => {
+                const crops = await loadAllFarmerCrops();
                 setMarketplaceCrops(crops);
                 setFilteredCrops(crops);
-                setMarketplaceStats(getMarketplaceStats());
+                const stats = await getMarketplaceStats();
+                setMarketplaceStats(stats);
                 console.log('🔄 Marketplace data refreshed manually');
               }}
               className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
