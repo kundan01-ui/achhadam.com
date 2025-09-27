@@ -2248,7 +2248,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               if (!kycCompleted) {
                 // Check if KYC was dismissed this session
                 if (sessionStorage.getItem('kyc_dismissed_this_session') === 'true') {
-                  alert('🔐 KYC verification is required to list crops. Please complete your KYC verification first.');
+                  console.log('✅ KYC was dismissed this session, opening crop upload directly');
+                  setShowCropUploadModal(true);
                   return;
                 }
                 console.log('📋 Showing KYC modal');
