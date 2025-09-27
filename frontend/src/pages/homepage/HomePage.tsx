@@ -747,19 +747,27 @@ const HomePage: React.FC = () => {
                      
                      {/* SEO-friendly hidden content for search engines */}
                      <div className="sr-only">
-                       <h2>Digital Farming Platform - Achhadam</h2>
-                       <p>Connect farmers directly with consumers. Buy fresh crops, vegetables, fruits online. Eliminate middlemen, get fair prices. Smart agriculture solutions for farmers and buyers across India.</p>
-                       <h3>Key Features:</h3>
+                       <h2>Achhadam - India's Leading Digital Agriculture Platform</h2>
+                       <p>Achhadam is India's #1 digital farming platform connecting farmers directly with buyers. Buy fresh crops, vegetables, fruits online. Smart farming technology, crop analytics, KYC verification. Eliminate middlemen, get fair prices. Join 10,000+ farmers and buyers across India.</p>
+                       <h3>Agriculture Platform Features:</h3>
                        <ul>
-                         <li>Direct farmer to consumer platform</li>
-                         <li>Fresh crop marketplace</li>
-                         <li>Smart agriculture technology</li>
-                         <li>Quality verification system</li>
-                         <li>Secure payment processing</li>
-                         <li>Real-time crop analytics</li>
+                         <li>Direct farmer to consumer marketplace</li>
+                         <li>Fresh crop buying and selling online</li>
+                         <li>Smart agriculture technology solutions</li>
+                         <li>Quality verification and certification</li>
+                         <li>Secure payment processing with Razorpay</li>
+                         <li>Real-time crop analytics and insights</li>
                          <li>KYC verification for all users</li>
                          <li>Mobile app for farmers, buyers, transporters</li>
+                         <li>Weather updates and AI crop advisory</li>
+                         <li>Logistics and transportation services</li>
+                         <li>Market information and pricing</li>
+                         <li>Order management and tracking</li>
                        </ul>
+                       <h3>About Achhadam:</h3>
+                       <p>Achhadam Private Limited is revolutionizing agriculture in India through technology. Our platform connects farmers directly with consumers, eliminating middlemen and ensuring fair prices. We provide smart farming solutions, crop analytics, and quality verification services.</p>
+                       <h3>Contact Information:</h3>
+                       <p>Phone: +91-9905441890 | Email: shampawarp3@gmail.com | Location: Maharashtra, India</p>
                      </div>
                      <div className="flex flex-col sm:flex-row gap-4 justify-center">
                        <Button
