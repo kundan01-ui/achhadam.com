@@ -1282,14 +1282,14 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
             <div className="p-2 sm:p-3 lg:p-4">
               <div className="flex items-start justify-between mb-1 sm:mb-2">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base lg:text-lg truncate">{crop.name}</h3>
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">{crop.type} • {crop.variety}</p>
+                  <h3 className="font-semibold text-gray-900 text-base sm:text-base lg:text-lg truncate">{crop.name}</h3>
+                  <p className="text-sm sm:text-sm text-gray-600 truncate">{crop.type} • {crop.variety}</p>
                 </div>
                 <div className="text-right ml-2">
-                  <div className="text-sm sm:text-base lg:text-lg font-bold text-green-600">
+                  <div className="text-base sm:text-base lg:text-lg font-bold text-green-600">
                     ₹{crop.price}/{crop.unit === 'kg' ? 'kg' : 'quintal'}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-sm text-gray-500">
                     {crop.quantity} {crop.unit}
                   </div>
                 </div>
@@ -1302,8 +1302,8 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                     <User className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{crop.farmer.name}</div>
-                    <div className="text-xs text-gray-500 flex items-center truncate">
+                    <div className="text-sm sm:text-sm font-medium text-gray-900 truncate">{crop.farmer.name}</div>
+                    <div className="text-sm text-gray-500 flex items-center truncate">
                       <MapPin className="h-2 w-2 sm:h-3 sm:w-3 mr-1 flex-shrink-0" />
                       <span className="truncate">{crop.farmer.location}</span>
                     </div>
@@ -1312,9 +1312,9 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                 <div className="text-right ml-2 flex-shrink-0">
                   <div className="flex items-center text-yellow-500">
                     <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-current" />
-                    <span className="text-xs sm:text-sm ml-1">{crop.farmer.rating.toFixed(1)}</span>
+                    <span className="text-sm sm:text-sm ml-1">{crop.farmer.rating.toFixed(1)}</span>
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-sm text-gray-500">
                     {crop.distance?.toFixed(1)} km
                   </div>
                 </div>
@@ -1362,14 +1362,13 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                       className="flex-1 min-w-0 bg-blue-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
                     >
                       <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                      <span className="hidden sm:inline">Chat</span>
                     </button>
                     <button
                       onClick={() => addToCart(crop, 1)}
                       className="flex-1 min-w-0 bg-orange-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
                     >
                       <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                      <span className="hidden sm:inline">Add to Cart</span>
+                      <span className="hidden sm:inline">Cart</span>
                       <span className="sm:hidden">Add</span>
                     </button>
                     <button
@@ -1377,11 +1376,8 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                       className="flex-1 min-w-0 bg-green-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
                     >
                       <Package className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                      <span className="hidden sm:inline">Buy Now</span>
+                      <span className="hidden sm:inline">Buy</span>
                       <span className="sm:hidden">Buy</span>
-                    </button>
-                    <button className="px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center">
-                      <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
                     </button>
                   </div>
             </div>
