@@ -1333,6 +1333,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     try {
       console.log(`🔄 FORCE REFRESH: Loading fresh data from database for farmer: ${userProfile.id}`);
       console.log(`🌐 This ensures latest data is loaded from any device`);
+      console.log(`📱 Cross-device sync: Mobile crops will be available on desktop and vice versa`);
       
       const response = await fetch(`/api/crops/farmer/${userProfile.id}`, {
         method: 'GET',
@@ -1342,10 +1343,18 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         }
       });
 
+      console.log(`📡 Database response status: ${response.status}`);
+
       if (response.ok) {
         const data = await response.json();
         const crops = data.data || [];
         console.log(`✅ FORCE REFRESH: Loaded ${crops.length} fresh crops from database`);
+        console.log(`🌐 CROSS-DEVICE SYNC: These crops are now available on this device`);
+        console.log(`📊 Database response:`, {
+          success: data.success,
+          count: data.count,
+          persistence: data.persistence
+        });
         
         // Update state with fresh data
         setUploadedCrops(crops);
@@ -1367,13 +1376,17 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         localStorage.setItem(databaseKey, JSON.stringify(databaseEntry));
         
         console.log(`🔄 FORCE REFRESH COMPLETE: Fresh data loaded and synced`);
+        console.log(`🌐 Cross-device sync successful - crops available on all devices`);
         return crops;
       } else {
-        console.log(`⚠️ Force refresh failed, using existing data`);
+        const errorData = await response.json();
+        console.log(`⚠️ Force refresh failed with status ${response.status}:`, errorData);
+        console.log(`🔄 Will try localStorage fallback`);
         return [];
       }
     } catch (error) {
       console.error(`❌ Force refresh error:`, error);
+      console.log(`🔄 Network error, will try localStorage fallback`);
       return [];
     }
   };
@@ -1413,13 +1426,16 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         console.log(`📊 Showing zero state: 0 crops, 0 earnings, 0 land`);
       }
       
-      // First try to force refresh from database for cross-device sync
+      // ALWAYS try to force refresh from database first for cross-device sync
+      console.log(`🌐 CROSS-DEVICE SYNC: Always loading fresh data from database first`);
       const freshCrops = await forceRefreshFromDatabase();
       if (freshCrops.length > 0) {
         console.log(`🌾 CROSS-DEVICE SYNC: Loaded ${freshCrops.length} fresh crops from database`);
         setUploadedCrops(freshCrops);
+        console.log(`🌐 These crops are now available on this device`);
       } else {
-        // Fallback to normal loading
+        // Fallback to localStorage only if database has no data
+        console.log(`⚠️ No fresh data from database, trying localStorage fallback`);
         const savedCrops = await loadCropsFromStorage();
         setUploadedCrops(savedCrops);
         console.log(`🌾 CROSS-DEVICE SYNC: Loaded ${savedCrops.length} crops for farmer ${userProfile.name}`);
