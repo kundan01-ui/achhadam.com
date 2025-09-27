@@ -297,5 +297,37 @@ router.delete('/:cropId', auth, async (req, res) => {
   }
 });
 
+// Get all crops for marketplace (public endpoint)
+router.get('/marketplace', async (req, res) => {
+  try {
+    console.log('🌾 Loading crops for marketplace...');
+    
+    const crops = await CropListing.find({ 
+      status: 'available',
+      isPermanent: true,
+      crossDeviceAccess: true,
+      sessionIndependent: true
+    })
+    .populate('farmerId', 'profile.fullName phone address.current.city')
+    .sort({ uploadedAt: -1 });
+
+    console.log(`✅ Found ${crops.length} crops for marketplace`);
+
+    res.json({
+      success: true,
+      data: crops,
+      count: crops.length,
+      message: 'Marketplace crops loaded successfully'
+    });
+  } catch (error) {
+    console.error('Error fetching marketplace crops:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch marketplace crops',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
 
