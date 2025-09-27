@@ -219,52 +219,51 @@ const ProductsPage: React.FC = () => {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header - Mobile Responsive */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
         <div>
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Products</h2>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">Discover and order agricultural products</p>
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Products</h2>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">Discover and order agricultural products</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <button className="flex items-center justify-center space-x-2 px-3 py-2 sm:px-4 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Request Product</span>
-            <span className="sm:hidden">Request</span>
+        <div className="flex items-center gap-2">
+          <button className="flex items-center justify-center px-2 py-1.5 sm:px-3 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-medium">
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline ml-1">Request Product</span>
           </button>
         </div>
       </div>
 
       {/* Search and Filters - Mobile Responsive */}
-      <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
+      <div className="bg-white rounded-xl p-2 sm:p-3 lg:p-4 shadow-sm border border-gray-100">
+        <div className="flex flex-col xl:flex-row xl:items-center gap-2 xl:gap-3">
           {/* Search Bar */}
           <div className="flex-1 min-w-0">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search products, suppliers..."
+                placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                className="w-full pl-7 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs sm:text-sm"
               />
             </div>
           </div>
           
           {/* Controls */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             {/* View Mode Toggle */}
             <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 ${viewMode === 'grid' ? 'bg-green-100 text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`p-1.5 sm:p-2 ${viewMode === 'grid' ? 'bg-green-100 text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
               >
-                <Grid3X3 className="h-4 w-4" />
+                <Grid3X3 className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 ${viewMode === 'list' ? 'bg-green-100 text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`p-1.5 sm:p-2 ${viewMode === 'list' ? 'bg-green-100 text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
               >
-                <List className="h-4 w-4" />
+                <List className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
             </div>
             
@@ -272,11 +271,10 @@ const ProductsPage: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setShowSortMenu(!showSortMenu)}
-                className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                className="flex items-center space-x-1 px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-xs sm:text-sm"
               >
-                <ArrowUpDown className="h-4 w-4" />
+                <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Sort</span>
-                <span className="sm:hidden">Sort</span>
               </button>
               
               {showSortMenu && (
@@ -321,23 +319,22 @@ const ProductsPage: React.FC = () => {
             {/* Filters Button */}
             <button 
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center justify-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center justify-center space-x-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                 showFilters 
                   ? 'bg-green-100 text-green-600 border border-green-200' 
                   : 'border border-gray-300 hover:bg-gray-50'
               }`}
             >
-              <SlidersHorizontal className="h-4 w-4" />
+              <SlidersHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Filters</span>
-              <span className="sm:hidden">Filter</span>
             </button>
           </div>
         </div>
 
         {/* Filter Panel */}
         {showFilters && (
-          <div className="mt-4 p-4 sm:p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-100">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="mt-3 p-3 sm:p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                 <select
@@ -397,8 +394,8 @@ const ProductsPage: React.FC = () => {
 
       {/* Products Grid/List - Mobile Responsive */}
       <div className={viewMode === 'grid' 
-        ? "grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6" 
-        : "space-y-3 sm:space-y-4"
+        ? "grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4" 
+        : "space-y-2 sm:space-y-3"
       }>
         {filteredProducts.map((product) => (
           <div key={product.id} className={`bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden ${
@@ -407,43 +404,43 @@ const ProductsPage: React.FC = () => {
             {/* Product Image */}
             <div className={`relative bg-gradient-to-br from-green-100 to-blue-100 ${
               viewMode === 'grid' 
-                ? 'h-40 sm:h-48' 
-                : 'h-32 sm:h-24 sm:w-32 flex-shrink-0'
+                ? 'h-32 sm:h-40 lg:h-48' 
+                : 'h-24 sm:h-20 sm:w-24 flex-shrink-0'
             }`}>
               <div className="absolute inset-0 flex items-center justify-center">
-                <Package className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400" />
+                <Package className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-gray-400" />
               </div>
-              <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
+              <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
                 <button
                   onClick={() => toggleFavorite(product.id)}
-                  className={`p-1.5 sm:p-2 rounded-full transition-colors ${
+                  className={`p-1 sm:p-1.5 rounded-full transition-colors ${
                     product.isFavorite 
                       ? 'bg-red-100 text-red-600' 
                       : 'bg-white text-gray-400 hover:text-red-600'
                   }`}
                 >
-                  <Heart className={`h-3 w-3 sm:h-4 sm:w-4 ${product.isFavorite ? 'fill-current' : ''}`} />
+                  <Heart className={`h-2.5 w-2.5 sm:h-3 sm:w-3 ${product.isFavorite ? 'fill-current' : ''}`} />
                 </button>
               </div>
               {!product.isAvailable && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <span className="text-white font-semibold text-xs sm:text-sm">Out of Stock</span>
+                  <span className="text-white font-semibold text-xs">Out of Stock</span>
                 </div>
               )}
             </div>
 
             {/* Product Info - Mobile Responsive */}
-            <div className={`p-3 sm:p-4 ${viewMode === 'list' ? 'flex-1' : ''}`}>
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold text-gray-900 text-sm sm:text-base lg:text-lg line-clamp-1">{product.name}</h3>
+            <div className={`p-2 sm:p-3 ${viewMode === 'list' ? 'flex-1' : ''}`}>
+              <div className="flex items-start justify-between mb-1 sm:mb-2">
+                <h3 className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base line-clamp-1">{product.name}</h3>
                 <div className="flex items-center space-x-1 ml-2">
-                  <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 fill-current" />
-                  <span className="text-xs sm:text-sm text-gray-600">{product.rating}</span>
-                  <span className="text-xs sm:text-sm text-gray-400">({product.reviews})</span>
+                  <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-yellow-400 fill-current" />
+                  <span className="text-xs text-gray-600">{product.rating}</span>
+                  <span className="text-xs text-gray-400">({product.reviews})</span>
                 </div>
               </div>
 
-              <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2">{product.description}</p>
+              <p className="text-gray-600 text-xs mb-2 sm:mb-3 line-clamp-2">{product.description}</p>
 
               <div className={`space-y-1 sm:space-y-2 mb-4 ${viewMode === 'list' ? 'grid grid-cols-1 sm:grid-cols-3 gap-2' : ''}`}>
                 <div className="flex items-center text-xs sm:text-sm text-gray-500">
