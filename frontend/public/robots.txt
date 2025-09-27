@@ -22,3 +22,4 @@ Allow: /terms-conditions
 Allow: /cancellation-refund
 Allow: /shipping-delivery
 Allow: /legal-compliance
+

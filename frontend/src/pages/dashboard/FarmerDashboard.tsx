@@ -1038,8 +1038,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     };
   };
 
-  // Enhanced function to load crops from database - USER SPECIFIC with CROSS-DEVICE SYNC
-  const loadCropsFromStorage = async () => {
+  // Enhanced function to load crops from DATABASE ONLY - TRUE CROSS-DEVICE SYNC
+  const loadCropsFromDatabase = async () => {
     try {
       if (!userProfile.id) {
         console.log('❌ No user ID available, returning empty crops');
@@ -1047,61 +1047,58 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       }
 
       console.log(`🔍 Loading crops for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
-      console.log(`🌐 CROSS-DEVICE SYNC: Loading from database first, then localStorage fallback`);
+      console.log(`🌐 TRUE CROSS-DEVICE SYNC: Loading ONLY from database - no localStorage dependency`);
+      console.log(`📱 This ensures mobile crops show on desktop and vice versa`);
 
-      // FIRST: Try to load from database (CROSS-DEVICE SYNC)
-      try {
-        console.log(`🔄 CROSS-DEVICE SYNC: Loading crops from database for farmer: ${userProfile.id}`);
-        console.log(`🌐 This will ensure data is available from any device, any session`);
-        
-        const response = await fetch(`/api/crops/farmer/${userProfile.id}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
-
-        console.log(`📡 Database response status: ${response.status}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          const crops = data.data || [];
-          console.log(`✅ DATABASE LOAD SUCCESS: Found ${crops.length} crops in database for farmer ${userProfile.name}`);
-          console.log(`🌐 CROSS-DEVICE SYNC: These crops are available from any device`);
-          console.log(`📊 Database response:`, {
-            success: data.success,
-            count: data.count,
-            persistence: data.persistence
-          });
-          
-          // Save to localStorage for offline access and cross-device sync
-          const userKey = `farmer_${userProfile.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
-          const databaseKey = `farmer_database_${userKey}`;
-          const databaseEntry = {
-            crops: crops,
-            farmerId: userProfile.id,
-            farmerName: userProfile.name,
-            lastUpdated: new Date().toISOString(),
-            totalImages: crops.reduce((total, crop) => total + (crop.images?.length || 0), 0),
-            // Add cross-device sync markers
-            crossDeviceSync: true,
-            databaseSource: true,
-            syncTimestamp: new Date().toISOString()
-          };
-          localStorage.setItem(databaseKey, JSON.stringify(databaseEntry));
-          console.log(`💾 CROSS-DEVICE SYNC: Saved ${crops.length} crops to localStorage for offline access`);
-          console.log(`🔄 Data will be available on any device when farmer logs in`);
-          
-          return crops;
-        } else {
-          const errorData = await response.json();
-          console.log(`⚠️ Database load failed with status ${response.status}:`, errorData);
-          console.log(`🔄 Trying localStorage fallback...`);
+      // ONLY: Load from database (TRUE CROSS-DEVICE SYNC)
+      console.log(`🔄 DATABASE LOAD: Loading crops from database for farmer: ${userProfile.id}`);
+      console.log(`🌐 This will ensure data is available from any device, any session`);
+      
+      const response = await fetch(`/api/crops/farmer/${userProfile.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
-      } catch (error) {
-        console.log(`⚠️ Database error, trying localStorage fallback:`, error);
-        console.log(`🔄 This might be due to network issues or server problems`);
+      });
+      
+      console.log(`📡 Database response status: ${response.status}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        const crops = data.data || [];
+        console.log(`✅ DATABASE LOAD SUCCESS: Found ${crops.length} crops in database for farmer ${userProfile.name}`);
+        console.log(`🌐 TRUE CROSS-DEVICE SYNC: These crops are available from any device`);
+        console.log(`📊 Database response:`, {
+          success: data.success,
+          count: data.count,
+          persistence: data.persistence
+        });
+        
+        // Save to localStorage ONLY for offline access (not as primary source)
+        const userKey = `farmer_${userProfile.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        const databaseKey = `farmer_database_${userKey}`;
+        const databaseEntry = {
+          crops: crops,
+          farmerId: userProfile.id,
+          farmerName: userProfile.name,
+          lastUpdated: new Date().toISOString(),
+          totalImages: crops.reduce((total, crop) => total + (crop.images?.length || 0), 0),
+          crossDeviceSync: true,
+          databaseSource: true,
+          syncTimestamp: new Date().toISOString()
+        };
+        localStorage.setItem(databaseKey, JSON.stringify(databaseEntry));
+        console.log(`💾 OFFLINE CACHE: Saved ${crops.length} crops to localStorage for offline access`);
+        console.log(`🌐 PRIMARY SOURCE: Database is the primary source for cross-device sync`);
+        
+        return crops;
+      } else {
+        const errorData = await response.json();
+        console.log(`⚠️ Database load failed with status ${response.status}:`, errorData);
+        console.log(`❌ NO FALLBACK: Database is required for cross-device sync`);
+        console.log(`🔄 Please check your internet connection and try again`);
+        return [];
       }
 
       // FALLBACK: Try to load from localStorage
@@ -1189,9 +1186,10 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         return migratedCrops;
       }
       
-      return [];
     } catch (error) {
-      console.error('Error loading crops from database:', error);
+      console.error('❌ Database load error:', error);
+      console.log(`❌ NO FALLBACK: Database is required for cross-device sync`);
+      console.log(`🔄 Please check your internet connection and try again`);
       return [];
     }
   };
@@ -1436,13 +1434,14 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       } else {
         // Fallback to localStorage only if database has no data
         console.log(`⚠️ No fresh data from database, trying localStorage fallback`);
-        const savedCrops = await loadCropsFromStorage();
-        setUploadedCrops(savedCrops);
-        console.log(`🌾 CROSS-DEVICE SYNC: Loaded ${savedCrops.length} crops for farmer ${userProfile.name}`);
+        // No fallback - database is required for cross-device sync
+        console.log(`❌ No crops found in database for farmer ${userProfile.name}`);
+        console.log(`🌐 Cross-device sync requires database connection`);
+        setUploadedCrops([]);
       }
       
       // Log each crop to verify user-specific data
-      const currentCrops = freshCrops.length > 0 ? freshCrops : savedCrops;
+      const currentCrops = freshCrops.length > 0 ? freshCrops : [];
       currentCrops.forEach((crop, index) => {
         console.log(`📋 Crop ${index + 1}: ${crop.name} by ${crop.farmerName} (ID: ${crop.farmerId})`);
       });
