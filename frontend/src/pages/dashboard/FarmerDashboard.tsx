@@ -1018,33 +1018,71 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     };
   };
 
-  // Enhanced function to load crops from database - USER SPECIFIC
-  const loadCropsFromStorage = () => {
+  // Enhanced function to load crops from database - USER SPECIFIC with CROSS-DEVICE SYNC
+  const loadCropsFromStorage = async () => {
     try {
       if (!userProfile.id) {
         console.log('❌ No user ID available, returning empty crops');
         return [];
       }
 
-      // Get user key from localStorage or create from user data
-      let userKey = localStorage.getItem('farmer_user_key');
+      console.log(`🔍 Loading crops for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
+      console.log(`🌐 CROSS-DEVICE SYNC: Loading from database first, then localStorage fallback`);
+
+      // FIRST: Try to load from database (CROSS-DEVICE SYNC)
+      try {
+        console.log(`🔄 Loading crops from database for farmer: ${userProfile.id}`);
+        const response = await fetch(`/api/crops/farmer/${userProfile.id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const crops = data.data || [];
+          console.log(`✅ DATABASE LOAD: Found ${crops.length} crops in database for farmer ${userProfile.name}`);
+          console.log(`🌐 CROSS-DEVICE SYNC: These crops are available from any device`);
+          
+          // Save to localStorage for offline access
+          const userKey = `farmer_${userProfile.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
+          const databaseKey = `farmer_database_${userKey}`;
+          const databaseEntry = {
+            crops: crops,
+            farmerId: userProfile.id,
+            farmerName: userProfile.name,
+            lastUpdated: new Date().toISOString(),
+            totalImages: crops.reduce((total, crop) => total + (crop.images?.length || 0), 0)
+          };
+          localStorage.setItem(databaseKey, JSON.stringify(databaseEntry));
+          console.log(`💾 Saved ${crops.length} crops to localStorage for offline access`);
+          
+          return crops;
+        } else {
+          console.log(`⚠️ Database load failed, trying localStorage fallback`);
+        }
+      } catch (error) {
+        console.log(`⚠️ Database error, trying localStorage fallback:`, error);
+      }
+
+      // FALLBACK: Try to load from localStorage
+      const userKey = localStorage.getItem('farmer_user_key');
       if (!userKey) {
         const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
-        userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
-        localStorage.setItem('farmer_user_key', userKey);
+        const newUserKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        localStorage.setItem('farmer_user_key', newUserKey);
+        console.log(`🔑 Created new user key: ${newUserKey}`);
       }
       
-      console.log(`🔍 Loading crops for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
-      console.log(`🔍 User key: ${userKey}`);
-
-      // Try to load from new database structure first
-      const databaseKey = `farmer_database_${userKey}`;
-      console.log(`🔍 Looking for database key: ${databaseKey}`);
+      const databaseKey = `farmer_database_${userKey || `farmer_${userProfile.id.replace(/[^a-zA-Z0-9]/g, '_')}`}`;
+      console.log(`🔍 Looking for localStorage key: ${databaseKey}`);
       
       const databaseEntry = localStorage.getItem(databaseKey);
       if (databaseEntry) {
         const parsed = JSON.parse(databaseEntry);
-        console.log(`✅ Loaded database for farmer ${userProfile.name}:`, {
+        console.log(`✅ LOCALSTORAGE LOAD: Found database for farmer ${userProfile.name}:`, {
           totalCrops: parsed.crops?.length || 0,
           totalImages: parsed.totalImages || 0,
           lastUpdated: parsed.lastUpdated,
@@ -1055,15 +1093,6 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         // Double check that crops belong to this farmer
         const userCrops = parsed.crops?.filter(crop => crop.farmerId === userProfile.id) || [];
         console.log(`🌾 Filtered crops for ${userProfile.name}: ${userCrops.length} crops`);
-        
-        // Debug: Show all crops in database
-        if (parsed.crops) {
-          console.log(`🔍 All crops in database:`, parsed.crops.map(crop => ({
-            name: crop.name,
-            farmerId: crop.farmerId,
-            farmerName: crop.farmerName
-          })));
-        }
         
         return userCrops;
       } else {
@@ -1243,9 +1272,10 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     }
   }, []);
   
-  // Load crops from storage when component mounts - USER SPECIFIC with PERSISTENCE
+  // Load crops from storage when component mounts - USER SPECIFIC with CROSS-DEVICE SYNC
   useEffect(() => {
-    if (userProfile.id) {
+    const loadCrops = async () => {
+      if (userProfile.id) {
       // Get user key from localStorage or create from user data
       let userKey = localStorage.getItem('farmer_user_key');
       if (!userKey) {
@@ -1277,9 +1307,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         console.log(`📊 Showing zero state: 0 crops, 0 earnings, 0 land`);
       }
       
-      const savedCrops = loadCropsFromStorage();
+      const savedCrops = await loadCropsFromStorage();
       setUploadedCrops(savedCrops);
-      console.log(`🌾 Loaded ${savedCrops.length} crops for farmer ${userProfile.name}`);
+      console.log(`🌾 CROSS-DEVICE SYNC: Loaded ${savedCrops.length} crops for farmer ${userProfile.name}`);
       
       // Log each crop to verify user-specific data
       savedCrops.forEach((crop, index) => {
@@ -1300,7 +1330,10 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       
       // Validate user data integrity
       validateUserData();
-    }
+      }
+    };
+    
+    loadCrops();
   }, [userProfile.id, userProfile.name]);
 
   // Calculate real-time statistics from uploaded crops
