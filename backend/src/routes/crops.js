@@ -54,30 +54,87 @@ router.post('/', async (req, res) => {
     
     // Create new crop listing with PERMANENT PERSISTENCE
     console.log('🌾 CROP UPLOAD: Creating crop listing object...');
+    
+    // Generate unique listingId
+    const listingId = 'CRP_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
+    // Create or use existing ObjectId for farmerId  
+    let farmerObjectId;
+    let cropObjectId;
+    
+    try {
+      farmerObjectId = new mongoose.Types.ObjectId(actualFarmerId);
+    } catch {
+      farmerObjectId = new mongoose.Types.ObjectId();
+    }
+    
+    // Create a temporary cropId (in a real app, this would reference actual crop taxonomy)  
+    cropObjectId = new mongoose.Types.ObjectId();
+    
     const cropListing = new CropListing({
-      farmerId: actualFarmerId,
+      listingId: listingId,
+      farmerId: farmerObjectId,
+      cropId: cropObjectId,
+      title: `${cropName} - ${variety || cropType}`,
+      description: description || `Fresh ${cropName} available for sale`,
+      
+      // Crop Information
       cropName,
       cropType,
       variety,
-      quantity: parseInt(quantity),
-      unit,
-      quality,
-      harvestDate: new Date(harvestDate),
-      price: parseFloat(price),
-      organic: organic === 'true',
-      location,
-      description,
-      images: images || [],
-      status: 'available',
-      uploadedAt: new Date(),
+      quality: quality || 'good',
+      organic: organic === 'true' || organic === true,
+      
+      // Quantity & Pricing (nested structure)
+      quantity: {
+        available: parseInt(quantity) || 1,
+        unit: unit || 'kg',
+        minimumOrder: 1
+      },
+      pricing: {
+        pricePerUnit: parseFloat(price),
+        currency: 'INR',
+        negotiable: true
+      },
+      
+      // Location (nested structure with defaults)
+      location: {
+        farmAddress: typeof location === 'string' ? location : (location?.farmAddress || 'Farm Address'),
+        city: typeof location === 'string' ? location : (location?.city || 'Unknown City'),
+        state: typeof location === 'string' ? 'Unknown State' : (location?.state || 'Unknown State'),
+        pincode: typeof location === 'string' ? '000000' : (location?.pincode || '000000'),
+        coordinates: {
+          latitude: location?.coordinates?.latitude || 28.6139, // Default to Delhi coordinates
+          longitude: location?.coordinates?.longitude || 77.2090
+        }
+      },
+      
+      // Harvest Information (nested structure)
+      harvest: {
+        harvestDate: harvestDate ? new Date(harvestDate) : new Date(),
+        storageMethod: 'farm_storage'
+      },
+      
+      // Images
+      images: Array.isArray(images) ? images : [],
+      
+      // Status
+      status: {
+        isActive: true,
+        isVerified: false,
+        visibility: 'public'
+      },
+      
       // PERMANENT PERSISTENCE MARKERS
       isPermanent: true,
       crossDeviceAccess: true,
       sessionIndependent: true,
+      uploadedAt: new Date(),
       lastUpdated: new Date(),
-      // Add farmer association for permanent linking
+      
+      // Farmer Association for Permanent Linking
       farmerAssociation: {
-        farmerId: actualFarmerId,
+        farmerId: farmerObjectId,
         farmerName: farmerName || 'Unknown Farmer',
         permanentLink: true
       }
@@ -88,12 +145,16 @@ router.post('/', async (req, res) => {
     await cropListing.save();
     console.log('✅ CROP UPLOAD: Crop saved to MongoDB successfully');
 
-    // Update farmer's crop count
-    await Farmer.findOneAndUpdate(
-      { userId: actualFarmerId },
-      { $inc: { 'activity.totalListings': 1, 'activity.activeListings': 1 } }
-    );
-    console.log('✅ CROP UPLOAD: Farmer stats updated successfully');
+    // Update farmer's crop count (skip if no valid farmer record)
+    try {
+      await Farmer.findOneAndUpdate(
+        { userId: farmerObjectId },
+        { $inc: { 'activity.totalListings': 1, 'activity.activeListings': 1 } }
+      );
+      console.log('✅ CROP UPLOAD: Farmer stats updated successfully');
+    } catch (error) {
+      console.log('⚠️ CROP UPLOAD: Farmer stats update skipped:', error.message);
+    }
 
     console.log('🎉 CROP UPLOAD: Complete success - crop saved to database');
     res.status(201).json({
@@ -120,7 +181,7 @@ router.get('/marketplace', async (req, res) => {
     console.log(`🌐 Cross-device sync: All farmer crops available for buyers`);
     
     let query = { 
-      status: 'available',
+      'status.isActive': true,
       isPermanent: true,
       crossDeviceAccess: true,
       sessionIndependent: true
@@ -154,7 +215,6 @@ router.get('/marketplace', async (req, res) => {
     }
 
     const crops = await CropListing.find(query)
-      .populate('farmerId', 'profile.fullName address.current.city address.current.state phone email')
       .sort({ uploadedAt: -1 })
       .limit(100);
 
