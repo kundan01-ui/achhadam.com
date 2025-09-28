@@ -1391,7 +1391,10 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   // Manual sync buttons removed - crops are saved to database immediately
   console.log('✅ ARCHITECTURE: Manual sync removed - using automatic database save only');
 
-  // Force refresh data from database on login - CROSS-DEVICE SYNC
+  // NO MANUAL REFRESH - AUTOMATIC DATABASE LOAD ONLY
+  // Manual refresh functions removed - crops are loaded from database automatically
+  console.log('✅ ARCHITECTURE: Manual refresh removed - using automatic database load only');
+  
   const forceRefreshFromDatabase = async () => {
     try {
       // Use actual user ID from authentication, not generated ID
@@ -1496,12 +1499,10 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         console.log(`📊 Showing zero state: 0 crops, 0 earnings, 0 land`);
       }
       
-      // ALWAYS try to force refresh from database first for cross-device sync
-      console.log(`🌐 CROSS-DEVICE SYNC: Always loading fresh data from database first`);
-      const freshCrops = await forceRefreshFromDatabase();
-      if (freshCrops.length > 0) {
-        console.log(`🌾 CROSS-DEVICE SYNC: Loaded ${freshCrops.length} fresh crops from database`);
-        setUploadedCrops(freshCrops);
+      // NO MANUAL REFRESH - AUTOMATIC DATABASE LOAD ONLY
+      console.log(`✅ ARCHITECTURE: Automatic database load - no manual refresh needed`);
+      // Crops will be loaded automatically from database
+      setUploadedCrops([]);
         console.log(`🌐 These crops are now available on this device`);
       } else {
         // Fallback to localStorage only if database has no data
@@ -3260,12 +3261,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             <p className="text-sm text-gray-600">Your crops are synced across all devices</p>
           </div>
           <div className="mt-2 sm:mt-0 flex flex-col sm:flex-row gap-2">
-            <button
-              onClick={handleManualRefresh}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-            >
-              🔄 Refresh Data
-            </button>
+            {/* Manual refresh button removed - using automatic database save only */}
             {/* SyncButton removed - using automatic database save only */}
             {/* ImmediateSyncButton removed - using automatic database save only */}
           </div>
