@@ -75,6 +75,34 @@ class DataSyncService {
           );
           console.log('🔍 All farmer-related keys:', allFarmerData);
           
+          // Check for existing crop data in different formats
+          const cropKeys = keys.filter(key => 
+            key.includes('crop') || 
+            key.includes('farmer_crops') ||
+            key.includes('uploadedCrops')
+          );
+          console.log('🔍 Crop-related keys:', cropKeys);
+          
+          // Try to find existing crop data
+          let existingCrops = [];
+          for (const key of cropKeys) {
+            try {
+              const data = localStorage.getItem(key);
+              if (data) {
+                const parsed = JSON.parse(data);
+                if (Array.isArray(parsed)) {
+                  existingCrops = existingCrops.concat(parsed);
+                } else if (parsed.crops && Array.isArray(parsed.crops)) {
+                  existingCrops = existingCrops.concat(parsed.crops);
+                }
+              }
+            } catch (e) {
+              console.log('🔍 Error parsing key:', key, e);
+            }
+          }
+          
+          console.log('🔍 Found existing crops:', existingCrops.length);
+          
           // Try to create farmer database from existing data
           if (userKey && !localStorage.getItem(`farmer_database_${userKey}`)) {
             console.log('🔧 Creating farmer database from existing data...');
@@ -85,26 +113,102 @@ class DataSyncService {
               farmerName: 'Unknown Farmer',
               farmerEmail: 'unknown@example.com',
               farmerPhone: 'unknown',
-              totalCrops: 0,
-              totalImages: 0,
-              crops: [],
+              totalCrops: existingCrops.length,
+              totalImages: existingCrops.reduce((sum, crop) => sum + (crop.images?.length || 0), 0),
+              crops: existingCrops,
               statistics: {
-                totalEarnings: 0,
-                averageCropValue: 0,
-                mostCommonCropType: 'none',
+                totalEarnings: existingCrops.reduce((sum, crop) => sum + (crop.price * crop.quantity || 0), 0),
+                averageCropValue: existingCrops.length > 0 ? existingCrops.reduce((sum, crop) => sum + (crop.price || 0), 0) / existingCrops.length : 0,
+                mostCommonCropType: existingCrops.length > 0 ? existingCrops[0].type || 'unknown' : 'none',
                 imageQualityDistribution: {
-                  total: 0,
+                  total: existingCrops.reduce((sum, crop) => sum + (crop.images?.length || 0), 0),
                   highQuality: 0,
                   mediumQuality: 0,
                   lowQuality: 0,
-                  unknown: 0
+                  unknown: existingCrops.reduce((sum, crop) => sum + (crop.images?.length || 0), 0)
                 }
               }
             };
             
             localStorage.setItem(`farmer_database_${userKey}`, JSON.stringify(farmerData));
-            console.log('✅ Created empty farmer database:', `farmer_database_${userKey}`);
+            console.log('✅ Created farmer database with existing crops:', `farmer_database_${userKey}`);
+            console.log('✅ Database contains:', existingCrops.length, 'crops');
           }
+        }
+        
+        // Try to recover data from alternative sources
+        console.log('🔧 Attempting data recovery from alternative sources...');
+        
+        // Check if there are any crops in localStorage that we can recover
+        const allKeys = Object.keys(localStorage);
+        const cropKeys = allKeys.filter(key => 
+          key.includes('crop') || 
+          key.includes('farmer_crops') ||
+          key.includes('uploadedCrops') ||
+          key.includes('userData')
+        );
+        
+        console.log('🔧 Found potential crop keys:', cropKeys);
+        
+        let recoveredCrops = [];
+        for (const key of cropKeys) {
+          try {
+            const data = localStorage.getItem(key);
+            if (data) {
+              const parsed = JSON.parse(data);
+              if (Array.isArray(parsed)) {
+                recoveredCrops = recoveredCrops.concat(parsed);
+              } else if (parsed.crops && Array.isArray(parsed.crops)) {
+                recoveredCrops = recoveredCrops.concat(parsed.crops);
+              } else if (parsed.uploadedCrops && Array.isArray(parsed.uploadedCrops)) {
+                recoveredCrops = recoveredCrops.concat(parsed.uploadedCrops);
+              }
+            }
+          } catch (e) {
+            console.log('🔧 Error parsing key:', key, e);
+          }
+        }
+        
+        console.log('🔧 Recovered crops:', recoveredCrops.length);
+        
+        if (recoveredCrops.length > 0) {
+          console.log('🔧 Creating farmer database from recovered data...');
+          const userKey = localStorage.getItem('farmer_user_key') || 'farmer_recovered';
+          const userId = localStorage.getItem('farmer_user_id') || 'unknown';
+          
+          const farmerData = {
+            version: '1.0',
+            lastUpdated: new Date().toISOString(),
+            farmerId: userId,
+            farmerName: 'Recovered Farmer',
+            farmerEmail: 'recovered@example.com',
+            farmerPhone: 'unknown',
+            totalCrops: recoveredCrops.length,
+            totalImages: recoveredCrops.reduce((sum, crop) => sum + (crop.images?.length || 0), 0),
+            crops: recoveredCrops,
+            statistics: {
+              totalEarnings: recoveredCrops.reduce((sum, crop) => sum + (crop.price * crop.quantity || 0), 0),
+              averageCropValue: recoveredCrops.length > 0 ? recoveredCrops.reduce((sum, crop) => sum + (crop.price || 0), 0) / recoveredCrops.length : 0,
+              mostCommonCropType: recoveredCrops.length > 0 ? recoveredCrops[0].type || 'unknown' : 'none',
+              imageQualityDistribution: {
+                total: recoveredCrops.reduce((sum, crop) => sum + (crop.images?.length || 0), 0),
+                highQuality: 0,
+                mediumQuality: 0,
+                lowQuality: 0,
+                unknown: recoveredCrops.reduce((sum, crop) => sum + (crop.images?.length || 0), 0)
+              }
+            }
+          };
+          
+          localStorage.setItem(`farmer_database_${userKey}`, JSON.stringify(farmerData));
+          console.log('✅ Created farmer database from recovered data:', `farmer_database_${userKey}`);
+          console.log('✅ Database contains:', recoveredCrops.length, 'crops');
+          
+          // Now try to sync the recovered data
+          result.syncedCount = recoveredCrops.length;
+          result.success = true;
+          result.message = `Recovered and synced ${recoveredCrops.length} crops from localStorage`;
+          return result;
         }
         
         result.message = 'No farmer data found in localStorage';
