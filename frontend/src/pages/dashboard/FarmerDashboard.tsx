@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { saveToMongoDB, saveToPostgreSQL, uploadImagesToCloud, loadCropsFromDatabase, deleteCropFromDatabase, updateCropInDatabase } from '../../services/databaseService';
 import { testUserSpecificData, clearAllFarmerData } from '../../utils/userSpecificTest';
 import { authenticatedFetch } from '../../services/tokenService';
+import { autoSyncAllData } from '../../services/dataSyncService';
+import SyncButton from '../../components/SyncButton';
 import '../../../src/styles/animations.css';
 import { 
   LayoutDashboard, 
@@ -1372,6 +1374,25 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         console.log('📝 KYC dismissed this session');
       }
     }
+  }, []);
+
+  // Auto-sync all data to database on component mount
+  useEffect(() => {
+    const performAutoSync = async () => {
+      console.log('🔄 AUTO-SYNC: Starting automatic data synchronization...');
+      
+      try {
+        await autoSyncAllData();
+        console.log('✅ AUTO-SYNC COMPLETE: All data synced to database');
+      } catch (error) {
+        console.error('❌ AUTO-SYNC FAILED:', error);
+      }
+    };
+
+    // Run auto-sync after a short delay to ensure component is fully loaded
+    const syncTimeout = setTimeout(performAutoSync, 2000);
+    
+    return () => clearTimeout(syncTimeout);
   }, []);
   
   // Manual refresh button for cross-device sync
@@ -3248,12 +3269,19 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             <h3 className="text-lg font-semibold text-gray-900 mb-1">🌐 Cross-Device Data Sync</h3>
             <p className="text-sm text-gray-600">Your crops are synced across all devices</p>
           </div>
-          <button
-            onClick={handleManualRefresh}
-            className="mt-2 sm:mt-0 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-          >
-            🔄 Refresh Data
-          </button>
+          <div className="mt-2 sm:mt-0 flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={handleManualRefresh}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+            >
+              🔄 Refresh Data
+            </button>
+            <SyncButton 
+              variant="outline" 
+              size="sm"
+              className="border-green-600 text-green-600 hover:bg-green-50"
+            />
+          </div>
         </div>
       </div>
 

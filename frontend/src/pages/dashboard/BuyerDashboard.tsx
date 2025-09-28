@@ -8,6 +8,7 @@ import ContractsPage from './ContractsPage';
 import ProfileModal from '../../components/ui/ProfileModal';
 import ChatModal from '../../components/ui/ChatModal';
 import { authenticatedFetch } from '../../services/tokenService';
+import { autoSyncAllData } from '../../services/dataSyncService';
 import { 
   loadAllFarmerCrops, 
   filterCropsByCategory, 
@@ -175,6 +176,25 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       console.log(`🔑 Buyer user key: ${buyerKey}`);
     }
   }, [user]);
+
+  // Auto-sync all data to database on component mount
+  useEffect(() => {
+    const performAutoSync = async () => {
+      console.log('🔄 AUTO-SYNC: Starting automatic data synchronization...');
+      
+      try {
+        await autoSyncAllData();
+        console.log('✅ AUTO-SYNC COMPLETE: All data synced to database');
+      } catch (error) {
+        console.error('❌ AUTO-SYNC FAILED:', error);
+      }
+    };
+
+    // Run auto-sync after a short delay to ensure component is fully loaded
+    const syncTimeout = setTimeout(performAutoSync, 2000);
+    
+    return () => clearTimeout(syncTimeout);
+  }, []);
   
   // Marketplace states
   const [marketplaceCrops, setMarketplaceCrops] = useState<MarketplaceCrop[]>([]);
