@@ -13,10 +13,10 @@ const AboutPage: React.FC<AboutPageProps> = ({ onBackToHome }) => {
   const { t } = useLanguage();
 
   const stats = [
-    { value: '10,000+', label: 'Farmers', icon: Leaf, color: 'text-green-600', bgColor: 'bg-green-100' },
-    { value: '5,000+', label: 'Buyers', icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-100' },
-    { value: '2,000+', label: 'Transporters', icon: Truck, color: 'text-orange-600', bgColor: 'bg-orange-100' },
-    { value: '₹50Cr+', label: 'Trade Volume', icon: TrendingUp, color: 'text-purple-600', bgColor: 'bg-purple-100' }
+    { value: '100+', label: 'Farmers', icon: Leaf, color: 'text-green-600', bgColor: 'bg-green-100' },
+    { value: '50+', label: 'Buyers', icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+    { value: '20+', label: 'Transporters', icon: Truck, color: 'text-orange-600', bgColor: 'bg-orange-100' },
+    { value: '₹1000+', label: 'Trade Volume', icon: TrendingUp, color: 'text-purple-600', bgColor: 'bg-purple-100' }
   ];
 
   const values = [
@@ -52,19 +52,19 @@ const AboutPage: React.FC<AboutPageProps> = ({ onBackToHome }) => {
 
   const team = [
     {
-      name: 'Rajesh Kumar',
+      name: 'Sham Haribhau Pawar',
       role: 'Founder & CEO',
       avatar: '🌾',
       description: 'Former farmer turned tech entrepreneur with 15+ years in agriculture'
     },
     {
-      name: 'Priya Sharma',
+      name: 'Kundan Pal',
       role: 'CTO',
       avatar: '💻',
       description: 'Tech leader with expertise in building scalable digital platforms'
     },
     {
-      name: 'Amit Patel',
+      name: 'Dipak Pawar & Maroti Shewale',
       role: 'Head of Operations',
       avatar: '🚛',
       description: 'Logistics expert with deep understanding of supply chain management'
@@ -73,27 +73,27 @@ const AboutPage: React.FC<AboutPageProps> = ({ onBackToHome }) => {
 
   const milestones = [
     {
-      year: '2020',
+      year: '2025 JUN',
       title: 'Foundation',
       description: 'ACHHADAM was founded with a vision to digitize Indian agriculture'
     },
     {
-      year: '2021',
+      year: '2025 JULY',
       title: 'First 1000 Farmers',
-      description: 'Reached our first milestone of 1000 registered farmers'
+      description: 'Reached our first milestone of 100 registered farmers'
     },
     {
-      year: '2022',
+      year: '2025 AUGUST',
       title: 'Market Launch',
       description: 'Launched our digital marketplace connecting farmers and buyers'
     },
     {
-      year: '2023',
+      year: '2025 SEPT',
       title: 'Expansion',
-      description: 'Expanded to 15 states across India with 10,000+ farmers'
+      description: 'Expanded to states across India with 10,000+ farmers'
     },
     {
-      year: '2024',
+      year: '2025 OCT',
       title: 'Innovation',
       description: 'Introduced AI-powered crop advisory and weather forecasting'
     }
