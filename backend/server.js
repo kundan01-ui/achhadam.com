@@ -5,7 +5,8 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const session = require('express-session');
 const mongoose = require('mongoose');
-const { Pool } = require('pg');
+// PostgreSQL connection (optional - only if needed)
+// const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -106,20 +107,20 @@ async function connectMongoDB() {
   }
 }
 
-// PostgreSQL Connection
+// PostgreSQL Connection (commented out for now - using MongoDB only)
 async function connectPostgreSQL() {
   try {
-    const postgresURI = process.env.POSTGRES_URI || 'postgresql://neondb_owner:npg_Ozpa3sFKwS0d@ep-jolly-mode-a156f3rx-pooler.ap-southeast-1.aws.neon.tech/krishi1?sslmode=require&channel_binding=require';
-    postgresConnection = new Pool({
-      connectionString: postgresURI,
-      ssl: { rejectUnauthorized: false }
-    });
+    // const postgresURI = process.env.POSTGRES_URI || 'postgresql://neondb_owner:npg_Ozpa3sFKwS0d@ep-jolly-mode-a156f3rx-pooler.ap-southeast-1.aws.neon.tech/krishi1?sslmode=require&channel_binding=require';
+    // postgresConnection = new Pool({
+    //   connectionString: postgresURI,
+    //   ssl: { rejectUnauthorized: false }
+    // });
     
-    // Test connection
-    const client = await postgresConnection.connect();
-    await client.query('SELECT NOW()');
-    client.release();
-    console.log('✅ PostgreSQL (Neon) connected successfully!');
+    // Test connection (commented out)
+    // const client = await postgresConnection.connect();
+    // await client.query('SELECT NOW()');
+    // client.release();
+    console.log('✅ PostgreSQL connection skipped (using MongoDB only)');
   } catch (error) {
     console.error('❌ PostgreSQL connection failed:', error.message);
   }
