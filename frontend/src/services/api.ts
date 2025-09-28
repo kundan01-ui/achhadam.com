@@ -118,17 +118,19 @@ class ApiService {
       
       config.signal = controller.signal;
       
-      // Check if timer already exists to prevent conflicts
-      const timerKey = `API Request: ${endpoint}`;
-      if (console.time && console.timeEnd) {
-        // Clear any existing timer first
-        try {
-          console.timeEnd(timerKey);
-        } catch (e) {
-          // Timer doesn't exist, that's fine
-        }
-        console.time(timerKey);
+    // Check if timer already exists to prevent conflicts
+    const timerKey = `API Request: ${endpoint}`;
+    if (console.time && console.timeEnd) {
+      // Clear any existing timer first
+      try {
+        console.timeEnd(timerKey);
+      } catch (e) {
+        // Timer doesn't exist, that's fine
       }
+      // Add small delay to prevent timer conflicts
+      await new Promise(resolve => setTimeout(resolve, 10));
+      console.time(timerKey);
+    }
       
       const response = await fetch(url, config);
       
