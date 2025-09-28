@@ -1,4 +1,4 @@
-const CookiePreference = require('../models/CookiePreference');
+// const CookiePreference = require('../models/CookiePreference');
 const { v4: uuidv4 } = require('uuid');
 
 /**
