@@ -25,7 +25,7 @@ export default defineConfig({
     // CORS proxy configuration for development - pointing to local backend
     proxy: {
       '/api': {
-        target: 'http://localhost:10000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {

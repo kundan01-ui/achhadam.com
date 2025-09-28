@@ -18,7 +18,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 8000;
 
 // Rate limiting
 const limiter = rateLimit({
