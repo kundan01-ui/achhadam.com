@@ -41,11 +41,72 @@ class DataSyncService {
     try {
       // Get all localStorage keys
       const keys = Object.keys(localStorage);
+      console.log('🔍 All localStorage keys:', keys);
+      
       const farmerKeys = keys.filter(key => key.startsWith('farmer_database_'));
+      console.log('🔍 Farmer database keys found:', farmerKeys);
+      
+      // Also check for other possible farmer data keys
+      const alternativeKeys = keys.filter(key => 
+        key.includes('farmer') && 
+        (key.includes('crop') || key.includes('database') || key.includes('data'))
+      );
+      console.log('🔍 Alternative farmer keys:', alternativeKeys);
       
       console.log(`🔍 Found ${farmerKeys.length} farmer databases to sync`);
       
       if (farmerKeys.length === 0) {
+        console.log('⚠️ No farmer_database_ keys found!');
+        console.log('🔍 Checking for alternative farmer data...');
+        
+        // Try to find farmer data in other formats
+        const userKey = localStorage.getItem('farmer_user_key');
+        const userId = localStorage.getItem('farmer_user_id');
+        console.log('🔍 User key:', userKey);
+        console.log('🔍 User ID:', userId);
+        
+        if (userKey || userId) {
+          console.log('🔍 Found user identifiers, checking for data...');
+          // Check if there's any farmer data stored differently
+          const allFarmerData = keys.filter(key => 
+            key.includes('farmer') || 
+            key.includes('crop') ||
+            key.includes('database')
+          );
+          console.log('🔍 All farmer-related keys:', allFarmerData);
+          
+          // Try to create farmer database from existing data
+          if (userKey && !localStorage.getItem(`farmer_database_${userKey}`)) {
+            console.log('🔧 Creating farmer database from existing data...');
+            const farmerData = {
+              version: '1.0',
+              lastUpdated: new Date().toISOString(),
+              farmerId: userId || 'unknown',
+              farmerName: 'Unknown Farmer',
+              farmerEmail: 'unknown@example.com',
+              farmerPhone: 'unknown',
+              totalCrops: 0,
+              totalImages: 0,
+              crops: [],
+              statistics: {
+                totalEarnings: 0,
+                averageCropValue: 0,
+                mostCommonCropType: 'none',
+                imageQualityDistribution: {
+                  total: 0,
+                  highQuality: 0,
+                  mediumQuality: 0,
+                  lowQuality: 0,
+                  unknown: 0
+                }
+              }
+            };
+            
+            localStorage.setItem(`farmer_database_${userKey}`, JSON.stringify(farmerData));
+            console.log('✅ Created empty farmer database:', `farmer_database_${userKey}`);
+          }
+        }
+        
         result.message = 'No farmer data found in localStorage';
         return result;
       }
