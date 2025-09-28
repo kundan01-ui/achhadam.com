@@ -227,7 +227,9 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     const loadCartData = async () => {
       try {
         // Load cart from database first (PERMANENT DATA)
-        const cartResponse = await fetch(`/api/cart/buyer/${userProfile?.id || user?.id}`, {
+        const actualBuyerId = user?._id || user?.id || userProfile?.id;
+        console.log(`🔑 Using actual buyer ID: ${actualBuyerId} (not generated ID: ${userProfile?.id})`);
+        const cartResponse = await fetch(`/api/cart/buyer/${actualBuyerId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -312,7 +314,9 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     const loadBuyerData = async () => {
       try {
         // Load orders from database first (PERMANENT DATA)
-        const ordersResponse = await fetch(`/api/orders/buyer/${userProfile?.id || user?.id}`, {
+        const actualBuyerId = user?._id || user?.id || userProfile?.id;
+        console.log(`🔑 Using actual buyer ID: ${actualBuyerId} (not generated ID: ${userProfile?.id})`);
+        const ordersResponse = await fetch(`/api/orders/buyer/${actualBuyerId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -635,13 +639,25 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
           });
 
           if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to save order to database');
+            let errorMessage = `HTTP ${response.status}`;
+            try {
+              const errorData = await response.json();
+              errorMessage = errorData.message || errorMessage;
+            } catch (jsonError) {
+              console.log(`⚠️ Order save failed with status ${response.status}: ${errorMessage}`);
+            }
+            throw new Error(errorMessage);
           }
 
-          const result = await response.json();
-          console.log(`✅ PERMANENT: Order saved to database: ${order.id}`);
-          console.log(`🌐 This order will be available on any device when buyer logs in`);
+          // Handle JSON parsing safely
+          try {
+            const result = await response.json();
+            console.log(`✅ PERMANENT: Order saved to database: ${order.id}`);
+            console.log(`🌐 This order will be available on any device when buyer logs in`);
+          } catch (jsonError) {
+            console.log(`✅ PERMANENT: Order saved to database: ${order.id} (No JSON response)`);
+            console.log(`🌐 This order will be available on any device when buyer logs in`);
+          }
         } catch (error) {
           console.error(`❌ Error saving order ${order.id}:`, error);
         }
@@ -686,13 +702,25 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save cart to database');
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (jsonError) {
+          console.log(`⚠️ Cart save failed with status ${response.status}: ${errorMessage}`);
+        }
+        throw new Error(errorMessage);
       }
 
-      const result = await response.json();
-      console.log(`✅ PERMANENT: Cart saved to database`);
-      console.log(`🌐 This cart will be available on any device when buyer logs in`);
+      // Handle JSON parsing safely
+      try {
+        const result = await response.json();
+        console.log(`✅ PERMANENT: Cart saved to database`);
+        console.log(`🌐 This cart will be available on any device when buyer logs in`);
+      } catch (jsonError) {
+        console.log(`✅ PERMANENT: Cart saved to database (No JSON response)`);
+        console.log(`🌐 This cart will be available on any device when buyer logs in`);
+      }
       
     } catch (error) {
       console.error('❌ Error saving cart to database:', error);
