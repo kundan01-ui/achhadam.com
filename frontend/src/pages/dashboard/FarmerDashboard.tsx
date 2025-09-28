@@ -1051,10 +1051,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       console.log(`📱 This ensures mobile crops show on desktop and vice versa`);
 
       // ONLY: Load from database (TRUE CROSS-DEVICE SYNC)
-      console.log(`🔄 DATABASE LOAD: Loading crops from database for farmer: ${userProfile.id}`);
+      // Use actual user ID from authentication, not generated ID
+      const actualUserId = user?.id || userProfile.id;
+      console.log(`🔑 Using actual user ID: ${actualUserId} (not generated ID: ${userProfile.id})`);
+      console.log(`🔄 DATABASE LOAD: Loading crops from database for farmer: ${actualUserId}`);
       console.log(`🌐 This will ensure data is available from any device, any session`);
       
-      const response = await fetch(`/api/crops/farmer/${userProfile.id}`, {
+      const response = await fetch(`/api/crops/farmer/${actualUserId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -1094,8 +1097,15 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         
         return crops;
       } else {
-        const errorData = await response.json();
-        console.log(`⚠️ Database load failed with status ${response.status}:`, errorData);
+        // Handle non-JSON error responses
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.log(`⚠️ Database load failed with status ${response.status}:`, errorData);
+        } catch (jsonError) {
+          console.log(`⚠️ Database load failed with status ${response.status}: ${errorMessage}`);
+        }
         console.log(`❌ NO FALLBACK: Database is required for cross-device sync`);
         console.log(`🔄 Please check your internet connection and try again`);
         return [];
@@ -1329,11 +1339,14 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   // Force refresh data from database on login - CROSS-DEVICE SYNC
   const forceRefreshFromDatabase = async () => {
     try {
-      console.log(`🔄 FORCE REFRESH: Loading fresh data from database for farmer: ${userProfile.id}`);
+      // Use actual user ID from authentication, not generated ID
+      const actualUserId = user?.id || userProfile.id;
+      console.log(`🔑 Using actual user ID: ${actualUserId} (not generated ID: ${userProfile.id})`);
+      console.log(`🔄 FORCE REFRESH: Loading fresh data from database for farmer: ${actualUserId}`);
       console.log(`🌐 This ensures latest data is loaded from any device`);
       console.log(`📱 Cross-device sync: Mobile crops will be available on desktop and vice versa`);
       
-      const response = await fetch(`/api/crops/farmer/${userProfile.id}`, {
+      const response = await fetch(`/api/crops/farmer/${actualUserId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -1377,8 +1390,15 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         console.log(`🌐 Cross-device sync successful - crops available on all devices`);
         return crops;
       } else {
-        const errorData = await response.json();
-        console.log(`⚠️ Force refresh failed with status ${response.status}:`, errorData);
+        // Handle non-JSON error responses
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.log(`⚠️ Force refresh failed with status ${response.status}:`, errorData);
+        } catch (jsonError) {
+          console.log(`⚠️ Force refresh failed with status ${response.status}: ${errorMessage}`);
+        }
         console.log(`🔄 Will try localStorage fallback`);
         return [];
       }
