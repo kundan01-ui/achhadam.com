@@ -67,13 +67,30 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
   try {
     console.log('🌾 Saving crop to MongoDB:', cropData);
     
+    // Validate required fields
+    if (!cropData.name || !cropData.type || !cropData.price) {
+      throw new Error('Missing required crop data: name, type, or price');
+    }
+    
+    // Add farmer ID to crop data
+    const farmerId = localStorage.getItem('farmer_user_id') || 'unknown';
+    const enrichedCropData = {
+      ...cropData,
+      farmerId: farmerId,
+      uploadedAt: new Date().toISOString(),
+      status: 'available',
+      isPermanent: true,
+      crossDeviceAccess: true,
+      sessionIndependent: true
+    };
+    
     const response = await fetch('https://acchadam1-backend.onrender.com/api/crops', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       },
-      body: JSON.stringify(cropData)
+      body: JSON.stringify(enrichedCropData)
     });
     
     if (!response.ok) {

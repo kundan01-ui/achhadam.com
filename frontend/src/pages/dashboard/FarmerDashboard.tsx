@@ -600,7 +600,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       const mongoResult = await saveToMongoDB(cropData);
       if (!mongoResult.success) {
         console.warn('MongoDB save failed:', mongoResult.error);
+        console.log('🔄 Will continue with localStorage backup');
         // Continue with PostgreSQL even if MongoDB fails
+      } else {
+        console.log('✅ MongoDB save successful:', mongoResult.data);
+        console.log('🌐 Crop is now available across all devices');
       }
       
       // Step 3: Save to PostgreSQL
@@ -643,6 +647,16 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         localStorage: true,
         cloudStorage: imageUploadResult.success
       });
+      
+      // Verify database save
+      if (mongoResult.success) {
+        console.log('🎉 DATABASE SYNC SUCCESS: Crop is permanently stored');
+        console.log('🌐 This crop will be available on any device when farmer logs in');
+        console.log('📱 Cross-device sync: Mobile crops → Desktop visible');
+      } else {
+        console.log('⚠️ DATABASE SYNC FAILED: Using localStorage only');
+        console.log('🔄 Crop will only be available on this device');
+      }
       
       return { 
         success: true, 
@@ -1065,11 +1079,25 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       console.log(`🔄 DATABASE LOAD: Loading crops from database for farmer: ${actualUserId}`);
       console.log(`🌐 This will ensure data is available from any device, any session`);
       
+      const authToken = localStorage.getItem('authToken');
+      console.log(`🔑 Auth token check:`, { 
+        hasToken: !!authToken, 
+        tokenLength: authToken?.length || 0,
+        tokenStart: authToken?.substring(0, 20) + '...' || 'No token'
+      });
+      
+      // If no token, try to get fresh token
+      if (!authToken) {
+        console.log(`❌ No auth token found, cannot access database`);
+        console.log(`🔄 Falling back to localStorage`);
+        return [];
+      }
+      
       const response = await fetch(`https://acchadam1-backend.onrender.com/api/crops/farmer/${actualUserId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       
@@ -1117,7 +1145,30 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         console.log(`❌ Database failed, falling back to localStorage`);
         console.log(`🔄 Loading from localStorage for offline access`);
         // Fallback to localStorage when database fails
-        return await loadCropsFromStorage();
+        // Load from localStorage fallback
+        const userKey = localStorage.getItem('farmer_user_key');
+        if (!userKey) {
+          console.log(`❌ No user key found, cannot load from localStorage`);
+          return [];
+        }
+        
+        const databaseKey = `farmer_database_${userKey}`;
+        const existingData = localStorage.getItem(databaseKey);
+        
+        if (existingData) {
+          try {
+            const parsed = JSON.parse(existingData);
+            const crops = parsed.crops || [];
+            console.log(`📱 Loaded ${crops.length} crops from localStorage fallback`);
+            return crops;
+          } catch (error) {
+            console.error(`❌ Error parsing localStorage data:`, error);
+            return [];
+          }
+        }
+        
+        console.log(`❌ No localStorage data found for fallback`);
+        return [];
       }
 
       // FALLBACK: Try to load from localStorage
