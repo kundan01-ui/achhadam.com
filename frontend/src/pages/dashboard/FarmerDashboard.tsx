@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { saveToMongoDB, saveToPostgreSQL, uploadImagesToCloud, loadCropsFromDatabase, deleteCropFromDatabase, updateCropInDatabase } from '../../services/databaseService';
 import { testUserSpecificData, clearAllFarmerData } from '../../utils/userSpecificTest';
 import { authenticatedFetch } from '../../services/tokenService';
-import { autoSyncAllData } from '../../services/dataSyncService';
-import SyncButton from '../../components/SyncButton';
-import ImmediateSyncButton from '../../components/ImmediateSyncButton';
+// dataSyncService removed - using automatic database save only
+// SyncButton removed - using automatic database save only
+// ImmediateSyncButton removed - using automatic database save only
 import '../../../src/styles/animations.css';
 import { 
   LayoutDashboard, 
@@ -3266,16 +3266,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             >
               🔄 Refresh Data
             </button>
-            <SyncButton 
-              variant="outline" 
-              size="sm"
-              className="border-green-600 text-green-600 hover:bg-green-50"
-            />
-            <ImmediateSyncButton 
-              variant="danger" 
-              size="sm"
-              className="bg-red-600 text-white hover:bg-red-700"
-            />
+            {/* SyncButton removed - using automatic database save only */}
+            {/* ImmediateSyncButton removed - using automatic database save only */}
           </div>
         </div>
       </div>

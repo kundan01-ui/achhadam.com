@@ -8,8 +8,8 @@ import ContractsPage from './ContractsPage';
 import ProfileModal from '../../components/ui/ProfileModal';
 import ChatModal from '../../components/ui/ChatModal';
 import { authenticatedFetch } from '../../services/tokenService';
-import { autoSyncAllData } from '../../services/dataSyncService';
-import ImmediateSyncButton from '../../components/ImmediateSyncButton';
+// dataSyncService removed - using automatic database save only
+// ImmediateSyncButton removed - using automatic database save only
 import { 
   loadAllFarmerCrops, 
   filterCropsByCategory, 
@@ -883,11 +883,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Recent Orders</h3>
             <div className="flex items-center space-x-2">
-              <ImmediateSyncButton 
-                variant="danger" 
-                size="sm"
-                className="bg-red-600 text-white hover:bg-red-700"
-              />
+              {/* ImmediateSyncButton removed - using automatic database save only */}
               <button 
                 className="text-blue-600 hover:text-blue-700 font-medium text-sm"
                 onClick={() => setActiveTab('orders')}
