@@ -1533,7 +1533,6 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       
       // Validate user data integrity
       validateUserData();
-      }
     };
     
     loadCrops();
