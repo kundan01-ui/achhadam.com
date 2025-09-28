@@ -9,6 +9,7 @@ import ProfileModal from '../../components/ui/ProfileModal';
 import ChatModal from '../../components/ui/ChatModal';
 import { authenticatedFetch } from '../../services/tokenService';
 import { autoSyncAllData } from '../../services/dataSyncService';
+import ImmediateSyncButton from '../../components/ImmediateSyncButton';
 import { 
   loadAllFarmerCrops, 
   filterCropsByCategory, 
@@ -881,12 +882,19 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         <div className="p-6 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Recent Orders</h3>
-            <button 
-              className="text-blue-600 hover:text-blue-700 font-medium text-sm"
-              onClick={() => setActiveTab('orders')}
-            >
-              View All
-            </button>
+            <div className="flex items-center space-x-2">
+              <ImmediateSyncButton 
+                variant="danger" 
+                size="sm"
+                className="bg-red-600 text-white hover:bg-red-700"
+              />
+              <button 
+                className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                onClick={() => setActiveTab('orders')}
+              >
+                View All
+              </button>
+            </div>
           </div>
         </div>
         {/* Mobile-Friendly Order Cards */}

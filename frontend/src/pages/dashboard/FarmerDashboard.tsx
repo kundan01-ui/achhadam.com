@@ -4,6 +4,7 @@ import { testUserSpecificData, clearAllFarmerData } from '../../utils/userSpecif
 import { authenticatedFetch } from '../../services/tokenService';
 import { autoSyncAllData } from '../../services/dataSyncService';
 import SyncButton from '../../components/SyncButton';
+import ImmediateSyncButton from '../../components/ImmediateSyncButton';
 import '../../../src/styles/animations.css';
 import { 
   LayoutDashboard, 
@@ -3280,6 +3281,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               variant="outline" 
               size="sm"
               className="border-green-600 text-green-600 hover:bg-green-50"
+            />
+            <ImmediateSyncButton 
+              variant="danger" 
+              size="sm"
+              className="bg-red-600 text-white hover:bg-red-700"
             />
           </div>
         </div>
