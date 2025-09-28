@@ -42,15 +42,32 @@ app.use(helmet({
   contentSecurityPolicy: false
 }));
 
-// Add explicit CORS headers for all requests
+// Add explicit CORS headers for all requests - ENHANCED FOR ACHHADAM.COM
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  const origin = req.headers.origin;
+  
+  // Allow specific origins
+  const allowedOrigins = [
+    'https://www.achhadam.com',
+    'https://achhadam.com',
+    'http://localhost:5173',
+    'http://localhost:5174'
+  ];
+  
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+  res.header('Access-Control-Max-Age', '86400'); // 24 hours
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('✅ CORS preflight request handled for:', origin);
     res.status(200).end();
     return;
   }
@@ -60,25 +77,28 @@ app.use((req, res, next) => {
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('✅ CORS: No origin (mobile/curl request) - allowing');
+      return callback(null, true);
+    }
     
     const allowedOrigins = [
+      'https://www.achhadam.com',
+      'https://achhadam.com',
       'http://localhost:5173', 
       'http://localhost:5174', 
       'https://achhadam-frontend.onrender.com',
       'https://achhadamf.onrender.com',
       'https://acchadam1.onrender.com',
-      'https://acchadam1-frontend.onrender.com',
-      'https://www.achhadam.com',
-      'https://achhadam.com',
-      'https://achhadam.com/',
-      'https://www.achhadam.com/'
+      'https://acchadam1-frontend.onrender.com'
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('✅ CORS: Origin allowed:', origin);
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
+      console.log('❌ CORS: Origin blocked:', origin);
+      console.log('🔍 Allowed origins:', allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -94,7 +114,8 @@ app.use(cors({
     'Access-Control-Request-Headers'
   ],
   exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
+  maxAge: 86400 // 24 hours
 }));
 app.use(limiter);
 app.use(morgan('combined'));
@@ -570,28 +591,85 @@ app.post('/api/auth/signup', async (req, res) => {
   }
 });
 
-// Handle OPTIONS requests for all auth endpoints
+// Handle OPTIONS requests for all auth endpoints - ENHANCED FOR ACHHADAM.COM
 app.options('/api/auth/*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  const origin = req.headers.origin;
+  console.log('🔍 CORS preflight for auth endpoint from:', origin);
+  
+  // Allow specific origins
+  const allowedOrigins = [
+    'https://www.achhadam.com',
+    'https://achhadam.com',
+    'http://localhost:5173',
+    'http://localhost:5174'
+  ];
+  
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    console.log('✅ CORS: Auth endpoint origin allowed:', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+    console.log('⚠️ CORS: Auth endpoint using wildcard for:', origin);
+  }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+  res.header('Access-Control-Max-Age', '86400');
   res.status(200).end();
 });
 
-// Handle OPTIONS request for login
+// Handle OPTIONS request for login - ENHANCED FOR ACHHADAM.COM
 app.options('/api/auth/login', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  const origin = req.headers.origin;
+  console.log('🔍 CORS preflight for login from:', origin);
+  
+  if (['https://www.achhadam.com', 'https://achhadam.com'].includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    console.log('✅ CORS: Login origin allowed:', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.header('Access-Control-Max-Age', '86400');
+  res.status(200).end();
+});
+
+// Handle OPTIONS for all API endpoints
+app.options('/api/*', (req, res) => {
+  const origin = req.headers.origin;
+  console.log('🔍 CORS preflight for API endpoint from:', origin);
+  
+  if (['https://www.achhadam.com', 'https://achhadam.com'].includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    console.log('✅ CORS: API endpoint origin allowed:', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.header('Access-Control-Max-Age', '86400');
   res.status(200).end();
 });
 
 app.post('/api/auth/login', async (req, res) => {
   try {
-    // Set CORS headers explicitly for login
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    const origin = req.headers.origin;
+    console.log('🔍 Login request from origin:', origin);
+    
+    // Set CORS headers explicitly for login - ENHANCED FOR ACHHADAM.COM
+    if (['https://www.achhadam.com', 'https://achhadam.com'].includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+      console.log('✅ CORS: Login origin explicitly allowed:', origin);
+    } else {
+      res.header('Access-Control-Allow-Origin', '*');
+      console.log('⚠️ CORS: Login using wildcard for:', origin);
+    }
     res.header('Access-Control-Allow-Credentials', 'true');
     
     console.time('Login Request');
