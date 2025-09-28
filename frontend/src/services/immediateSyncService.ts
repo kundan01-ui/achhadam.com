@@ -11,6 +11,44 @@ interface ImmediateSyncResult {
 class ImmediateSyncService {
   private backendUrl = 'https://acchadam1-backend.onrender.com';
 
+  // TOKEN REFRESH FUNCTION
+  private async refreshToken(): Promise<string | null> {
+    try {
+      console.log('🔄 Attempting to refresh token...');
+      
+      // Get current token
+      const currentToken = localStorage.getItem('authToken');
+      if (!currentToken) {
+        console.error('❌ No current token to refresh');
+        return null;
+      }
+
+      // Try to refresh token via backend
+      const response = await fetch(`${this.backendUrl}/api/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentToken}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.token) {
+          localStorage.setItem('authToken', data.token);
+          console.log('✅ Token refreshed successfully');
+          return data.token;
+        }
+      }
+
+      console.log('⚠️ Token refresh not supported, using current token');
+      return currentToken;
+    } catch (error) {
+      console.error('❌ Token refresh failed:', error);
+      return null;
+    }
+  }
+
   // IMMEDIATE SYNC - Force sync all data right now
   async immediateSyncAllData(): Promise<ImmediateSyncResult> {
     console.log('🚀 IMMEDIATE SYNC: Starting instant data synchronization...');
@@ -133,35 +171,100 @@ class ImmediateSyncService {
         source: 'localStorage_sync'
       };
 
-      // Get valid token
+      // Get valid token with validation
       const token = localStorage.getItem('authToken');
       if (!token) {
         console.error('❌ No auth token for immediate sync');
         return false;
       }
 
-      // IMMEDIATE API CALL
-      const response = await fetch(`${this.backendUrl}/api/crops`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(cropData)
-      });
-
-      console.log(`📡 IMMEDIATE SYNC Response: ${response.status} ${response.statusText}`);
-
-      if (response.ok) {
-        const responseData = await response.json();
-        console.log(`✅ IMMEDIATE SYNC SUCCESS: ${crop.name} saved to MongoDB`);
-        console.log(`📊 MongoDB Response:`, responseData);
-        return true;
-      } else {
-        const errorText = await response.text();
-        console.error(`❌ IMMEDIATE SYNC FAILED: ${response.status} ${errorText}`);
+      // Validate token format
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) {
+        console.error('❌ Invalid token format for immediate sync');
         return false;
       }
+
+      // Check token expiry
+      try {
+        const payload = JSON.parse(atob(tokenParts[1]));
+        const now = Math.floor(Date.now() / 1000);
+        if (payload.exp && payload.exp < now) {
+          console.error('❌ Token expired for immediate sync');
+          return false;
+        }
+      } catch (error) {
+        console.error('❌ Token validation failed for immediate sync');
+        return false;
+      }
+
+      console.log(`🔑 Using valid token for immediate sync: ${token.substring(0, 20)}...`);
+
+      // IMMEDIATE API CALL with retry logic and token refresh
+      let response;
+      let retryCount = 0;
+      const maxRetries = 2;
+      let currentToken = token;
+
+      while (retryCount <= maxRetries) {
+        try {
+          response = await fetch(`${this.backendUrl}/api/crops`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${currentToken}`
+            },
+            body: JSON.stringify(cropData)
+          });
+
+          console.log(`📡 IMMEDIATE SYNC Response: ${response.status} ${response.statusText}`);
+
+          if (response.ok) {
+            const responseData = await response.json();
+            console.log(`✅ IMMEDIATE SYNC SUCCESS: ${crop.name} saved to MongoDB`);
+            console.log(`📊 MongoDB Response:`, responseData);
+            return true;
+          } else if (response.status === 401) {
+            console.error(`❌ 401 Unauthorized - Token rejected by server`);
+            if (retryCount < maxRetries) {
+              console.log(`🔄 Attempting token refresh (attempt ${retryCount + 1}/${maxRetries})...`);
+              
+              // Try to refresh token
+              const refreshedToken = await this.refreshToken();
+              if (refreshedToken && refreshedToken !== currentToken) {
+                currentToken = refreshedToken;
+                console.log(`✅ Token refreshed, retrying with new token...`);
+              } else {
+                console.log(`⚠️ Token refresh failed, retrying with current token...`);
+              }
+              
+              retryCount++;
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+              continue;
+            } else {
+              console.error(`❌ IMMEDIATE SYNC FAILED: Max retries reached for ${crop.name}`);
+              return false;
+            }
+          } else {
+            const errorText = await response.text();
+            console.error(`❌ IMMEDIATE SYNC FAILED: ${response.status} ${errorText}`);
+            return false;
+          }
+        } catch (error) {
+          console.error(`❌ Network error during immediate sync:`, error);
+          if (retryCount < maxRetries) {
+            console.log(`🔄 Retrying immediate sync due to network error (attempt ${retryCount + 1}/${maxRetries})...`);
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            continue;
+          } else {
+            console.error(`❌ IMMEDIATE SYNC FAILED: Max retries reached due to network error`);
+            return false;
+          }
+        }
+      }
+
+      return false;
     } catch (error) {
       console.error(`❌ IMMEDIATE SYNC ERROR for ${crop.name}:`, error);
       return false;
@@ -231,6 +334,35 @@ class ImmediateSyncService {
     console.log('🚀 FORCE SYNC NOW: Starting immediate synchronization...');
     
     try {
+      // Check if user is logged in
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        alert('❌ SYNC FAILED!\n\nYou must be logged in to sync data.\n\nPlease login first and try again.');
+        return;
+      }
+
+      // Validate token before sync
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) {
+        alert('❌ SYNC FAILED!\n\nInvalid authentication token.\n\nPlease login again and try.');
+        return;
+      }
+
+      // Check token expiry
+      try {
+        const payload = JSON.parse(atob(tokenParts[1]));
+        const now = Math.floor(Date.now() / 1000);
+        if (payload.exp && payload.exp < now) {
+          alert('❌ SYNC FAILED!\n\nYour session has expired.\n\nPlease login again and try.');
+          return;
+        }
+      } catch (error) {
+        alert('❌ SYNC FAILED!\n\nInvalid authentication token.\n\nPlease login again and try.');
+        return;
+      }
+
+      console.log('🔑 Token validation passed, proceeding with sync...');
+
       const result = await this.immediateSyncAllData();
       
       if (result.success) {
