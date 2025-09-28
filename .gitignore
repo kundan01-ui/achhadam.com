@@ -8,3 +8,6 @@ dist/
 build/
 logs/
 *.log
+
+# Exclude ProductsPage.tsx from version control
+frontend/src/pages/dashboard/ProductsPage.tsx
