@@ -760,14 +760,21 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             throw new Error(errorData.message || 'Failed to save crop to database');
           }
 
-          const result = await response.json();
-          console.log(`✅ CROSS-DEVICE SYNC: Crop saved to database: ${crop.cropName || crop.name}`);
-          console.log(`🌐 This crop will be available on any device when farmer logs in`);
-          console.log(`📊 Database response:`, {
-            success: result.success,
-            cropId: result.data?._id,
-            farmerId: result.data?.farmerId
-          });
+          // Handle JSON parsing safely
+          let result;
+          try {
+            result = await response.json();
+            console.log(`✅ CROSS-DEVICE SYNC: Crop saved to database: ${crop.cropName || crop.name}`);
+            console.log(`🌐 This crop will be available on any device when farmer logs in`);
+            console.log(`📊 Database response:`, {
+              success: result.success,
+              cropId: result.data?._id,
+              farmerId: result.data?.farmerId
+            });
+          } catch (jsonError) {
+            console.log(`✅ CROSS-DEVICE SYNC: Crop saved to database: ${crop.cropName || crop.name} (No JSON response)`);
+            console.log(`🌐 This crop will be available on any device when farmer logs in`);
+          }
         } catch (error) {
           console.error(`❌ Error saving crop ${crop.cropName || crop.name}:`, error);
           console.log(`🔄 This crop will only be available locally until database sync is fixed`);
@@ -1052,8 +1059,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
       // ONLY: Load from database (TRUE CROSS-DEVICE SYNC)
       // Use actual user ID from authentication, not generated ID
-      const actualUserId = user?.id || userProfile.id;
+      const actualUserId = user?._id || user?.id || userProfile.id;
       console.log(`🔑 Using actual user ID: ${actualUserId} (not generated ID: ${userProfile.id})`);
+      console.log(`🔍 User object:`, { _id: user?._id, id: user?.id, userProfileId: userProfile.id });
       console.log(`🔄 DATABASE LOAD: Loading crops from database for farmer: ${actualUserId}`);
       console.log(`🌐 This will ensure data is available from any device, any session`);
       
@@ -1340,8 +1348,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   const forceRefreshFromDatabase = async () => {
     try {
       // Use actual user ID from authentication, not generated ID
-      const actualUserId = user?.id || userProfile.id;
+      const actualUserId = user?._id || user?.id || userProfile.id;
       console.log(`🔑 Using actual user ID: ${actualUserId} (not generated ID: ${userProfile.id})`);
+      console.log(`🔍 User object:`, { _id: user?._id, id: user?.id, userProfileId: userProfile.id });
       console.log(`🔄 FORCE REFRESH: Loading fresh data from database for farmer: ${actualUserId}`);
       console.log(`🌐 This ensures latest data is loaded from any device`);
       console.log(`📱 Cross-device sync: Mobile crops will be available on desktop and vice versa`);
