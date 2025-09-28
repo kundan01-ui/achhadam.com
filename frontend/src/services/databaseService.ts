@@ -67,7 +67,7 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
   try {
     console.log('🌾 Saving crop to MongoDB:', cropData);
     
-    const response = await fetch('/api/crops', {
+    const response = await fetch('https://acchadam1-backend.onrender.com/api/crops', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -77,11 +77,24 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
     });
     
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to save crop to database');
+      let errorMessage = `HTTP ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (jsonError) {
+        console.log(`⚠️ MongoDB save failed with status ${response.status}: ${errorMessage}`);
+      }
+      throw new Error(errorMessage);
     }
     
-    const result = await response.json();
+    // Handle JSON parsing safely
+    let result;
+    try {
+      result = await response.json();
+    } catch (jsonError) {
+      console.log(`✅ MongoDB save successful (no JSON response)`);
+      return { success: true, data: { message: 'Crop saved successfully' } };
+    }
     console.log('✅ Crop saved to MongoDB successfully:', result);
     return { success: true, data: result };
   } catch (error) {
@@ -160,7 +173,7 @@ export const loadCropsFromDatabase = async (farmerId: string): Promise<{ success
   try {
     console.log('🌾 Loading crops from database for farmer:', farmerId);
     
-    const response = await fetch(`/api/crops/farmer/${farmerId}`, {
+    const response = await fetch(`https://acchadam1-backend.onrender.com/api/crops/farmer/${farmerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
