@@ -51,7 +51,9 @@ app.use((req, res, next) => {
     'https://www.achhadam.com',
     'https://achhadam.com',
     'http://localhost:5173',
-    'http://localhost:5174'
+    'http://localhost:5174',
+    'http://localhost:5000',
+    'http://0.0.0.0:5000'
   ];
   
   if (allowedOrigins.includes(origin)) {
@@ -87,6 +89,8 @@ app.use(cors({
       'https://achhadam.com',
       'http://localhost:5173', 
       'http://localhost:5174', 
+      'http://localhost:5000',
+      'http://0.0.0.0:5000',
       'https://achhadam-frontend.onrender.com',
       'https://achhadamf.onrender.com',
       'https://acchadam1.onrender.com',
@@ -601,7 +605,9 @@ app.options('/api/auth/*', (req, res) => {
     'https://www.achhadam.com',
     'https://achhadam.com',
     'http://localhost:5173',
-    'http://localhost:5174'
+    'http://localhost:5174',
+    'http://localhost:5000',
+    'http://0.0.0.0:5000'
   ];
   
   if (allowedOrigins.includes(origin)) {
