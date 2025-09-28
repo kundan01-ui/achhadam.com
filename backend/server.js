@@ -738,40 +738,72 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Protected route middleware
+// Protected route middleware - ENHANCED DEBUGGING
 const authenticateToken = async (req, res, next) => {
   try {
     console.time('Token Authentication');
+    console.log('🔍 AUTH DEBUG: Starting token authentication');
+    console.log('🔍 AUTH DEBUG: Request URL:', req.url);
+    console.log('🔍 AUTH DEBUG: Request Method:', req.method);
+    
     const authHeader = req.headers['authorization'];
+    console.log('🔍 AUTH DEBUG: Authorization header:', authHeader);
+    
     const token = authHeader && authHeader.split(' ')[1];
+    console.log('🔍 AUTH DEBUG: Extracted token:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
 
     if (!token) {
+      console.log('❌ AUTH DEBUG: No token found in Authorization header');
       console.timeEnd('Token Authentication');
-      return res.status(401).json({ error: 'Access token required' });
+      return res.status(401).json({ success: false, message: 'Access token required' });
     }
 
-    // Verify token
+    // Verify token with detailed debugging
+    console.log('🔍 AUTH DEBUG: Verifying token with JWT_SECRET...');
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+    console.log('🔍 AUTH DEBUG: Token decoded successfully:', {
+      userId: decoded.userId,
+      userType: decoded.userType,
+      phone: decoded.phone,
+      exp: decoded.exp,
+      iat: decoded.iat
+    });
     
     // Store decoded info directly
     req.userId = decoded.userId;
     req.userType = decoded.userType;
     req.userPhone = decoded.phone;
     
+    console.log('🔍 AUTH DEBUG: Looking up user in database with ID:', decoded.userId);
     // Use lean() for better performance and only fetch if needed
     const user = await User.findById(decoded.userId).lean();
+    console.log('🔍 AUTH DEBUG: User found in database:', user ? 'YES' : 'NO');
     
     if (!user) {
+      console.log('❌ AUTH DEBUG: User not found in database for ID:', decoded.userId);
       console.timeEnd('Token Authentication');
-      return res.status(401).json({ error: 'Invalid token' });
+      return res.status(401).json({ success: false, message: 'Invalid token - user not found' });
     }
 
+    console.log('🔍 AUTH DEBUG: User details:', {
+      _id: user._id,
+      firstName: user.firstName,
+      userType: user.userType,
+      phone: user.phone
+    });
+
     req.user = user;
+    console.log('✅ AUTH DEBUG: Token authentication successful');
     console.timeEnd('Token Authentication');
     next();
   } catch (error) {
-    console.error('Token authentication error:', error);
-    return res.status(403).json({ error: 'Invalid or expired token' });
+    console.error('❌ AUTH DEBUG: Token authentication error:', error);
+    console.error('❌ AUTH DEBUG: Error details:', {
+      name: error.name,
+      message: error.message,
+      expiredAt: error.expiredAt
+    });
+    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 };
 
@@ -924,6 +956,15 @@ app.post('/api/auth/refresh', async (req, res) => {
 // Crop Upload Endpoint (POST /api/crops)
 app.post('/api/crops', authenticateToken, async (req, res) => {
   try {
+    console.log('🌾 CROP DEBUG: Starting crop upload');
+    console.log('🌾 CROP DEBUG: Request body:', req.body);
+    console.log('🌾 CROP DEBUG: User from middleware:', {
+      userId: req.userId,
+      userType: req.userType,
+      userPhone: req.userPhone,
+      user: req.user
+    });
+
     const cropData = {
       ...req.body,
       farmerId: req.userId,
@@ -934,6 +975,9 @@ app.post('/api/crops', authenticateToken, async (req, res) => {
       sessionIndependent: true
     };
 
+    console.log('🌾 CROP DEBUG: Final crop data:', cropData);
+    console.log('✅ CROP DEBUG: Crop upload successful');
+
     // Save to MongoDB using existing crop routes
     // This will be handled by the crop routes middleware
     res.json({
@@ -943,7 +987,7 @@ app.post('/api/crops', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Crop upload error:', error);
+    console.error('❌ CROP DEBUG: Crop upload error:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Failed to upload crop',
@@ -955,15 +999,31 @@ app.post('/api/crops', authenticateToken, async (req, res) => {
 // Get Farmer Crops Endpoint
 app.get('/api/crops/farmer/:farmerId', authenticateToken, async (req, res) => {
   try {
+    console.log('🌾 GET CROPS DEBUG: Starting get farmer crops');
+    console.log('🌾 GET CROPS DEBUG: Request params:', req.params);
+    console.log('🌾 GET CROPS DEBUG: User from middleware:', {
+      userId: req.userId,
+      userType: req.userType,
+      userPhone: req.userPhone,
+      user: req.user
+    });
+
     const { farmerId } = req.params;
+    console.log('🌾 GET CROPS DEBUG: Requested farmerId:', farmerId);
+    console.log('🌾 GET CROPS DEBUG: Authenticated userId:', req.userId);
     
     // Verify farmer owns the crops
     if (req.userId !== farmerId && req.userType !== 'admin') {
+      console.log('❌ GET CROPS DEBUG: Access denied - userId mismatch');
+      console.log('❌ GET CROPS DEBUG: req.userId:', req.userId, 'farmerId:', farmerId);
       return res.status(403).json({ 
         success: false, 
         message: 'Access denied' 
       });
     }
+
+    console.log('✅ GET CROPS DEBUG: Access granted');
+    console.log('✅ GET CROPS DEBUG: Returning empty crops array (placeholder)');
 
     // This will be handled by existing crop routes
     res.json({
@@ -973,7 +1033,7 @@ app.get('/api/crops/farmer/:farmerId', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get farmer crops error:', error);
+    console.error('❌ GET CROPS DEBUG: Get farmer crops error:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Failed to retrieve farmer crops',
@@ -982,9 +1042,20 @@ app.get('/api/crops/farmer/:farmerId', authenticateToken, async (req, res) => {
   }
 });
 
-// Marketplace Crops Endpoint
+// Marketplace Crops Endpoint - ENHANCED DEBUGGING
 app.get('/api/crops/marketplace', authenticateToken, async (req, res) => {
   try {
+    console.log('🛒 MARKETPLACE DEBUG: Starting marketplace crops request');
+    console.log('🛒 MARKETPLACE DEBUG: User from middleware:', {
+      userId: req.userId,
+      userType: req.userType,
+      userPhone: req.userPhone,
+      user: req.user
+    });
+
+    console.log('✅ MARKETPLACE DEBUG: Access granted');
+    console.log('✅ MARKETPLACE DEBUG: Returning empty crops array (placeholder)');
+
     // This will be handled by existing crop routes
     res.json({
       success: true,
@@ -993,7 +1064,7 @@ app.get('/api/crops/marketplace', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Marketplace crops error:', error);
+    console.error('❌ MARKETPLACE DEBUG: Marketplace crops error:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Failed to retrieve marketplace crops',
