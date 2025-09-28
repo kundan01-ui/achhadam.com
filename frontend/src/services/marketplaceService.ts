@@ -99,7 +99,7 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
     
     // Try to load from database first
     try {
-      const response = await fetch('/api/crops/marketplace', {
+      const response = await fetch('https://acchadam1-backend.onrender.com/api/crops/marketplace', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

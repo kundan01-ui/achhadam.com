@@ -658,6 +658,10 @@ app.use('/api/crops', cropRoutes);
 // Order routes - PERMANENT PERSISTENCE for buyer data
 app.use('/api/orders', orderRoutes);
 
+// Cart routes - PERMANENT PERSISTENCE for buyer data
+const cartRoutes = require('./src/routes/cart');
+app.use('/api/cart', cartRoutes);
+
 // Razorpay Routes - Temporarily commented out
 // app.use('/api/razorpay', require('./src/routes/razorpay.js'));
 
@@ -691,6 +695,33 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
     console.error('Error fetching user profile:', error);
     res.status(500).json({ error: 'Error fetching user profile' });
   }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// API Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'ACHHADAM Backend API is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    endpoints: {
+      crops: '/api/crops',
+      orders: '/api/orders',
+      cart: '/api/cart',
+      auth: '/api/auth'
+    }
+  });
 });
 
 // Get all users (for admin purposes)
