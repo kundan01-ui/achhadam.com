@@ -34,11 +34,27 @@ const cropListingSchema = new mongoose.Schema({
     maxlength: 1000
   },
   
-  // Crop Information
+  // Crop Information - FIXED FOR FRONTEND COMPATIBILITY
+  cropName: { type: String, required: true },
+  cropType: { type: String, required: true },
+  variety: { type: String },
+  quality: { 
+    type: String, 
+    enum: ['premium', 'good', 'average', 'fair'],
+    default: 'good'
+  },
+  organic: { type: Boolean, default: false },
+  certification: [{
+    type: { type: String, enum: ['organic', 'fair_trade', 'rainforest_alliance'] },
+    certificateNumber: { type: String },
+    validUntil: { type: Date }
+  }],
+  
+  // Legacy cropDetails for backward compatibility
   cropDetails: {
-    name: { type: String, required: true },
+    name: { type: String },
     variety: { type: String },
-    category: { type: String, required: true },
+    category: { type: String },
     quality: { 
       type: String, 
       enum: ['premium', 'good', 'average', 'fair'],
@@ -49,12 +65,7 @@ const cropListingSchema = new mongoose.Schema({
       enum: ['A', 'B', 'C'],
       default: 'B'
     },
-    organic: { type: Boolean, default: false },
-    certification: [{
-      type: { type: String, enum: ['organic', 'fair_trade', 'rainforest_alliance'] },
-      certificateNumber: { type: String },
-      validUntil: { type: Date }
-    }]
+    organic: { type: Boolean, default: false }
   },
   
   // Quantity & Pricing
@@ -144,6 +155,20 @@ const cropListingSchema = new mongoose.Schema({
     shares: { type: Number, default: 0 },
     inquiries: { type: Number, default: 0 },
     orders: { type: Number, default: 0 }
+  },
+  
+  // PERMANENT PERSISTENCE FIELDS - CROSS-DEVICE SYNC
+  isPermanent: { type: Boolean, default: true },
+  crossDeviceAccess: { type: Boolean, default: true },
+  sessionIndependent: { type: Boolean, default: true },
+  uploadedAt: { type: Date, default: Date.now },
+  lastUpdated: { type: Date, default: Date.now },
+  
+  // Farmer Association for Permanent Linking
+  farmerAssociation: {
+    farmerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    farmerName: { type: String },
+    permanentLink: { type: Boolean, default: true }
   },
   
   // Timestamps
