@@ -107,26 +107,31 @@ class TokenService {
     }
   }
 
-  // Refresh token if needed
+  // Refresh token if needed - ENHANCED DEBUGGING
   async refreshTokenIfNeeded(): Promise<string | null> {
+    console.log('🔄 TOKEN REFRESH: Starting token refresh process');
+    
     const tokenInfo = this.validateToken();
+    console.log('🔄 TOKEN REFRESH: Token validation result:', tokenInfo);
     
     if (tokenInfo.isValid && !tokenInfo.error) {
-      console.log('✅ Token is valid, no refresh needed');
+      console.log('✅ TOKEN REFRESH: Token is valid, no refresh needed');
       return tokenInfo.token;
     }
 
     // If already refreshing, wait for that promise
     if (this.refreshPromise) {
-      console.log('🔄 Token refresh already in progress, waiting...');
+      console.log('🔄 TOKEN REFRESH: Token refresh already in progress, waiting...');
       return await this.refreshPromise;
     }
 
     // Start new refresh process
+    console.log('🔄 TOKEN REFRESH: Starting new refresh process...');
     this.refreshPromise = this.performTokenRefresh();
     
     try {
       const newToken = await this.refreshPromise;
+      console.log('🔄 TOKEN REFRESH: Refresh process completed, result:', newToken ? 'SUCCESS' : 'FAILED');
       return newToken;
     } finally {
       this.refreshPromise = null;
@@ -136,13 +141,16 @@ class TokenService {
   // Perform actual token refresh
   private async performTokenRefresh(): Promise<string | null> {
     try {
-      console.log('🔄 Attempting token refresh...');
+      console.log('🔄 TOKEN REFRESH: Starting token refresh process...');
       
       const currentToken = localStorage.getItem('authToken');
       if (!currentToken) {
-        console.error('❌ No current token to refresh');
+        console.error('❌ TOKEN REFRESH: No current token to refresh');
         return null;
       }
+
+      console.log('🔄 TOKEN REFRESH: Current token:', currentToken.substring(0, 20) + '...');
+      console.log('🔄 TOKEN REFRESH: Making refresh request to backend...');
 
       const response = await fetch('https://acchadam1-backend.onrender.com/api/auth/refresh', {
         method: 'POST',
@@ -153,7 +161,8 @@ class TokenService {
         body: JSON.stringify({ token: currentToken })
       });
 
-      console.log(`📡 Token refresh response: ${response.status} ${response.statusText}`);
+      console.log(`📡 TOKEN REFRESH: Response status: ${response.status} ${response.statusText}`);
+      console.log(`📡 TOKEN REFRESH: Response headers:`, Object.fromEntries(response.headers.entries()));
 
       if (response.ok) {
         const data = await response.json();
@@ -408,33 +417,68 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
       throw new Error('No valid authentication token available');
     }
 
-    // DEBUG: Log token details
+    // COMPREHENSIVE TOKEN DEBUGGING
+    console.log('🔑 TOKEN DEBUG: Starting comprehensive token analysis');
     console.log('🔑 Token being sent:', token.substring(0, 20) + '...');
     console.log('🔑 Token length:', token.length);
     console.log('🔑 Full token for debugging:', token);
     
     // Validate token format before sending
     const tokenParts = token.split('.');
+    console.log('🔑 Token parts count:', tokenParts.length);
+    console.log('🔑 Token parts:', tokenParts.map((part, index) => `${index}: ${part.substring(0, 20)}...`));
+    
     if (tokenParts.length !== 3) {
-      console.error('❌ Invalid token format detected');
+      console.error('❌ Invalid token format detected - not 3 parts');
+      console.error('❌ Token parts:', tokenParts);
       tokenService.clearAuth();
       window.location.href = '/login';
       throw new Error('Invalid token format');
     }
 
-    // Decode token for debugging
+    // Decode token for comprehensive debugging
     try {
+      const header = JSON.parse(atob(tokenParts[0]));
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log('🔑 Token payload:', {
+      
+      console.log('🔑 TOKEN HEADER:', header);
+      console.log('🔑 TOKEN PAYLOAD:', {
         userId: payload.userId,
         userType: payload.userType,
         phone: payload.phone,
         exp: payload.exp,
         iat: payload.iat,
-        expiresAt: new Date(payload.exp * 1000)
+        expiresAt: new Date(payload.exp * 1000),
+        isExpired: payload.exp ? (Date.now() / 1000) > payload.exp : false,
+        expiresIn: payload.exp ? (payload.exp - (Date.now() / 1000)) : 'No expiry'
       });
+      
+      // Check if token is expired
+      if (payload.exp && (Date.now() / 1000) > payload.exp) {
+        console.error('❌ TOKEN EXPIRED:', {
+          exp: payload.exp,
+          now: Date.now() / 1000,
+          diff: (Date.now() / 1000) - payload.exp
+        });
+        tokenService.clearAuth();
+        window.location.href = '/login';
+        throw new Error('Token expired');
+      }
+      
+      // Check if token expires soon
+      if (payload.exp && (payload.exp - (Date.now() / 1000)) < 300) {
+        console.warn('⚠️ TOKEN EXPIRES SOON:', {
+          expiresIn: payload.exp - (Date.now() / 1000),
+          expiresAt: new Date(payload.exp * 1000)
+        });
+      }
+      
     } catch (e) {
-      console.log('🔑 Could not decode token payload:', e);
+      console.error('❌ TOKEN DECODE FAILED:', e);
+      console.error('❌ Token parts:', tokenParts);
+      tokenService.clearAuth();
+      window.location.href = '/login';
+      throw new Error('Token decode failed');
     }
 
     // Add authorization header
@@ -455,33 +499,54 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
       headers
     });
 
-    // If 401, try to refresh token and retry once
+    // COMPREHENSIVE 401 ERROR HANDLING
     if (response.status === 401) {
-      console.log('🔄 401 received, attempting token refresh...');
+      console.log('🚨 401 UNAUTHORIZED ERROR DETECTED');
+      console.log('🔍 Request URL:', url);
+      console.log('🔍 Request method:', options.method || 'GET');
+      console.log('🔍 Request headers:', headers);
       
       // DEBUG: Log response details
       try {
         const errorText = await response.text();
         console.log('🔍 401 Response body:', errorText);
+        console.log('🔍 401 Response headers:', Object.fromEntries(response.headers.entries()));
       } catch (e) {
         console.log('🔍 401 Response: Could not read response body');
       }
       
+      console.log('🔄 Attempting token refresh...');
       const refreshedToken = await tokenService.refreshTokenIfNeeded();
+      
       if (refreshedToken) {
-        console.log('🔄 Retrying request with refreshed token...');
+        console.log('✅ Token refresh successful, retrying request...');
+        console.log('🔑 New token:', refreshedToken.substring(0, 20) + '...');
         
         const retryHeaders = {
           ...headers,
           'Authorization': `Bearer ${refreshedToken}`
         };
         
-        return fetch(url, {
+        console.log('🔄 Retry headers:', retryHeaders);
+        
+        const retryResponse = await fetch(url, {
           ...options,
           headers: retryHeaders
         });
+        
+        console.log('🔄 Retry response status:', retryResponse.status);
+        
+        if (retryResponse.status === 401) {
+          console.error('❌ Retry also failed with 401 - token refresh did not work');
+          console.error('❌ Original token:', token.substring(0, 20) + '...');
+          console.error('❌ Refreshed token:', refreshedToken.substring(0, 20) + '...');
+        }
+        
+        return retryResponse;
       } else {
-        console.error('❌ Token refresh failed, auto-logout...');
+        console.error('❌ Token refresh failed - no new token received');
+        console.error('❌ Original token was:', token.substring(0, 20) + '...');
+        console.error('❌ Clearing auth and redirecting to login...');
         tokenService.clearAuth();
         window.location.href = '/login';
         return response;
