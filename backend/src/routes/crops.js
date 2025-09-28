@@ -77,12 +77,20 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// Get all crops for marketplace
+// Get all crops for marketplace - CROSS-DEVICE SYNC
 router.get('/marketplace', async (req, res) => {
   try {
     const { category, search, minPrice, maxPrice, organic, quality } = req.query;
     
-    let query = { status: 'available' };
+    console.log(`🌾 MARKETPLACE: Loading all crops for marketplace`);
+    console.log(`🌐 Cross-device sync: All farmer crops available for buyers`);
+    
+    let query = { 
+      status: 'available',
+      isPermanent: true,
+      crossDeviceAccess: true,
+      sessionIndependent: true
+    };
     
     // Apply filters
     if (category && category !== 'all') {
@@ -112,20 +120,29 @@ router.get('/marketplace', async (req, res) => {
     }
 
     const crops = await CropListing.find(query)
-      .populate('farmerId', 'profile.fullName address.current.city address.current.state')
+      .populate('farmerId', 'profile.fullName address.current.city address.current.state phone email')
       .sort({ uploadedAt: -1 })
-      .limit(50);
+      .limit(100);
+
+    console.log(`✅ MARKETPLACE: Found ${crops.length} crops available for marketplace`);
+    console.log(`🌐 These crops are available across all devices and sessions`);
 
     res.json({
       success: true,
       data: crops,
-      count: crops.length
+      count: crops.length,
+      message: 'Marketplace crops loaded successfully',
+      persistence: {
+        isPermanent: true,
+        crossDeviceAccess: true,
+        sessionIndependent: true
+      }
     });
   } catch (error) {
     console.error('Error fetching marketplace crops:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch crops',
+      message: 'Failed to fetch marketplace crops',
       error: error.message
     });
   }
@@ -180,45 +197,7 @@ router.get('/farmer/:farmerId', auth, async (req, res) => {
   }
 });
 
-// Get all crops for marketplace - CROSS-DEVICE SYNC
-router.get('/marketplace', async (req, res) => {
-  try {
-    console.log(`🌾 MARKETPLACE: Loading all crops for marketplace`);
-    console.log(`🌐 Cross-device sync: All farmer crops available for buyers`);
-    
-    // Load all crops with permanent persistence markers
-    const crops = await CropListing.find({ 
-      isPermanent: true,
-      crossDeviceAccess: true,
-      sessionIndependent: true,
-      status: 'available'
-    })
-    .populate('farmerId', 'profile.fullName address.current.city address.current.state phone email')
-    .sort({ uploadedAt: -1 });
-
-    console.log(`✅ MARKETPLACE: Found ${crops.length} crops available for marketplace`);
-    console.log(`🌐 These crops are available across all devices and sessions`);
-
-    res.json({
-      success: true,
-      data: crops,
-      count: crops.length,
-      message: 'Marketplace crops loaded successfully',
-      persistence: {
-        isPermanent: true,
-        crossDeviceAccess: true,
-        sessionIndependent: true
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching marketplace crops:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch marketplace crops',
-      error: error.message
-    });
-  }
-});
+// REMOVED: Duplicate marketplace endpoint
 
 // Get single crop by ID
 router.get('/:cropId', async (req, res) => {
@@ -337,37 +316,7 @@ router.delete('/:cropId', auth, async (req, res) => {
   }
 });
 
-// Get all crops for marketplace (public endpoint)
-router.get('/marketplace', async (req, res) => {
-  try {
-    console.log('🌾 Loading crops for marketplace...');
-    
-    const crops = await CropListing.find({ 
-      status: 'available',
-      isPermanent: true,
-      crossDeviceAccess: true,
-      sessionIndependent: true
-    })
-    .populate('farmerId', 'profile.fullName phone address.current.city')
-    .sort({ uploadedAt: -1 });
-
-    console.log(`✅ Found ${crops.length} crops for marketplace`);
-
-    res.json({
-      success: true,
-      data: crops,
-      count: crops.length,
-      message: 'Marketplace crops loaded successfully'
-    });
-  } catch (error) {
-    console.error('Error fetching marketplace crops:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch marketplace crops',
-      error: error.message
-    });
-  }
-});
+// REMOVED: Third duplicate marketplace endpoint
 
 module.exports = router;
 
