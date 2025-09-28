@@ -411,6 +411,7 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
     // DEBUG: Log token details
     console.log('🔑 Token being sent:', token.substring(0, 20) + '...');
     console.log('🔑 Token length:', token.length);
+    console.log('🔑 Full token for debugging:', token);
     
     // Validate token format before sending
     const tokenParts = token.split('.');
@@ -419,6 +420,21 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
       tokenService.clearAuth();
       window.location.href = '/login';
       throw new Error('Invalid token format');
+    }
+
+    // Decode token for debugging
+    try {
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log('🔑 Token payload:', {
+        userId: payload.userId,
+        userType: payload.userType,
+        phone: payload.phone,
+        exp: payload.exp,
+        iat: payload.iat,
+        expiresAt: new Date(payload.exp * 1000)
+      });
+    } catch (e) {
+      console.log('🔑 Could not decode token payload:', e);
     }
 
     // Add authorization header
@@ -430,7 +446,9 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
 
     // DEBUG: Log authorization header
     console.log('🔑 Authorization header:', `Bearer ${token.substring(0, 20)}...`);
+    console.log('🔑 Full Authorization header:', `Bearer ${token}`);
     console.log(`🌐 Making authenticated request to: ${url}`);
+    console.log('🔑 Request options:', options);
     
     const response = await fetch(url, {
       ...options,
