@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { saveToMongoDB, saveToPostgreSQL, uploadImagesToCloud, loadCropsFromDatabase, deleteCropFromDatabase, updateCropInDatabase } from '../../services/databaseService';
 import { testUserSpecificData, clearAllFarmerData } from '../../utils/userSpecificTest';
+import { authenticatedFetch } from '../../services/tokenService';
 import '../../../src/styles/animations.css';
 import { 
   LayoutDashboard, 
@@ -1093,12 +1094,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         return [];
       }
       
-      const response = await fetch(`https://acchadam1-backend.onrender.com/api/crops/farmer/${actualUserId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        }
+      const response = await authenticatedFetch(`https://acchadam1-backend.onrender.com/api/crops/farmer/${actualUserId}`, {
+        method: 'GET'
       });
       
       console.log(`📡 Database response status: ${response.status}`);
@@ -1407,12 +1404,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       console.log(`🌐 This ensures latest data is loaded from any device`);
       console.log(`📱 Cross-device sync: Mobile crops will be available on desktop and vice versa`);
       
-      const response = await fetch(`https://acchadam1-backend.onrender.com/api/crops/farmer/${actualUserId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
+      const response = await authenticatedFetch(`https://acchadam1-backend.onrender.com/api/crops/farmer/${actualUserId}`, {
+        method: 'GET'
       });
 
       console.log(`📡 Database response status: ${response.status}`);

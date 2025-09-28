@@ -1,4 +1,44 @@
 // Marketplace Service - Loads real farmer crop data for buyers
+import { authenticatedFetch } from './tokenService';
+
+// Enhanced token validation function
+function validateAuthToken(): { isValid: boolean; token: string | null; error?: string } {
+  const token = localStorage.getItem('authToken');
+  
+  if (!token) {
+    console.error('❌ No auth token found in localStorage');
+    return { isValid: false, token: null, error: 'No token found' };
+  }
+  
+  // Check token format (JWT should have 3 parts separated by dots)
+  const tokenParts = token.split('.');
+  if (tokenParts.length !== 3) {
+    console.error('❌ Invalid token format:', token.substring(0, 20) + '...');
+    return { isValid: false, token: null, error: 'Invalid token format' };
+  }
+  
+  // Check if token is expired (basic check)
+  try {
+    const payload = JSON.parse(atob(tokenParts[1]));
+    const now = Math.floor(Date.now() / 1000);
+    
+    if (payload.exp && payload.exp < now) {
+      console.error('❌ Token expired:', new Date(payload.exp * 1000));
+      return { isValid: false, token: null, error: 'Token expired' };
+    }
+    
+    console.log('✅ Token validation passed:', {
+      userId: payload.userId,
+      exp: new Date(payload.exp * 1000),
+      iat: new Date(payload.iat * 1000)
+    });
+    
+    return { isValid: true, token };
+  } catch (error) {
+    console.error('❌ Token parsing error:', error);
+    return { isValid: false, token: null, error: 'Token parsing failed' };
+  }
+}
 
 // Helper function to load from localStorage
 async function loadFromLocalStorage(): Promise<MarketplaceCrop[]> {
@@ -178,13 +218,29 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
     
     // Try to load from database first
     try {
-      const response = await fetch('https://acchadam1-backend.onrender.com/api/crops/marketplace', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
+      // Validate auth token before making request
+      const tokenValidation = validateAuthToken();
+      
+      if (!tokenValidation.isValid) {
+        console.error('❌ Invalid auth token:', tokenValidation.error);
+        console.log('🔄 Falling back to localStorage due to invalid token');
+        return await loadFromLocalStorage();
+      }
+      
+      console.log('✅ Token validation passed, making API request');
+      
+      // Use authenticated fetch with automatic token management
+      const response = await authenticatedFetch('https://acchadam1-backend.onrender.com/api/crops/marketplace', {
+        method: 'GET'
       });
+      
+      console.log(`📡 API Response Status: ${response.status} ${response.statusText}`);
+      
+      if (response.status === 401) {
+        console.error('❌ 401 Unauthorized - Token rejected by server');
+        console.log('🔄 Falling back to localStorage due to 401 error');
+        return await loadFromLocalStorage();
+      }
 
       if (response.ok) {
         const result = await response.json();

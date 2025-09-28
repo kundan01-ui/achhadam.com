@@ -7,6 +7,7 @@ import SettingsPage from './SettingsPage';
 import ContractsPage from './ContractsPage';
 import ProfileModal from '../../components/ui/ProfileModal';
 import ChatModal from '../../components/ui/ChatModal';
+import { authenticatedFetch } from '../../services/tokenService';
 import { 
   loadAllFarmerCrops, 
   filterCropsByCategory, 
@@ -316,12 +317,8 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         // Load orders from database first (PERMANENT DATA)
         const actualBuyerId = user?._id || user?.id || userProfile?.id;
         console.log(`🔑 Using actual buyer ID: ${actualBuyerId} (not generated ID: ${userProfile?.id})`);
-        const ordersResponse = await fetch(`https://acchadam1-backend.onrender.com/api/orders/buyer/${actualBuyerId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
+        const ordersResponse = await authenticatedFetch(`https://acchadam1-backend.onrender.com/api/orders/buyer/${actualBuyerId}`, {
+          method: 'GET'
         });
 
         if (ordersResponse.ok) {
