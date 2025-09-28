@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ProductsPage from './ProductsPage';
 import SuppliersPage from './SuppliersPage';
 import AnalyticsPage from './AnalyticsPage';
 import FavoritesPage from './FavoritesPage';
@@ -1801,8 +1800,6 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         return renderOverview();
       case 'orders':
         return renderOrders();
-      case 'products':
-        return <ProductsPage />;
       case 'suppliers':
         return <SuppliersPage />;
       case 'analytics':
