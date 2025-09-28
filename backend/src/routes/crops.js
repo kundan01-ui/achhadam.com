@@ -7,7 +7,10 @@ const auth = require('../middleware/auth');
 router.post('/', async (req, res) => {
   try {
     console.log('🌾 CROP UPLOAD: Starting crop upload process...');
+    console.log('🌾 CROP UPLOAD: Request headers:', req.headers);
     console.log('🌾 CROP UPLOAD: Request body:', req.body);
+    console.log('🌾 CROP UPLOAD: Request method:', req.method);
+    console.log('🌾 CROP UPLOAD: Request URL:', req.url);
     
     const {
       cropName,
@@ -29,8 +32,28 @@ router.post('/', async (req, res) => {
     // TEMPORARY: Use farmerId from request body instead of auth
     const actualFarmerId = farmerId || 'temp_farmer_' + Date.now();
     console.log('🌾 CROP UPLOAD: Using farmer ID:', actualFarmerId);
+    
+    // Check database connection
+    const mongoose = require('mongoose');
+    console.log('🌾 CROP UPLOAD: Database connection state:', mongoose.connection.readyState);
+    console.log('🌾 CROP UPLOAD: Database name:', mongoose.connection.name);
+    console.log('🌾 CROP UPLOAD: Database host:', mongoose.connection.host);
+    console.log('🌾 CROP UPLOAD: Database port:', mongoose.connection.port);
 
+    // Validate required fields
+    console.log('🌾 CROP UPLOAD: Validating required fields...');
+    if (!cropName || !cropType || !price) {
+      console.log('❌ CROP UPLOAD: Missing required fields:', { cropName, cropType, price });
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: cropName, cropType, price'
+      });
+    }
+    
+    console.log('✅ CROP UPLOAD: Required fields validated');
+    
     // Create new crop listing with PERMANENT PERSISTENCE
+    console.log('🌾 CROP UPLOAD: Creating crop listing object...');
     const cropListing = new CropListing({
       farmerId: actualFarmerId,
       cropName,
@@ -59,6 +82,8 @@ router.post('/', async (req, res) => {
         permanentLink: true
       }
     });
+    
+    console.log('🌾 CROP UPLOAD: Crop listing object created:', cropListing);
 
     await cropListing.save();
     console.log('✅ CROP UPLOAD: Crop saved to MongoDB successfully');
