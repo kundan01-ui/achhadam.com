@@ -180,6 +180,46 @@ router.get('/farmer/:farmerId', auth, async (req, res) => {
   }
 });
 
+// Get all crops for marketplace - CROSS-DEVICE SYNC
+router.get('/marketplace', async (req, res) => {
+  try {
+    console.log(`🌾 MARKETPLACE: Loading all crops for marketplace`);
+    console.log(`🌐 Cross-device sync: All farmer crops available for buyers`);
+    
+    // Load all crops with permanent persistence markers
+    const crops = await CropListing.find({ 
+      isPermanent: true,
+      crossDeviceAccess: true,
+      sessionIndependent: true,
+      status: 'available'
+    })
+    .populate('farmerId', 'profile.fullName address.current.city address.current.state phone email')
+    .sort({ uploadedAt: -1 });
+
+    console.log(`✅ MARKETPLACE: Found ${crops.length} crops available for marketplace`);
+    console.log(`🌐 These crops are available across all devices and sessions`);
+
+    res.json({
+      success: true,
+      data: crops,
+      count: crops.length,
+      message: 'Marketplace crops loaded successfully',
+      persistence: {
+        isPermanent: true,
+        crossDeviceAccess: true,
+        sessionIndependent: true
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching marketplace crops:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch marketplace crops',
+      error: error.message
+    });
+  }
+});
+
 // Get single crop by ID
 router.get('/:cropId', async (req, res) => {
   try {
