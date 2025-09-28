@@ -1,5 +1,84 @@
 // Marketplace Service - Loads real farmer crop data for buyers
 
+// Helper function to load from localStorage
+async function loadFromLocalStorage(): Promise<MarketplaceCrop[]> {
+  console.log('🔄 Loading crops from localStorage fallback...');
+  
+  const allCrops: MarketplaceCrop[] = [];
+  
+  // Get all localStorage keys
+  const keys = Object.keys(localStorage);
+  
+  // Find all farmer database keys
+  const farmerKeys = keys.filter(key => key.startsWith('farmer_database_'));
+  
+  console.log(`🔍 Found ${farmerKeys.length} farmer databases in localStorage`);
+  
+  // Validate farmerKeys is an array
+  if (!Array.isArray(farmerKeys)) {
+    console.error('❌ farmerKeys is not an array:', typeof farmerKeys, farmerKeys);
+    return [];
+  }
+  
+  // If no farmer data found, show debug info
+  if (farmerKeys.length === 0) {
+    console.warn('⚠️ No farmer data found in localStorage!');
+    console.log('🔍 All localStorage keys:', keys);
+    console.log('💡 Make sure farmers have uploaded crops first');
+    return [];
+  }
+  
+  farmerKeys.forEach(key => {
+    try {
+      const data = localStorage.getItem(key);
+      if (data) {
+        const farmerData = JSON.parse(data);
+        
+        if (farmerData.crops && Array.isArray(farmerData.crops)) {
+          console.log(`📊 Loading ${farmerData.crops.length} crops from farmer ${farmerData.farmerId} (${farmerData.farmerName})`);
+          
+          // Ensure crops is an array and has valid data
+          const validCrops = farmerData.crops.filter(crop => 
+            crop && typeof crop === 'object' && crop.id && crop.name
+          );
+          
+          console.log(`✅ Found ${validCrops.length} valid crops from ${farmerData.farmerName}`);
+          
+          validCrops.forEach(crop => {
+            const marketplaceCrop: MarketplaceCrop = {
+              ...crop,
+              farmer: {
+                id: farmerData.farmerId || 'unknown',
+                name: farmerData.farmerName || 'Unknown Farmer',
+                phone: farmerData.farmerPhone || '+91-XXXX-XXXX',
+                location: 'Unknown Location',
+                rating: Math.random() * 2 + 3,
+                totalCrops: validCrops.length,
+                joinedDate: new Date().toISOString(),
+                avatar: undefined
+              },
+              distance: Math.random() * 50 + 1,
+              demandScore: Math.random() * 100,
+              priceComparison: {
+                marketAverage: crop.price * (0.8 + Math.random() * 0.4),
+                isAboveAverage: Math.random() > 0.5,
+                percentageDifference: (Math.random() - 0.5) * 40
+              }
+            };
+            
+            allCrops.push(marketplaceCrop);
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`❌ Error loading farmer data from ${key}:`, error);
+    }
+  });
+  
+  console.log(`✅ LOCALSTORAGE FALLBACK: Loaded ${allCrops.length} crops from localStorage`);
+  return allCrops;
+}
+
 interface CropData {
   id: string;
   name: string;
@@ -117,6 +196,8 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
         // Validate cropsData before mapping
         if (cropsData.length === 0) {
           console.log('📭 No crops found in database, falling back to localStorage');
+          // Fallback to localStorage when database is empty
+          return await loadFromLocalStorage();
         } else {
           console.log(`🌾 Processing ${cropsData.length} crops from database`);
         }
@@ -153,6 +234,8 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
       }
     } catch (error) {
       console.error('❌ Database load failed, falling back to localStorage:', error);
+      // Fallback to localStorage when database fails
+      return await loadFromLocalStorage();
     }
 
     // Fallback to localStorage

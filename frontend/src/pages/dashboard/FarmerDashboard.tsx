@@ -1114,9 +1114,10 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         } catch (jsonError) {
           console.log(`⚠️ Database load failed with status ${response.status}: ${errorMessage}`);
         }
-        console.log(`❌ NO FALLBACK: Database is required for cross-device sync`);
-        console.log(`🔄 Please check your internet connection and try again`);
-        return [];
+        console.log(`❌ Database failed, falling back to localStorage`);
+        console.log(`🔄 Loading from localStorage for offline access`);
+        // Fallback to localStorage when database fails
+        return await loadCropsFromStorage();
       }
 
       // FALLBACK: Try to load from localStorage
