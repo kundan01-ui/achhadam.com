@@ -103,8 +103,12 @@ class ApiService {
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Origin': window.location.origin,
         ...options.headers,
       },
+      mode: 'cors',
+      credentials: 'include',
       ...options,
     };
 
