@@ -166,7 +166,7 @@ const getHeroSlides = (t: (key: string) => string) => [
 // Data arrays
 const stats = [
   { 
-    value: '10,000+', 
+    value: '100+', 
     label: 'Active Farmers', 
     icon: Users, 
     color: 'text-gray-600 group-hover:text-green-600',
@@ -175,7 +175,7 @@ const stats = [
     cardBg: 'bg-green-50/80'
   },
   { 
-    value: '5,000+', 
+    value: '50+', 
     label: 'Verified Buyers', 
     icon: Shield, 
     color: 'text-gray-600 group-hover:text-blue-600',
@@ -184,7 +184,7 @@ const stats = [
     cardBg: 'bg-blue-50/80'
   },
   { 
-    value: '2,000+', 
+    value: '20+', 
     label: 'Transport Partners', 
     icon: Truck, 
     color: 'text-gray-600 group-hover:text-orange-600',
@@ -193,7 +193,7 @@ const stats = [
     cardBg: 'bg-orange-50/80'
   },
   { 
-    value: '₹50Cr+', 
+    value: '₹1000+', 
     label: 'Trade Volume', 
     icon: TrendingUp, 
     color: 'text-gray-600 group-hover:text-purple-600',
@@ -767,7 +767,7 @@ const HomePage: React.FC = () => {
                        <h3>About Achhadam:</h3>
                        <p>Achhadam Private Limited is revolutionizing agriculture in India through technology. Our platform connects farmers directly with consumers, eliminating middlemen and ensuring fair prices. We provide smart farming solutions, crop analytics, and quality verification services.</p>
                        <h3>Contact Information:</h3>
-                       <p>Phone: +91-9905441890 | Email: shampawarp3@gmail.com | Location: Maharashtra, India</p>
+                       <p>Phone: +91-9905441890 | Email: shampawarp3@gmail.com | Location: Near Sai Mandir balsa road Jintur Maharashtra, India</p>
                      </div>
                      <div className="flex flex-col sm:flex-row gap-4 justify-center">
                        <Button
@@ -818,7 +818,7 @@ const HomePage: React.FC = () => {
 {t('statisticsTitle')}
                    </h2>
                    <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4">
-                     Real results from real farmers, buyers, and transporters across India
+                     Real results from farmers, buyers, and transporters across India
                    </p>
                  </div>
                  
@@ -1143,7 +1143,7 @@ const HomePage: React.FC = () => {
                        </div>
                        <div>
                          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-900 transition-colors duration-300">Direct Connection</h3>
-                         <p className="text-gray-600 group-hover:text-orange-700 transition-colors duration-300">Farmers sell directly to verified buyers, no commission fees</p>
+                         <p className="text-gray-600 group-hover:text-orange-700 transition-colors duration-300">Farmers sell directly to verified buyers, Almost no commission fees</p>
                        </div>
                      </div>
                      
@@ -1170,11 +1170,11 @@ const HomePage: React.FC = () => {
                      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
                        <div className="grid grid-cols-2 gap-6">
                          <div className="text-center">
-                           <div className="text-2xl font-bold text-gray-900 mb-2">₹50Cr+</div>
+                           <div className="text-2xl font-bold text-gray-900 mb-2">₹1000+</div>
                            <div className="text-sm text-gray-600">Trade Volume</div>
                          </div>
                          <div className="text-center">
-                           <div className="text-2xl font-bold text-gray-900 mb-2">15,000+</div>
+                           <div className="text-2xl font-bold text-gray-900 mb-2">150+</div>
                            <div className="text-sm text-gray-600">Successful Trades</div>
                          </div>
                        </div>
