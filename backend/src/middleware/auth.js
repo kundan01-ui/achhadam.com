@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const { User } = require('../models');
 
 const auth = async (req, res, next) => {
@@ -32,8 +33,51 @@ const auth = async (req, res, next) => {
     });
     
     console.log('🔍 AUTH MIDDLEWARE: Looking up user in database with ID:', decoded.userId);
+    console.log('🔍 AUTH MIDDLEWARE: Searching for user with userId:', decoded.userId);
+    
+    // Check database connection
+    console.log('🔍 AUTH MIDDLEWARE: Database connection state:', mongoose.connection.readyState);
+    console.log('🔍 AUTH MIDDLEWARE: Database name:', mongoose.connection.name);
+    
+    // Try different search methods
     const user = await User.findOne({ userId: decoded.userId });
     console.log('🔍 AUTH MIDDLEWARE: User found in database:', user ? 'YES' : 'NO');
+    
+    if (!user) {
+      // Try searching by _id
+      console.log('🔍 AUTH MIDDLEWARE: Trying to find user by _id:', decoded.userId);
+      const userById = await User.findById(decoded.userId);
+      console.log('🔍 AUTH MIDDLEWARE: User found by _id:', userById ? 'YES' : 'NO');
+      
+      if (userById) {
+        console.log('🔍 AUTH MIDDLEWARE: User found by _id, using that user');
+        req.user = {
+          userId: userById.userId,
+          userType: userById.userType,
+          email: userById.email,
+          phone: userById.phone
+        };
+        console.log('✅ AUTH MIDDLEWARE: Authentication successful with _id lookup');
+        return next();
+      }
+      
+      // Try searching by phone
+      console.log('🔍 AUTH MIDDLEWARE: Trying to find user by phone:', decoded.phone);
+      const userByPhone = await User.findOne({ phone: decoded.phone });
+      console.log('🔍 AUTH MIDDLEWARE: User found by phone:', userByPhone ? 'YES' : 'NO');
+      
+      if (userByPhone) {
+        console.log('🔍 AUTH MIDDLEWARE: User found by phone, using that user');
+        req.user = {
+          userId: userByPhone.userId,
+          userType: userByPhone.userType,
+          email: userByPhone.email,
+          phone: userByPhone.phone
+        };
+        console.log('✅ AUTH MIDDLEWARE: Authentication successful with phone lookup');
+        return next();
+      }
+    }
     
     if (!user) {
       console.log('❌ AUTH MIDDLEWARE: User not found in database');
