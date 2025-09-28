@@ -17,6 +17,8 @@ interface RefreshResponse {
 
 class TokenService {
   private refreshPromise: Promise<string> | null = null;
+  private retryQueue: Array<{url: string, options: RequestInit, timestamp: number}> = [];
+  private isOnline: boolean = navigator.onLine;
 
   // Validate current token
   validateToken(): TokenInfo {
@@ -106,29 +108,58 @@ class TokenService {
     try {
       console.log('🔄 Attempting token refresh...');
       
+      const currentToken = localStorage.getItem('authToken');
+      if (!currentToken) {
+        console.error('❌ No current token to refresh');
+        return null;
+      }
+
       const response = await fetch('https://acchadam1-backend.onrender.com/api/auth/refresh', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
+          'Authorization': `Bearer ${currentToken}`
+        },
+        body: JSON.stringify({ token: currentToken })
       });
+
+      console.log(`📡 Token refresh response: ${response.status} ${response.statusText}`);
 
       if (response.ok) {
         const data = await response.json();
         const newToken = data.token;
         
-        // Store new token
-        localStorage.setItem('authToken', newToken);
-        
-        console.log('✅ Token refreshed successfully');
-        return newToken;
+        if (newToken) {
+          // Store new token
+          localStorage.setItem('authToken', newToken);
+          console.log('✅ Token refreshed successfully');
+          return newToken;
+        } else {
+          console.error('❌ No token in refresh response');
+          return null;
+        }
       } else {
-        console.error('❌ Token refresh failed:', response.status);
+        const errorText = await response.text();
+        console.error('❌ Token refresh failed:', response.status, errorText);
+        
+        // If refresh fails, clear auth and redirect to login
+        if (response.status === 401 || response.status === 400) {
+          console.log('🔄 Refresh failed with auth error, clearing auth data...');
+          this.clearAuth();
+          window.location.href = '/login';
+        }
+        
         return null;
       }
     } catch (error) {
       console.error('❌ Token refresh error:', error);
+      
+      // Network error - queue for retry
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        console.log('🔄 Network error during refresh, will retry later...');
+        await this.queueRefreshForRetry();
+      }
+      
       return null;
     }
   }
@@ -208,6 +239,104 @@ class TokenService {
     console.log('🧹 Authentication data cleared');
   }
 
+  // Queue data for retry when network is back
+  async queueDataForRetry(url: string, options: RequestInit): Promise<void> {
+    const queueItem = {
+      url,
+      options,
+      timestamp: Date.now()
+    };
+    
+    this.retryQueue.push(queueItem);
+    console.log(`📦 Queued request for retry: ${url}`);
+    
+    // Store in localStorage for persistence
+    localStorage.setItem('retryQueue', JSON.stringify(this.retryQueue));
+  }
+
+  // Queue refresh for retry
+  async queueRefreshForRetry(): Promise<void> {
+    console.log('📦 Queuing token refresh for retry...');
+    // Store refresh request in localStorage
+    localStorage.setItem('pendingRefresh', 'true');
+  }
+
+  // Process retry queue when online
+  async processRetryQueue(): Promise<void> {
+    if (!this.isOnline) {
+      console.log('📡 Offline, skipping retry queue processing');
+      return;
+    }
+
+    if (this.retryQueue.length === 0) {
+      return;
+    }
+
+    console.log(`🔄 Processing ${this.retryQueue.length} queued requests...`);
+
+    const successfulRetries: number[] = [];
+    
+    for (let i = 0; i < this.retryQueue.length; i++) {
+      const item = this.retryQueue[i];
+      
+      try {
+        const response = await this.authenticatedFetch(item.url, item.options);
+        if (response.ok) {
+          successfulRetries.push(i);
+          console.log(`✅ Retry successful: ${item.url}`);
+        }
+      } catch (error) {
+        console.error(`❌ Retry failed: ${item.url}`, error);
+      }
+    }
+
+    // Remove successful retries
+    this.retryQueue = this.retryQueue.filter((_, index) => !successfulRetries.includes(index));
+    
+    // Update localStorage
+    localStorage.setItem('retryQueue', JSON.stringify(this.retryQueue));
+    
+    console.log(`✅ Processed retry queue. ${successfulRetries.length} successful, ${this.retryQueue.length} remaining`);
+  }
+
+  // Check for pending refresh
+  async checkPendingRefresh(): Promise<void> {
+    const pendingRefresh = localStorage.getItem('pendingRefresh');
+    if (pendingRefresh === 'true') {
+      console.log('🔄 Found pending refresh, attempting...');
+      localStorage.removeItem('pendingRefresh');
+      await this.refreshTokenIfNeeded();
+    }
+  }
+
+  // Initialize network recovery
+  initializeNetworkRecovery(): void {
+    // Listen for online/offline events
+    window.addEventListener('online', async () => {
+      console.log('📡 Network back online, processing retry queue...');
+      this.isOnline = true;
+      await this.checkPendingRefresh();
+      await this.processRetryQueue();
+    });
+
+    window.addEventListener('offline', () => {
+      console.log('📡 Network offline, queuing requests...');
+      this.isOnline = false;
+    });
+
+    // Load existing retry queue
+    const storedQueue = localStorage.getItem('retryQueue');
+    if (storedQueue) {
+      try {
+        this.retryQueue = JSON.parse(storedQueue);
+        console.log(`📦 Loaded ${this.retryQueue.length} queued requests`);
+      } catch (error) {
+        console.error('❌ Failed to load retry queue:', error);
+        this.retryQueue = [];
+      }
+    }
+  }
+
   // Check if user needs to re-login
   needsReLogin(): boolean {
     const tokenInfo = this.validateToken();
@@ -232,50 +361,74 @@ class TokenService {
 // Create global token service
 export const tokenService = new TokenService();
 
+// Initialize network recovery on app start
+tokenService.initializeNetworkRecovery();
+
 // Enhanced fetch with automatic token management
 export const authenticatedFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
-  // Get valid token
-  const token = await tokenService.getValidToken();
-  
-  if (!token) {
-    throw new Error('No valid authentication token available');
-  }
-
-  // Add authorization header
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-    ...options.headers
-  };
-
-  console.log(`🌐 Making authenticated request to: ${url}`);
-  
-  const response = await fetch(url, {
-    ...options,
-    headers
-  });
-
-  // If 401, try to refresh token and retry once
-  if (response.status === 401) {
-    console.log('🔄 401 received, attempting token refresh...');
+  try {
+    // Get valid token
+    const token = await tokenService.getValidToken();
     
-    const refreshedToken = await tokenService.refreshTokenIfNeeded();
-    if (refreshedToken) {
-      console.log('🔄 Retrying request with refreshed token...');
-      
-      const retryHeaders = {
-        ...headers,
-        'Authorization': `Bearer ${refreshedToken}`
-      };
-      
-      return fetch(url, {
-        ...options,
-        headers: retryHeaders
-      });
+    if (!token) {
+      console.error('❌ No valid authentication token available');
+      // Auto-logout when no token available
+      tokenService.clearAuth();
+      window.location.href = '/login';
+      throw new Error('No valid authentication token available');
     }
-  }
 
-  return response;
+    // Add authorization header
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...options.headers
+    };
+
+    console.log(`🌐 Making authenticated request to: ${url}`);
+    
+    const response = await fetch(url, {
+      ...options,
+      headers
+    });
+
+    // If 401, try to refresh token and retry once
+    if (response.status === 401) {
+      console.log('🔄 401 received, attempting token refresh...');
+      
+      const refreshedToken = await tokenService.refreshTokenIfNeeded();
+      if (refreshedToken) {
+        console.log('🔄 Retrying request with refreshed token...');
+        
+        const retryHeaders = {
+          ...headers,
+          'Authorization': `Bearer ${refreshedToken}`
+        };
+        
+        return fetch(url, {
+          ...options,
+          headers: retryHeaders
+        });
+      } else {
+        console.error('❌ Token refresh failed, auto-logout...');
+        tokenService.clearAuth();
+        window.location.href = '/login';
+        return response;
+      }
+    }
+
+    return response;
+  } catch (error) {
+    console.error('❌ Network error in authenticatedFetch:', error);
+    
+    // Network error - queue for retry
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      console.log('🔄 Network error, queuing request for retry...');
+      await tokenService.queueDataForRetry(url, options);
+    }
+    
+    throw error;
+  }
 };
 
 export default tokenService;

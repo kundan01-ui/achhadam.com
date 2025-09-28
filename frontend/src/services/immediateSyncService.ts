@@ -1,6 +1,8 @@
 // IMMEDIATE DATA SYNC SERVICE
 // Forces immediate sync of all localStorage data to MongoDB
 
+import { authenticatedFetch } from './tokenService';
+
 interface ImmediateSyncResult {
   success: boolean;
   syncedCount: number;
@@ -200,68 +202,38 @@ class ImmediateSyncService {
 
       console.log(`🔑 Using valid token for immediate sync: ${token.substring(0, 20)}...`);
 
-      // IMMEDIATE API CALL with retry logic and token refresh
-      let response;
-      let retryCount = 0;
-      const maxRetries = 2;
-      let currentToken = token;
+      // Use enhanced authenticatedFetch for better token management
+      try {
+        const response = await authenticatedFetch(`${this.backendUrl}/api/crops`, {
+          method: 'POST',
+          body: JSON.stringify(cropData)
+        });
 
-      while (retryCount <= maxRetries) {
-        try {
-          response = await fetch(`${this.backendUrl}/api/crops`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${currentToken}`
-            },
-            body: JSON.stringify(cropData)
-          });
+        console.log(`📡 IMMEDIATE SYNC Response: ${response.status} ${response.statusText}`);
 
-          console.log(`📡 IMMEDIATE SYNC Response: ${response.status} ${response.statusText}`);
-
-          if (response.ok) {
-            const responseData = await response.json();
-            console.log(`✅ IMMEDIATE SYNC SUCCESS: ${crop.name} saved to MongoDB`);
-            console.log(`📊 MongoDB Response:`, responseData);
-            return true;
-          } else if (response.status === 401) {
-            console.error(`❌ 401 Unauthorized - Token rejected by server`);
-            if (retryCount < maxRetries) {
-              console.log(`🔄 Attempting token refresh (attempt ${retryCount + 1}/${maxRetries})...`);
-              
-              // Try to refresh token
-              const refreshedToken = await this.refreshToken();
-              if (refreshedToken && refreshedToken !== currentToken) {
-                currentToken = refreshedToken;
-                console.log(`✅ Token refreshed, retrying with new token...`);
-              } else {
-                console.log(`⚠️ Token refresh failed, retrying with current token...`);
-              }
-              
-              retryCount++;
-              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-              continue;
-            } else {
-              console.error(`❌ IMMEDIATE SYNC FAILED: Max retries reached for ${crop.name}`);
-              return false;
-            }
-          } else {
-            const errorText = await response.text();
-            console.error(`❌ IMMEDIATE SYNC FAILED: ${response.status} ${errorText}`);
+        if (response.ok) {
+          const responseData = await response.json();
+          console.log(`✅ IMMEDIATE SYNC SUCCESS: ${crop.name} saved to MongoDB`);
+          console.log(`📊 MongoDB Response:`, responseData);
+          return true;
+        } else {
+          const errorText = await response.text();
+          console.error(`❌ IMMEDIATE SYNC FAILED: ${response.status} ${errorText}`);
+          
+          // If 401, token refresh should have been handled by authenticatedFetch
+          if (response.status === 401) {
+            console.error(`❌ Authentication failed for ${crop.name} - user may need to re-login`);
             return false;
           }
-        } catch (error) {
-          console.error(`❌ Network error during immediate sync:`, error);
-          if (retryCount < maxRetries) {
-            console.log(`🔄 Retrying immediate sync due to network error (attempt ${retryCount + 1}/${maxRetries})...`);
-            retryCount++;
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-            continue;
-          } else {
-            console.error(`❌ IMMEDIATE SYNC FAILED: Max retries reached due to network error`);
-            return false;
-          }
+          
+          return false;
         }
+      } catch (error) {
+        console.error(`❌ Network error during immediate sync for ${crop.name}:`, error);
+        
+        // Network error - data will be queued for retry by authenticatedFetch
+        console.log(`📦 ${crop.name} will be retried when network is available`);
+        return false;
       }
 
       return false;
