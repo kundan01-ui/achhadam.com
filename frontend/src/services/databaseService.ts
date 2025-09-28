@@ -115,9 +115,42 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
     }
     
     console.log('🌾 Using auth token:', authToken.substring(0, 20) + '...');
+    console.log('🔑 Full token for debugging:', authToken);
+    
+    // Validate token format
+    const tokenParts = authToken.split('.');
+    if (tokenParts.length !== 3) {
+      throw new Error('Invalid token format');
+    }
+    
+    // Decode token for debugging
+    try {
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log('🔑 Token payload:', {
+        userId: payload.userId,
+        userType: payload.userType,
+        phone: payload.phone,
+        exp: payload.exp,
+        iat: payload.iat,
+        expiresAt: new Date(payload.exp * 1000)
+      });
+      
+      // Check if token is expired
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < now) {
+        console.log('❌ Token expired:', {
+          exp: payload.exp,
+          now: now,
+          diff: now - payload.exp
+        });
+        throw new Error('Token expired');
+      }
+    } catch (e) {
+      console.log('🔑 Could not decode token payload:', e);
+    }
     
     // Make API call to save crop
-    const response = await fetch('https://acchadam1-backend.onrender.com/api/crops', {
+    let response = await fetch('https://acchadam1-backend.onrender.com/api/crops', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -125,6 +158,53 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
       },
       body: JSON.stringify(enrichedCropData)
     });
+    
+    // If 401, try to refresh token and retry
+    if (response.status === 401) {
+      console.log('🔄 401 received, attempting token refresh...');
+      
+      try {
+        // Try to refresh token
+        const refreshResponse = await fetch('https://acchadam1-backend.onrender.com/api/auth/refresh', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ token: authToken })
+        });
+        
+        if (refreshResponse.ok) {
+          const refreshData = await refreshResponse.json();
+          const newToken = refreshData.token;
+          
+          console.log('🔄 Token refreshed successfully, retrying request...');
+          
+          // Update localStorage with new token
+          localStorage.setItem('authToken', newToken);
+          
+          // Retry the original request with new token
+          response = await fetch('https://acchadam1-backend.onrender.com/api/crops', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${newToken}`
+            },
+            body: JSON.stringify(enrichedCropData)
+          });
+        } else {
+          console.log('❌ Token refresh failed, redirecting to login...');
+          localStorage.removeItem('authToken');
+          window.location.href = '/login';
+          throw new Error('Token refresh failed');
+        }
+      } catch (refreshError) {
+        console.log('❌ Token refresh error:', refreshError);
+        localStorage.removeItem('authToken');
+        window.location.href = '/login';
+        throw new Error('Token refresh failed');
+      }
+    }
     
     console.log('🌾 API Response status:', response.status);
     console.log('🌾 API Response headers:', Object.fromEntries(response.headers.entries()));
