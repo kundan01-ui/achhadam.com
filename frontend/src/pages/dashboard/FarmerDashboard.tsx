@@ -1562,46 +1562,59 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     loadCrops();
   }, [userProfile.id, userProfile.name]);
 
-  // Calculate real-time statistics from uploaded crops
-  const calculateRealTimeStats = () => {
-    const totalCrops = uploadedCrops.length;
-    const activeCrops = uploadedCrops.filter(crop => crop.status === 'active').length;
-    const harvestedCrops = uploadedCrops.filter(crop => {
-      const harvestDate = new Date(crop.harvestDate);
-      const today = new Date();
-      return harvestDate <= today;
-    }).length;
-    
-    const totalEarnings = uploadedCrops.reduce((sum, crop) => {
-      return sum + (crop.price * crop.quantity);
-    }, 0);
-    
-    // Mock land area (in real app, this would come from farmer profile)
-    const totalLand = userProfile.landArea || 0;
-    
-    // Mock pending orders (in real app, this would come from orders API)
-    const pendingOrders = Math.floor(Math.random() * 5); // Random for demo
-    
-    console.log(`📊 Real-time stats for ${userProfile.name}:`, {
-      totalCrops,
-      activeCrops,
-      harvestedCrops,
-      totalEarnings,
-      totalLand,
-      pendingOrders
-    });
+  // Calculate real-time statistics from uploaded crops - FIXED INFINITE LOOP
+  const [realTimeStats, setRealTimeStats] = useState({
+    totalCrops: 0,
+    activeCrops: 0,
+    harvestedCrops: 0,
+    totalEarnings: 0,
+    totalLand: 0,
+    pendingOrders: 0
+  });
 
-    return {
-      totalCrops,
-      activeCrops,
-      harvestedCrops,
-      totalEarnings,
-      totalLand,
-      pendingOrders
+  // Update stats only when crops change - FIXED INFINITE LOOP
+  useEffect(() => {
+    const calculateStats = () => {
+      const totalCrops = uploadedCrops.length;
+      const activeCrops = uploadedCrops.filter(crop => crop.status === 'active').length;
+      const harvestedCrops = uploadedCrops.filter(crop => {
+        const harvestDate = new Date(crop.harvestDate);
+        const today = new Date();
+        return harvestDate <= today;
+      }).length;
+      
+      const totalEarnings = uploadedCrops.reduce((sum, crop) => {
+        return sum + (crop.price * crop.quantity);
+      }, 0);
+      
+      // Mock land area (in real app, this would come from farmer profile)
+      const totalLand = userProfile.landArea || 0;
+      
+      // Mock pending orders (in real app, this would come from orders API)
+      const pendingOrders = Math.floor(Math.random() * 5); // Random for demo
+      
+      console.log(`📊 Real-time stats for ${userProfile.name}:`, {
+        totalCrops,
+        activeCrops,
+        harvestedCrops,
+        totalEarnings,
+        totalLand,
+        pendingOrders
+      });
+
+      setRealTimeStats({
+        totalCrops,
+        activeCrops,
+        harvestedCrops,
+        totalEarnings,
+        totalLand,
+        pendingOrders
+      });
     };
-  };
 
-  const realTimeStats = calculateRealTimeStats();
+    // Only calculate when crops or userProfile changes
+    calculateStats();
+  }, [uploadedCrops, userProfile.name, userProfile.landArea]);
 
   // PERMANENT DATA LOADING - Cross-device, Cross-session
   useEffect(() => {

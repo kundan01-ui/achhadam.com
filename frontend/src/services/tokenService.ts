@@ -25,6 +25,7 @@ class TokenService {
     const token = localStorage.getItem('authToken');
     
     if (!token) {
+      console.log('❌ No token found in localStorage');
       return {
         isValid: false,
         token: null,
@@ -36,6 +37,7 @@ class TokenService {
       // Parse JWT token
       const parts = token.split('.');
       if (parts.length !== 3) {
+        console.log('❌ Invalid token format - not 3 parts');
         return {
           isValid: false,
           token: null,
@@ -43,11 +45,37 @@ class TokenService {
         };
       }
 
-      const payload = JSON.parse(atob(parts[1]));
+      // Decode payload with proper error handling
+      let payload;
+      try {
+        payload = JSON.parse(atob(parts[1]));
+      } catch (decodeError) {
+        console.log('❌ Token payload decode failed:', decodeError);
+        return {
+          isValid: false,
+          token: null,
+          error: 'Token payload decode failed'
+        };
+      }
+
       const now = Math.floor(Date.now() / 1000);
+      
+      // DEBUG: Log token details
+      console.log('🔑 Token validation:', {
+        userId: payload.userId,
+        exp: payload.exp,
+        now: now,
+        expiresIn: payload.exp ? (payload.exp - now) : 'No expiry',
+        isExpired: payload.exp ? (payload.exp < now) : false
+      });
       
       // Check if token is expired
       if (payload.exp && payload.exp < now) {
+        console.log('❌ Token expired:', {
+          exp: payload.exp,
+          now: now,
+          diff: now - payload.exp
+        });
         return {
           isValid: false,
           token: null,
@@ -60,6 +88,7 @@ class TokenService {
       // Check if token expires soon (within 5 minutes)
       const expiresSoon = payload.exp && (payload.exp - now) < 300;
       
+      console.log('✅ Token is valid');
       return {
         isValid: true,
         token,
@@ -69,6 +98,7 @@ class TokenService {
       };
 
     } catch (error) {
+      console.log('❌ Token parsing failed:', error);
       return {
         isValid: false,
         token: null,
@@ -378,6 +408,19 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
       throw new Error('No valid authentication token available');
     }
 
+    // DEBUG: Log token details
+    console.log('🔑 Token being sent:', token.substring(0, 20) + '...');
+    console.log('🔑 Token length:', token.length);
+    
+    // Validate token format before sending
+    const tokenParts = token.split('.');
+    if (tokenParts.length !== 3) {
+      console.error('❌ Invalid token format detected');
+      tokenService.clearAuth();
+      window.location.href = '/login';
+      throw new Error('Invalid token format');
+    }
+
     // Add authorization header
     const headers = {
       'Content-Type': 'application/json',
@@ -385,6 +428,8 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
       ...options.headers
     };
 
+    // DEBUG: Log authorization header
+    console.log('🔑 Authorization header:', `Bearer ${token.substring(0, 20)}...`);
     console.log(`🌐 Making authenticated request to: ${url}`);
     
     const response = await fetch(url, {
@@ -395,6 +440,14 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
     // If 401, try to refresh token and retry once
     if (response.status === 401) {
       console.log('🔄 401 received, attempting token refresh...');
+      
+      // DEBUG: Log response details
+      try {
+        const errorText = await response.text();
+        console.log('🔍 401 Response body:', errorText);
+      } catch (e) {
+        console.log('🔍 401 Response: Could not read response body');
+      }
       
       const refreshedToken = await tokenService.refreshTokenIfNeeded();
       if (refreshedToken) {
