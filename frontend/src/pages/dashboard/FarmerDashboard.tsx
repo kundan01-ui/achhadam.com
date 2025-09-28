@@ -600,15 +600,20 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         throw new Error('Failed to upload images: ' + imageUploadResult.error);
       }
       
-      // Step 2: Save to MongoDB
+      // Step 2: IMMEDIATE SAVE to MongoDB - CRITICAL FOR CROSS-DEVICE SYNC
+      console.log('🌾 IMMEDIATE SAVE: Starting immediate MongoDB save...');
       const mongoResult = await saveToMongoDB(cropData);
+      
       if (!mongoResult.success) {
-        console.warn('MongoDB save failed:', mongoResult.error);
-        console.log('🔄 Will continue with localStorage backup');
+        console.error('❌ IMMEDIATE SAVE FAILED:', mongoResult.error);
+        console.log('🔄 MongoDB save failed, will continue with localStorage backup');
+        console.log('⚠️ WARNING: Crop will only be available on this device');
         // Continue with PostgreSQL even if MongoDB fails
       } else {
-        console.log('✅ MongoDB save successful:', mongoResult.data);
-        console.log('🌐 Crop is now available across all devices');
+        console.log('✅ IMMEDIATE SAVE SUCCESS: Crop saved to MongoDB immediately');
+        console.log('🌐 Crop is now available across all devices and sessions');
+        console.log('📱 Cross-device sync: Mobile crops → Desktop visible');
+        console.log('🔄 Permanent persistence: Data will survive device changes');
       }
       
       // Step 3: Save to PostgreSQL
@@ -652,14 +657,21 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         cloudStorage: imageUploadResult.success
       });
       
-      // Verify database save
+      // Verify database save and show user notification
       if (mongoResult.success) {
-        console.log('🎉 DATABASE SYNC SUCCESS: Crop is permanently stored');
+        console.log('🎉 IMMEDIATE SAVE SUCCESS: Crop is permanently stored in MongoDB');
         console.log('🌐 This crop will be available on any device when farmer logs in');
         console.log('📱 Cross-device sync: Mobile crops → Desktop visible');
+        console.log('🔄 Permanent persistence: Data will survive device changes');
+        
+        // Show success notification to user
+        alert('✅ Crop uploaded successfully!\n🌐 Your crop is now available across all devices\n📱 Cross-device sync enabled');
       } else {
-        console.log('⚠️ DATABASE SYNC FAILED: Using localStorage only');
+        console.log('⚠️ IMMEDIATE SAVE FAILED: Using localStorage only');
         console.log('🔄 Crop will only be available on this device');
+        
+        // Show warning notification to user
+        alert('⚠️ Crop uploaded to device only\n❌ Cross-device sync failed\n🔄 Please try syncing manually later');
       }
       
       return { 

@@ -62,60 +62,100 @@ interface ImageData {
   };
 }
 
-// MongoDB Integration Functions - REAL DATABASE SAVE
+// MongoDB Integration Functions - IMMEDIATE DATABASE SAVE
 export const saveToMongoDB = async (cropData: CropData): Promise<{ success: boolean; data?: any; error?: string }> => {
   try {
-    console.log('🌾 Saving crop to MongoDB:', cropData);
+    console.log('🌾 IMMEDIATE SAVE: Saving crop to MongoDB immediately...');
+    console.log('🌾 Crop data:', cropData);
     
     // Validate required fields
     if (!cropData.name || !cropData.type || !cropData.price) {
       throw new Error('Missing required crop data: name, type, or price');
     }
     
-    // Add farmer ID to crop data
-    const farmerId = localStorage.getItem('farmer_user_id') || 'unknown';
+    // Get farmer ID from localStorage or user profile
+    const farmerId = localStorage.getItem('farmer_user_id') || localStorage.getItem('farmer_user_key') || 'unknown';
+    const farmerName = localStorage.getItem('farmer_name') || 'Unknown Farmer';
+    const farmerPhone = localStorage.getItem('farmer_phone') || 'unknown';
+    
+    console.log('🌾 Farmer details:', { farmerId, farmerName, farmerPhone });
+    
+    // Enrich crop data with farmer information
     const enrichedCropData = {
       ...cropData,
       farmerId: farmerId,
+      farmerName: farmerName,
+      farmerPhone: farmerPhone,
       uploadedAt: new Date().toISOString(),
       status: 'available',
       isPermanent: true,
       crossDeviceAccess: true,
-      sessionIndependent: true
+      sessionIndependent: true,
+      // Add crop-specific fields for backend compatibility
+      cropName: cropData.name,
+      cropType: cropData.type,
+      variety: cropData.variety || 'Unknown',
+      quantity: cropData.quantity || 1,
+      unit: cropData.unit || 'kg',
+      quality: cropData.quality || 'good',
+      harvestDate: cropData.harvestDate || new Date().toISOString(),
+      price: cropData.price,
+      organic: cropData.organic || false,
+      location: cropData.location || 'Unknown',
+      description: cropData.description || '',
+      images: cropData.images || []
     };
     
+    console.log('🌾 Enriched crop data:', enrichedCropData);
+    
+    // Get authentication token
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+      throw new Error('No authentication token found');
+    }
+    
+    console.log('🌾 Using auth token:', authToken.substring(0, 20) + '...');
+    
+    // Make API call to save crop
     const response = await fetch('https://acchadam1-backend.onrender.com/api/crops', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        'Authorization': `Bearer ${authToken}`
       },
       body: JSON.stringify(enrichedCropData)
     });
+    
+    console.log('🌾 API Response status:', response.status);
+    console.log('🌾 API Response headers:', Object.fromEntries(response.headers.entries()));
     
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
       try {
         const errorData = await response.json();
         errorMessage = errorData.message || errorMessage;
+        console.error('🌾 API Error response:', errorData);
       } catch (jsonError) {
-        console.log(`⚠️ MongoDB save failed with status ${response.status}: ${errorMessage}`);
+        const errorText = await response.text();
+        console.error('🌾 API Error text:', errorText);
+        errorMessage = errorText || errorMessage;
       }
       throw new Error(errorMessage);
     }
     
-    // Handle JSON parsing safely
+    // Handle successful response
     let result;
     try {
       result = await response.json();
+      console.log('✅ IMMEDIATE SAVE SUCCESS: Crop saved to MongoDB:', result);
     } catch (jsonError) {
-      console.log(`✅ MongoDB save successful (no JSON response)`);
-      return { success: true, data: { message: 'Crop saved successfully' } };
+      console.log('✅ IMMEDIATE SAVE SUCCESS: Crop saved to MongoDB (no JSON response)');
+      result = { message: 'Crop saved successfully' };
     }
-    console.log('✅ Crop saved to MongoDB successfully:', result);
+    
     return { success: true, data: result };
   } catch (error) {
-    console.error('❌ MongoDB save error:', error);
+    console.error('❌ IMMEDIATE SAVE FAILED:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };
