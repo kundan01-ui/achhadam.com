@@ -90,7 +90,7 @@ const InvestorPage: React.FC<InvestorPageProps> = ({ onBackToHome }) => {
       icon: <TrendingUp className="w-8 h-8 text-green-600" />,
       title: "Rapid Growth Trajectory",
       description: "40% year-over-year growth in farmer registrations and 60% increase in transaction volume.",
-      metrics: ["₹50Cr+ GMV", "10,000+ Active Users", "200+ Cities"]
+      metrics: ["₹5000+ GMV", "10,000+ Active Users", "20+ Cities"]
     },
     {
       icon: <Shield className="w-8 h-8 text-blue-600" />,
@@ -146,21 +146,21 @@ const InvestorPage: React.FC<InvestorPageProps> = ({ onBackToHome }) => {
   const investmentRounds = [
     {
       round: "Seed Round",
-      amount: "₹2 Cr",
+      amount: "₹0",
       date: "2022",
       investors: ["AgriTech Ventures", "Rural Innovation Fund"],
       use: "Platform Development & Initial Operations"
     },
     {
       round: "Series A",
-      amount: "₹15 Cr",
+      amount: "₹0 ",
       date: "2023",
       investors: ["Green Capital", "FarmTech Partners", "Rural Growth Fund"],
       use: "Market Expansion & Technology Enhancement"
     },
     {
       round: "Series B",
-      amount: "₹50 Cr",
+      amount: "₹0 ",
       date: "2024",
       investors: ["Agricultural Investment Corp", "Tech Growth Fund", "Rural Development Bank"],
       use: "National Expansion & International Entry"
