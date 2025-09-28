@@ -121,6 +121,12 @@ class ApiService {
       // Check if timer already exists to prevent conflicts
       const timerKey = `API Request: ${endpoint}`;
       if (console.time && console.timeEnd) {
+        // Clear any existing timer first
+        try {
+          console.timeEnd(timerKey);
+        } catch (e) {
+          // Timer doesn't exist, that's fine
+        }
         console.time(timerKey);
       }
       

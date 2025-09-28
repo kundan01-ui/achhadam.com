@@ -172,12 +172,12 @@
     
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <!-- X-Frame-Options should be set via HTTP headers, not meta tags -->
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
     
     <!-- Performance Hints -->
-    <link rel="preload" href="/achhadam%20logo.jpg" as="image" />
-    <link rel="preload" href="/src/main.tsx" as="script" />
+    <link rel="preload" href="/achhadam%20logo.jpg" as="image" type="image/jpeg" />
+    <!-- Remove script preload as it's not needed for Vite -->
   </head>
   <body>
     <div id="root"></div>

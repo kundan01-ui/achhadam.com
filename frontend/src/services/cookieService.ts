@@ -98,11 +98,15 @@ export const getCookiePreferences = async (): Promise<CookiePreferences> => {
   } catch (error: any) {
     console.error('Error getting cookie preferences from server:', error);
     
-    // Handle specific error types
+    // Handle specific error types with better logging
     if (error.message && error.message.includes('Request timed out')) {
       console.log('🔄 Cookie preferences request timed out, using localStorage fallback');
     } else if (error.message && error.message.includes('Request was cancelled')) {
       console.log('🔄 Cookie preferences request was cancelled, using localStorage fallback');
+    } else if (error.message && error.message.includes('AbortError')) {
+      console.log('🔄 Cookie preferences request was aborted, using localStorage fallback');
+    } else {
+      console.log('🔄 Cookie preferences request failed, using localStorage fallback');
     }
   }
   
