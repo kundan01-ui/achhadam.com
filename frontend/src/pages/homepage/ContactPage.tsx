@@ -70,7 +70,7 @@ const ContactPage: React.FC<ContactPageProps> = ({ onBackToHome }) => {
     {
       icon: MapPin,
       title: 'Office Address',
-      details: ['123 Agriculture Hub,', 'Mumbai, Maharashtra 400001'],
+      details: ['Near Sai Mandir balsa road Jintur Maharashtra, India,', '400001'],
       color: 'text-purple-600',
       bgColor: 'bg-purple-100'
     },
