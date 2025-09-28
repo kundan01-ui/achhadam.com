@@ -40,7 +40,7 @@ const cropListingSchema = new mongoose.Schema({
   variety: { type: String },
   quality: { 
     type: String, 
-    enum: ['premium', 'good', 'average', 'fair'],
+    enum: ['premium', 'good', 'average', 'fair', 'A', 'B', 'C', 'D'],
     default: 'good'
   },
   organic: { type: Boolean, default: false },
@@ -124,7 +124,7 @@ const cropListingSchema = new mongoose.Schema({
   
   // Images & Media
   images: [{
-    url: { type: String, required: true },
+    url: { type: String, default: '' },
     caption: { type: String },
     isPrimary: { type: Boolean, default: false },
     uploadedAt: { type: Date, default: Date.now }

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   Search, 
-  Filter, 
   Plus, 
   Eye, 
   Heart, 
@@ -10,11 +9,8 @@ import {
   MapPin, 
   Calendar,
   Package,
-  TrendingUp,
   Users,
-  CheckCircle,
-  X,
-  Grid3X3,
+  Grid,
   List,
   SortAsc,
   SortDesc,
@@ -257,7 +253,7 @@ const ProductsPage: React.FC = () => {
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 sm:p-2 ${viewMode === 'grid' ? 'bg-green-100 text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
               >
-                <Grid3X3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <Grid className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}

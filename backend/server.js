@@ -53,13 +53,22 @@ app.use((req, res, next) => {
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5000',
-    'http://0.0.0.0:5000'
+    'http://localhost:8000',
+    'http://localhost:10000',
+    'http://0.0.0.0:5000',
+    'http://0.0.0.0:8000',
+    'http://0.0.0.0:10000'
   ];
   
   if (allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
   } else {
-    res.header('Access-Control-Allow-Origin', '*');
+    // For development, allow localhost with different ports
+    if (origin && origin.includes('localhost')) {
+      res.header('Access-Control-Allow-Origin', origin);
+    } else {
+      res.header('Access-Control-Allow-Origin', '*');
+    }
   }
   
   res.header('Access-Control-Allow-Credentials', 'true');

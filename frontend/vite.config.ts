@@ -22,7 +22,7 @@ export default defineConfig({
     host: '0.0.0.0',
     allowedHosts: true,
     historyApiFallback: true,
-    // CORS proxy configuration for development - pointing to local backend
+    // CORS proxy configuration enabled - using local backend
     proxy: {
       '/api': {
         target: 'http://localhost:8000',

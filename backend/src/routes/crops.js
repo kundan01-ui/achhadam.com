@@ -3,6 +3,33 @@ const router = express.Router();
 const { CropListing, Farmer, User } = require('../models');
 const auth = require('../middleware/auth');
 
+// Get all crops - Simple endpoint for testing
+router.get('/', async (req, res) => {
+  try {
+    console.log('🌾 GET CROPS: Fetching all crops...');
+    
+    const crops = await CropListing.find({})
+      .sort({ uploadedAt: -1 })
+      .limit(50);
+
+    console.log(`✅ GET CROPS: Found ${crops.length} crops`);
+
+    res.json({
+      success: true,
+      data: crops,
+      count: crops.length,
+      message: 'Crops loaded successfully'
+    });
+  } catch (error) {
+    console.error('Error fetching crops:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch crops',
+      error: error.message
+    });
+  }
+});
+
 // Create new crop listing - TEMPORARY AUTH BYPASS FOR TESTING
 router.post('/', async (req, res) => {
   try {
@@ -52,13 +79,7 @@ router.post('/', async (req, res) => {
     
     console.log('✅ CROP UPLOAD: Required fields validated');
     
-    // Create new crop listing with PERMANENT PERSISTENCE
-    console.log('🌾 CROP UPLOAD: Creating crop listing object...');
-    
-    // Generate unique listingId
-    const listingId = 'CRP_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    
-    // Create or use existing ObjectId for farmerId  
+    // Create or use existing ObjectId for farmerId FIRST
     let farmerObjectId;
     let cropObjectId;
     
@@ -70,6 +91,34 @@ router.post('/', async (req, res) => {
     
     // Create a temporary cropId (in a real app, this would reference actual crop taxonomy)  
     cropObjectId = new mongoose.Types.ObjectId();
+    
+    // Check for duplicate entries before creating new crop
+    console.log('🌾 CROP UPLOAD: Checking for duplicate entries...');
+    const existingCrop = await CropListing.findOne({
+      farmerId: farmerObjectId,
+      cropName: cropName,
+      'pricing.pricePerUnit': parseFloat(price),
+      uploadedAt: {
+        $gte: new Date(Date.now() - 5 * 60 * 1000) // Within last 5 minutes
+      }
+    });
+    
+    if (existingCrop) {
+      console.log('❌ CROP UPLOAD: Duplicate entry detected, preventing creation');
+      return res.status(409).json({
+        success: false,
+        message: 'Duplicate crop entry detected. Please wait before uploading again.',
+        duplicateId: existingCrop._id
+      });
+    }
+    
+    console.log('✅ CROP UPLOAD: No duplicates found, proceeding with creation');
+    
+    // Create new crop listing with PERMANENT PERSISTENCE
+    console.log('🌾 CROP UPLOAD: Creating crop listing object...');
+    
+    // Generate unique listingId
+    const listingId = 'CRP_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     
     const cropListing = new CropListing({
       listingId: listingId,
@@ -115,8 +164,13 @@ router.post('/', async (req, res) => {
         storageMethod: 'farm_storage'
       },
       
-      // Images
-      images: Array.isArray(images) ? images : [],
+      // Images - Handle properly for validation
+      images: Array.isArray(images) ? images.map(img => ({
+        url: img.url || img.imageUrl || '',
+        caption: img.caption || '',
+        isPrimary: img.isPrimary || false,
+        uploadedAt: new Date()
+      })) : [],
       
       // Status
       status: {

@@ -149,8 +149,8 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
       console.log('🔑 Could not decode token payload:', e);
     }
     
-    // Make API call to save crop
-    let response = await fetch('https://acchadam1-backend.onrender.com/api/crops', {
+    // Make API call to save crop - using local backend
+    let response = await fetch('http://localhost:8000/api/crops', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -159,13 +159,24 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
       body: JSON.stringify(enrichedCropData)
     });
     
+    // Handle duplicate detection response
+    if (response.status === 409) {
+      const duplicateResponse = await response.json();
+      console.log('❌ Duplicate crop detected by server:', duplicateResponse);
+      return {
+        success: false,
+        error: 'Duplicate crop entry detected. Please wait before uploading again.',
+        isDuplicate: true
+      };
+    }
+    
     // If 401, try to refresh token and retry
     if (response.status === 401) {
       console.log('🔄 401 received, attempting token refresh...');
       
       try {
         // Try to refresh token
-        const refreshResponse = await fetch('https://acchadam1-backend.onrender.com/api/auth/refresh', {
+        const refreshResponse = await fetch('http://localhost:8000/api/auth/refresh', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -184,7 +195,7 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
           localStorage.setItem('authToken', newToken);
           
           // Retry the original request with new token
-          response = await fetch('https://acchadam1-backend.onrender.com/api/crops', {
+          response = await fetch('http://localhost:8000/api/crops', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -310,7 +321,7 @@ export const loadCropsFromDatabase = async (farmerId: string): Promise<{ success
   try {
     console.log('🌾 Loading crops from database for farmer:', farmerId);
     
-    const response = await fetch(`https://acchadam1-backend.onrender.com/api/crops/farmer/${farmerId}`, {
+    const response = await fetch(`http://localhost:8000/api/crops/farmer/${farmerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
