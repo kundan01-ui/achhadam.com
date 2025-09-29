@@ -1,29 +1,20 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
-  Filter, 
-  Grid3X3, 
+  Grid, 
   List, 
-  SlidersHorizontal,
-  MapPin,
-  Star,
-  Package,
-  Leaf,
-  CheckCircle
+  Settings,
+  Package
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui';
 import type { SelectOption } from '../../components/ui';
-import ProductCard, { Product } from '../../components/ui/ProductCard';
+import ProductCard, { type Product } from '../../components/ui/ProductCard';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { 
-  loadAllFarmerCrops, 
-  filterCropsByCategory, 
-  searchCrops, 
-  sortCrops, 
-  getCropCategories,
+  loadAllFarmerCrops,
   type MarketplaceCrop 
 } from '../../services/marketplaceService';
 
@@ -64,7 +55,7 @@ const ProductListing: React.FC = () => {
   const products: Product[] = crops.map((crop: MarketplaceCrop) => ({
     id: crop.id,
     name: crop.name,
-    category: crop.category || 'crops',
+    category: crop.type || 'crops',
     subcategory: crop.variety || 'Unknown',
     description: crop.description || 'Fresh crop from local farmer',
     price: crop.price,
@@ -73,7 +64,7 @@ const ProductListing: React.FC = () => {
     location: crop.location || 'Unknown',
     harvestDate: crop.harvestDate || new Date().toISOString(),
     organic: crop.organic || false,
-    grade: crop.grade || 'A',
+    grade: 'A', // Default grade
     rating: 4.5, // Default rating
     reviewCount: 0, // Default review count
     images: crop.images || ['/images/default-crop.jpg'],
@@ -264,7 +255,7 @@ const ProductListing: React.FC = () => {
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
               >
-                <SlidersHorizontal className="w-4 h-4 mr-2" />
+                <Settings className="w-4 h-4 mr-2" />
                 Filters
               </Button>
             </div>
@@ -276,7 +267,7 @@ const ProductListing: React.FC = () => {
                 size="sm"
                 onClick={() => setViewMode('grid')}
               >
-                <Grid3X3 className="w-4 h-4" />
+                <Grid className="w-4 h-4" />
               </Button>
               <Button
                 variant={viewMode === 'list' ? 'primary' : 'outline'}
@@ -300,14 +291,14 @@ const ProductListing: React.FC = () => {
                     <Input
                       type="number"
                       placeholder="Min"
-                      value={priceRange[0]}
+                      value={priceRange[0].toString()}
                       onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
                       size="sm"
                     />
                     <Input
                       type="number"
                       placeholder="Max"
-                      value={priceRange[1]}
+                      value={priceRange[1].toString()}
                       onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
                       size="sm"
                     />
@@ -345,11 +336,11 @@ const ProductListing: React.FC = () => {
                   </label>
                   <Select
                     options={[
-                      { value: 0, label: 'Any Rating' },
-                      { value: 4, label: '4+ Stars' },
-                      { value: 4.5, label: '4.5+ Stars' }
+                      { value: '0', label: 'Any Rating' },
+                      { value: '4', label: '4+ Stars' },
+                      { value: '4.5', label: '4.5+ Stars' }
                     ]}
-                    value={minRating}
+                    value={minRating.toString()}
                     onChange={(value) => setMinRating(Number(value))}
                     size="sm"
                   />
