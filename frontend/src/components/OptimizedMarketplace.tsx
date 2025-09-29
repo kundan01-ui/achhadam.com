@@ -244,3 +244,4 @@ const OptimizedMarketplace: React.FC<OptimizedMarketplaceProps> = ({ onCropSelec
 };
 
 export default OptimizedMarketplace;
+

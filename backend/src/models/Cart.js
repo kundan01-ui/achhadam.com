@@ -81,3 +81,4 @@ cartSchema.index({ buyerId: 1, isPermanent: 1, crossDeviceAccess: 1 });
 cartSchema.index({ buyerId: 1, addedAt: -1 });
 
 module.exports = mongoose.models.Cart || mongoose.model('Cart', cartSchema);
+
