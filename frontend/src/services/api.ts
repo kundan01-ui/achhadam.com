@@ -1,9 +1,16 @@
 // API service for authentication and user management
-// Local Backend (Development) - Commented out for production deployment
-// const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
+// Local Backend (Development) - Commented out for production
+// const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-// Render Backend (Production) - Active for production deployment
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://acchadam1-backend.onrender.com';
+// Local Backend (Development) - Use local backend for testing
+const API_BASE_URL = 'http://localhost:8000';
+
+// Render Backend (Production) - Commented out due to 500 error
+// const API_BASE_URL = 'https://acchadam1-backend.onrender.com';
+
+// Debug: Log the API URL being used
+console.log('🌐 API_BASE_URL:', API_BASE_URL);
+console.log('🌐 Environment VITE_API_URL:', import.meta.env.VITE_API_URL);
 
 // API Response interface
 export interface ApiResponse {
@@ -91,6 +98,9 @@ class ApiService {
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     
+    // Debug: Log the full URL being requested
+    console.log('🔗 Making request to:', url);
+    
     // Create cache key for GET requests only
     const cacheKey = options.method === 'GET' ? `${endpoint}_${JSON.stringify(options.body || '')}` : null;
     
@@ -108,7 +118,7 @@ class ApiService {
         ...options.headers,
       },
       mode: 'cors',
-      credentials: 'include',
+      credentials: 'omit',
       ...options,
     };
 
@@ -122,18 +132,15 @@ class ApiService {
       
       config.signal = controller.signal;
       
-    // Check if timer already exists to prevent conflicts
+    // Simplified timer handling to prevent conflicts
     const timerKey = `API Request: ${endpoint}`;
     if (console.time && console.timeEnd) {
-      // Clear any existing timer first
+      // Only start timer if it doesn't exist
       try {
-        console.timeEnd(timerKey);
+        console.time(timerKey);
       } catch (e) {
-        // Timer doesn't exist, that's fine
+        // Timer already exists, that's fine
       }
-      // Add small delay to prevent timer conflicts
-      await new Promise(resolve => setTimeout(resolve, 10));
-      console.time(timerKey);
     }
       
       const response = await fetch(url, config);
@@ -142,7 +149,11 @@ class ApiService {
       clearTimeout(timeoutId);
       
       if (console.time && console.timeEnd) {
-        console.timeEnd(timerKey);
+        try {
+          console.timeEnd(timerKey);
+        } catch (e) {
+          // Timer doesn't exist, that's fine
+        }
       }
       
       if (!response.ok) {

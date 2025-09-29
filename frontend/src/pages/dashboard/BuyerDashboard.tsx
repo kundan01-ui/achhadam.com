@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ProductsPage from './ProductsPage';
 import SuppliersPage from './SuppliersPage';
 import AnalyticsPage from './AnalyticsPage';
 import FavoritesPage from './FavoritesPage';
@@ -17,10 +16,6 @@ import {
   sortCrops, 
   getCropCategories,
   getMarketplaceStats,
-  debugLocalStorageData,
-  recoverFarmerData,
-  forceRefreshMarketplace,
-  backupFarmerData,
   type MarketplaceCrop 
 } from '../../services/marketplaceService';
 import razorpayService from '../../services/razorpayService';
@@ -92,9 +87,7 @@ import {
   ChevronDown,
   X,
   Home,
-  MessageCircle,
-  RefreshCw,
-  AlertTriangle
+  MessageCircle
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -224,7 +217,6 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   });
   const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [showRecoveryOptions, setShowRecoveryOptions] = useState(false);
   const [selectedQuality, setSelectedQuality] = useState('all');
   const [selectedOrganic, setSelectedOrganic] = useState('all');
   const [showImageGallery, setShowImageGallery] = useState(false);
@@ -584,45 +576,6 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     }).format(amount);
   };
 
-  // Recovery functions
-  const handleRecoverData = async () => {
-    console.log('🔄 Manual data recovery triggered...');
-    const recoveredData = recoverFarmerData();
-    
-    if (recoveredData.length > 0) {
-      console.log(`✅ Found ${recoveredData.length} farmers with data!`);
-      const refreshedCrops = forceRefreshMarketplace();
-      
-      if (refreshedCrops.length > 0) {
-        console.log(`🎉 Successfully recovered ${refreshedCrops.length} crops!`);
-        setMarketplaceCrops(refreshedCrops);
-        setFilteredCrops(refreshedCrops);
-        const stats = await getMarketplaceStats();
-      setMarketplaceStats(stats);
-        setShowRecoveryOptions(false);
-      }
-    } else {
-      console.log('❌ No farmer data found to recover');
-      alert('No farmer data found to recover. Please upload crops from farmer dashboard first.');
-    }
-  };
-
-  const handleBackupData = () => {
-    console.log('💾 Creating backup of farmer data...');
-    const backup = backupFarmerData();
-    console.log('💾 Backup created and downloaded!');
-    alert('Farmer data backup has been downloaded!');
-  };
-
-  const handleForceRefresh = async () => {
-    console.log('🔄 Force refreshing marketplace...');
-    const refreshedCrops = forceRefreshMarketplace();
-    setMarketplaceCrops(refreshedCrops);
-    setFilteredCrops(refreshedCrops);
-    const stats = await getMarketplaceStats();
-    setMarketplaceStats(stats);
-    console.log(`🔄 Marketplace refreshed with ${refreshedCrops.length} crops`);
-  };
 
   // PERMANENT DATABASE SAVE - MongoDB Integration for Buyer Data
   const saveOrdersToDatabase = async (orders) => {
@@ -1107,16 +1060,6 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
             </div>
           </div>
           
-          {/* Recovery Button */}
-          <div className="flex gap-1 sm:gap-2">
-            <button
-              onClick={() => setShowRecoveryOptions(!showRecoveryOptions)}
-              className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors"
-            >
-              <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Recovery</span>
-            </button>
-          </div>
 
           {/* Category Filter */}
           <div className="xl:w-48">
@@ -1152,44 +1095,6 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         </div>
       </div>
 
-      {/* Recovery Options - Mobile Responsive */}
-      {showRecoveryOptions && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
-          <div className="flex items-center gap-2 mb-2 sm:mb-3">
-            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
-            <h3 className="text-sm sm:text-base font-semibold text-yellow-800">Data Recovery Options</h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-            <button
-              onClick={handleRecoverData}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors text-xs sm:text-sm"
-            >
-              <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Recover Data</span>
-              <span className="sm:hidden">Recover</span>
-            </button>
-            <button
-              onClick={handleForceRefresh}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors text-xs sm:text-sm"
-            >
-              <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Force Refresh</span>
-              <span className="sm:hidden">Refresh</span>
-            </button>
-            <button
-              onClick={handleBackupData}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors text-xs sm:text-sm"
-            >
-              <Download className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Backup Data</span>
-              <span className="sm:hidden">Backup</span>
-            </button>
-          </div>
-          <p className="text-xs sm:text-sm text-yellow-700 mt-2 sm:mt-3">
-            💡 If no products are showing, try these recovery options to restore farmer data.
-          </p>
-        </div>
-      )}
 
       {/* Results Count */}
       <div className="text-sm text-gray-600">
@@ -1895,8 +1800,6 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         return renderOverview();
       case 'orders':
         return renderOrders();
-      case 'products':
-        return renderMarketplace();
       case 'suppliers':
         return <SuppliersPage />;
       case 'analytics':

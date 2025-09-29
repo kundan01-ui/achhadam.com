@@ -18,15 +18,16 @@ export default defineConfig({
     }
   },
   server: {
-    port: 5173,
-    host: true,
+    port: 5000,
+    host: '0.0.0.0',
+    allowedHosts: true,
     historyApiFallback: true,
-    // CORS proxy configuration for development
+    // CORS proxy configuration enabled - using local backend
     proxy: {
       '/api': {
-        target: 'https://acchadam1-backend.onrender.com',
+        target: 'http://localhost:8000',
         changeOrigin: true,
-        secure: true,
+        secure: false,
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
             console.log('proxy error', err);

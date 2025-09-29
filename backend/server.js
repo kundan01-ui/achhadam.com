@@ -18,7 +18,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 8000;
 
 // Rate limiting
 const limiter = rateLimit({
@@ -51,13 +51,24 @@ app.use((req, res, next) => {
     'https://www.achhadam.com',
     'https://achhadam.com',
     'http://localhost:5173',
-    'http://localhost:5174'
+    'http://localhost:5174',
+    'http://localhost:5000',
+    'http://localhost:8000',
+    'http://localhost:10000',
+    'http://0.0.0.0:5000',
+    'http://0.0.0.0:8000',
+    'http://0.0.0.0:10000'
   ];
   
   if (allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
   } else {
-    res.header('Access-Control-Allow-Origin', '*');
+    // For development, allow localhost with different ports
+    if (origin && origin.includes('localhost')) {
+      res.header('Access-Control-Allow-Origin', origin);
+    } else {
+      res.header('Access-Control-Allow-Origin', '*');
+    }
   }
   
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -87,6 +98,8 @@ app.use(cors({
       'https://achhadam.com',
       'http://localhost:5173', 
       'http://localhost:5174', 
+      'http://localhost:5000',
+      'http://0.0.0.0:5000',
       'https://achhadam-frontend.onrender.com',
       'https://achhadamf.onrender.com',
       'https://acchadam1.onrender.com',
@@ -601,7 +614,9 @@ app.options('/api/auth/*', (req, res) => {
     'https://www.achhadam.com',
     'https://achhadam.com',
     'http://localhost:5173',
-    'http://localhost:5174'
+    'http://localhost:5174',
+    'http://localhost:5000',
+    'http://0.0.0.0:5000'
   ];
   
   if (allowedOrigins.includes(origin)) {

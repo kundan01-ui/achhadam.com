@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { saveToMongoDB, saveToPostgreSQL, uploadImagesToCloud, loadCropsFromDatabase, deleteCropFromDatabase, updateCropInDatabase } from '../../services/databaseService';
-import { testUserSpecificData, clearAllFarmerData } from '../../utils/userSpecificTest';
 import { authenticatedFetch } from '../../services/tokenService';
 // dataSyncService removed - using automatic database save only
 // SyncButton removed - using automatic database save only
@@ -979,69 +978,6 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     return Object.keys(typeCount).reduce((a, b) => typeCount[a] > typeCount[b] ? a : b);
   };
 
-  // Validate user data integrity
-  const validateUserData = () => {
-    console.log(`🔍 Validating user data for: ${userProfile.name} (ID: ${userProfile.id})`);
-    
-    // Get user key from localStorage or create from user data
-    let userKey = localStorage.getItem('farmer_user_key');
-    if (!userKey) {
-      const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
-      userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
-    }
-    
-    // Check if user has data in localStorage
-    const databaseKey = `farmer_database_${userKey}`;
-    const userData = localStorage.getItem(databaseKey);
-    
-    if (userData) {
-      try {
-        const parsed = JSON.parse(userData);
-        console.log(`✅ User data validation passed:`, {
-          farmerId: parsed.farmerId,
-          farmerName: parsed.farmerName,
-          totalCrops: parsed.crops?.length || 0,
-          lastUpdated: parsed.lastUpdated,
-          dataIntegrity: 'OK'
-        });
-        return true;
-      } catch (error) {
-        console.error(`❌ User data validation failed:`, error);
-        return false;
-      }
-    } else {
-      console.log(`❌ No user data found for validation`);
-      return false;
-    }
-  };
-
-  // Clear all data function
-  const clearAllData = () => {
-    console.log(`🗑️ Clearing all data for: ${userProfile.name} (ID: ${userProfile.id})`);
-    
-    // Get user key from localStorage or create from user data
-    let userKey = localStorage.getItem('farmer_user_key');
-    if (!userKey) {
-      const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
-      userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
-    }
-    
-    // Clear user-specific data only
-    const userDatabaseKey = `farmer_database_${userKey}`;
-    localStorage.removeItem(userDatabaseKey);
-    
-    // Clear user session data
-    localStorage.removeItem('farmer_user_id');
-    localStorage.removeItem('farmer_user_key');
-    localStorage.removeItem('farmer_email');
-    localStorage.removeItem('farmer_phone');
-    
-    // Reset state
-    setUploadedCrops([]);
-    
-    console.log(`✅ All data cleared for farmer: ${userProfile.name}`);
-    console.log(`🔄 Please refresh the page to see changes`);
-  };
 
   const getImageQualityDistribution = (crops) => {
     const allImages = crops.flatMap(crop => crop.images);
@@ -1630,14 +1566,14 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     }
   }, [userProfile.id, userProfile.name]);
 
-  // Save crops to storage whenever uploadedCrops changes - USER SPECIFIC + PERMANENT
-  useEffect(() => {
-    if (uploadedCrops.length > 0 && userProfile.id) {
-      console.log(`💾 PERMANENT SAVE: Saving ${uploadedCrops.length} crops for farmer ${userProfile.name} (ID: ${userProfile.id})`);
-      console.log(`🌐 These crops will be available on any device, any session`);
-      saveCropsToStorage(uploadedCrops);
-    }
-  }, [uploadedCrops, userProfile.id, userProfile.name]);
+  // NO LOCALSTORAGE SAVE - DATABASE ONLY TO PREVENT DUPLICATES
+  // useEffect(() => {
+  //   if (uploadedCrops.length > 0 && userProfile.id) {
+  //     console.log(`💾 PERMANENT SAVE: Saving ${uploadedCrops.length} crops for farmer ${userProfile.name} (ID: ${userProfile.id})`);
+  //     console.log(`🌐 These crops will be available on any device, any session`);
+  //     saveCropsToStorage(uploadedCrops); // DISABLED TO PREVENT DUPLICATES
+  //   }
+  // }, [uploadedCrops, userProfile.id, userProfile.name]);
 
   // Real crop listings - loaded from user's actual data
   const cropListings = uploadedCrops;
@@ -2200,6 +2136,24 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                     }
 
                     try {
+                      // Check for duplicate uploads within last 5 minutes
+                      const now = Date.now();
+                      const recentUploads = uploadedCrops.filter(crop => {
+                        const uploadTime = new Date(crop.uploadedAt).getTime();
+                        return (now - uploadTime) < 5 * 60 * 1000; // 5 minutes
+                      });
+                      
+                      const isDuplicate = recentUploads.some(crop => 
+                        crop.name === cropFormData.cropName && 
+                        crop.type === cropFormData.cropType && 
+                        crop.price === parseFloat(cropFormData.price)
+                      );
+                      
+                      if (isDuplicate) {
+                        alert('⚠️ Duplicate crop detected! Please wait 5 minutes before uploading the same crop again.');
+                        return;
+                      }
+                      
                       // Check if this is an edit operation (cropFormData has an existing ID)
                       const isEditMode = cropFormData.id;
                       
@@ -2218,8 +2172,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                           );
                           setUploadedCrops(updatedCrops);
                           
-                          // Save to storage immediately for real-time updates
-                          saveCropsToStorage(updatedCrops);
+                          // NO LOCALSTORAGE SAVE - DATABASE ONLY
+                          // saveCropsToStorage(updatedCrops); // REMOVED TO PREVENT DUPLICATES
                           
                           console.log('✅ Crop updated successfully:', updatedCrop);
                           console.log('🖼️ Updated crop images:', updatedCrop.images);
@@ -2240,8 +2194,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                           const updatedCrops = [newCrop, ...uploadedCrops];
                           setUploadedCrops(updatedCrops);
                         
-                          // Save to storage immediately
-                          saveCropsToStorage(updatedCrops);
+                          // NO LOCALSTORAGE SAVE - DATABASE ONLY
+                          // saveCropsToStorage(updatedCrops); // REMOVED TO PREVENT DUPLICATES
 
                           // Reset form
                           setCropFormData({
@@ -2264,7 +2218,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                           alert('फसल सफलतापूर्वक अपलोड हो गई! 🎉 (Crop uploaded successfully!)');
                           setShowCropUploadModal(false);
                         } else {
-                          alert('Error uploading crop: ' + result.error);
+                          if (result.isDuplicate) {
+                            alert('⚠️ Duplicate crop detected! Please wait 5 minutes before uploading the same crop again.');
+                          } else {
+                            alert('Error uploading crop: ' + result.error);
+                          }
                         }
                       }
                     } catch (error) {
@@ -2294,40 +2252,6 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Smart Crop Listing</h2>
               <p className="text-sm sm:text-base text-gray-600 mt-1">Upload your crops with AI-powered features</p>
-              {!kycCompleted && (
-                <div className="mt-2 flex items-center space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm text-yellow-700">
-                    KYC verification required to list crops
-                  </span>
-                </div>
-              )}
-              {kycCompleted && (
-                <div className="mt-2 flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm text-green-700">
-                    KYC verification completed
-                  </span>
-                </div>
-              )}
-              
-              {/* Debug Info */}
-              <div className="mt-2 text-xs text-gray-500">
-                <p>Debug: KYC Completed: {kycCompleted ? 'Yes' : 'No'}</p>
-                <p>Session Dismissed: {kycDismissedThisSession ? 'Yes' : 'No'}</p>
-                <button 
-                  onClick={() => {
-                    const allKeys = Object.keys(localStorage);
-                    const kycKeys = allKeys.filter(key => key.startsWith('farmer_kyc_') || key.startsWith('farmer_pan_') || key.startsWith('farmer_aadhar_'));
-                    console.log('🔍 All localStorage keys:', allKeys);
-                    console.log('🔍 KYC keys found:', kycKeys);
-                    alert(`KYC Keys: ${kycKeys.length > 0 ? kycKeys.join(', ') : 'None found'}`);
-                  }}
-                  className="text-blue-600 hover:text-blue-800 underline"
-                >
-                  Check KYC Data
-                </button>
-              </div>
             </div>
           </div>
           <button 
@@ -2556,7 +2480,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                         if (confirm('क्या आप इस फसल को हटाना चाहते हैं? (Do you want to delete this crop?)')) {
                           const updatedCrops = uploadedCrops.filter(c => c.id !== crop.id);
                           setUploadedCrops(updatedCrops);
-                          saveCropsToStorage(updatedCrops);
+                          // NO LOCALSTORAGE SAVE - DATABASE ONLY
+                          // saveCropsToStorage(updatedCrops); // REMOVED TO PREVENT DUPLICATES
                           alert('फसल हटा दी गई (Crop deleted)');
                         }
                       }}
@@ -3252,20 +3177,6 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
   const renderOverview = () => (
     <div className="space-y-4">
-      {/* Cross-Device Sync Header */}
-      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border border-green-100">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">🌐 Cross-Device Data Sync</h3>
-            <p className="text-sm text-gray-600">Your crops are synced across all devices</p>
-          </div>
-          <div className="mt-2 sm:mt-0 flex flex-col sm:flex-row gap-2">
-            {/* Manual refresh button removed - using automatic database save only */}
-            {/* SyncButton removed - using automatic database save only */}
-            {/* ImmediateSyncButton removed - using automatic database save only */}
-          </div>
-        </div>
-      </div>
 
       {/* Stats Grid - Perfect Mobile Design */}
       <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -4676,29 +4587,6 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
           {/* Main Content */}
           <div className="flex-1 p-3 sm:p-4 md:p-6">
-            {/* Debug Section */}
-            <div className="p-3 sm:p-4 bg-yellow-50 border-b border-yellow-200 mb-4 sm:mb-6 overflow-x-auto">
-              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                <button
-                  onClick={() => testUserSpecificData()}
-                  className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-blue-500 text-white rounded hover:bg-blue-600 whitespace-nowrap"
-                >
-                  Test Data
-                </button>
-                <button
-                  onClick={() => validateUserData()}
-                  className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-green-500 text-white rounded hover:bg-green-600 whitespace-nowrap"
-                >
-                  Validate
-                </button>
-                <button
-                  onClick={() => clearAllData()}
-                  className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-red-500 text-white rounded hover:bg-red-600 whitespace-nowrap"
-                >
-                  Clear My Data
-                </button>
-              </div>
-            </div>
 
             {/* Main Content */}
             <main className="flex-1">
