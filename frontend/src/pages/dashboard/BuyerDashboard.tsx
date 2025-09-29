@@ -4,6 +4,7 @@ import AnalyticsPage from './AnalyticsPage';
 import FavoritesPage from './FavoritesPage';
 import SettingsPage from './SettingsPage';
 import ContractsPage from './ContractsPage';
+import ProductListing from '../products/ProductListing';
 import ProfileModal from '../../components/ui/ProfileModal';
 import ChatModal from '../../components/ui/ChatModal';
 import { authenticatedFetch } from '../../services/tokenService';
@@ -1800,6 +1801,8 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         return renderOverview();
       case 'orders':
         return renderOrders();
+      case 'products':
+        return <ProductListing />;
       case 'suppliers':
         return <SuppliersPage />;
       case 'analytics':

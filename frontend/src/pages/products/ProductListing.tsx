@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -18,6 +18,14 @@ import { Select } from '../../components/ui';
 import type { SelectOption } from '../../components/ui';
 import ProductCard, { Product } from '../../components/ui/ProductCard';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import { 
+  loadAllFarmerCrops, 
+  filterCropsByCategory, 
+  searchCrops, 
+  sortCrops, 
+  getCropCategories,
+  type MarketplaceCrop 
+} from '../../services/marketplaceService';
 
 const ProductListing: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -30,159 +38,54 @@ const ProductListing: React.FC = () => {
   const [organicOnly, setOrganicOnly] = useState(false);
   const [minRating, setMinRating] = useState<number>(0);
 
-  // Mock data - in real app this would come from API
-  const products: Product[] = [
-    {
-      id: '1',
-      name: 'Organic Durum Wheat',
-      category: 'grains',
-      subcategory: 'Wheat',
-      description: 'Premium quality organic durum wheat, perfect for making pasta and bread. Grown without pesticides.',
-      price: 45.00,
-      unit: 'kg',
-      quantity: 500,
-      location: 'Punjab',
-      harvestDate: '2024-01-10',
-      organic: true,
-      grade: 'A',
-      rating: 4.8,
-      reviewCount: 124,
-      images: ['/images/wheat1.jpg', '/images/wheat2.jpg'],
-      tags: ['Organic', 'Premium', 'Durum'],
-      certifications: ['Organic India', 'FSSAI'],
-      supplier: {
-        id: 'supplier1',
-        name: 'Rajesh Kumar Farms',
-        rating: 4.9,
-        verified: true
+  // Real crop data from database
+  const [crops, setCrops] = useState<MarketplaceCrop[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load crops from database on component mount
+  useEffect(() => {
+    const loadCrops = async () => {
+      try {
+        console.log('🌾 PRODUCTS PAGE: Loading crops from database...');
+        const allCrops = await loadAllFarmerCrops();
+        console.log('🌾 PRODUCTS PAGE: Loaded crops:', allCrops.length);
+        setCrops(allCrops);
+        setLoading(false);
+      } catch (error) {
+        console.error('❌ PRODUCTS PAGE: Error loading crops:', error);
+        setLoading(false);
       }
-    },
-    {
-      id: '2',
-      name: 'Fresh Tomatoes',
-      category: 'vegetables',
-      subcategory: 'Tomatoes',
-      description: 'Fresh, juicy tomatoes harvested from our greenhouse. Perfect for salads and cooking.',
-      price: 35.00,
-      unit: 'kg',
-      quantity: 200,
-      location: 'Haryana',
-      harvestDate: '2024-01-15',
-      organic: false,
-      grade: 'A',
-      rating: 4.6,
-      reviewCount: 89,
-      images: ['/images/tomatoes1.jpg'],
-      tags: ['Fresh', 'Juicy', 'Greenhouse'],
-      certifications: ['FSSAI'],
-      supplier: {
-        id: 'supplier2',
-        name: 'Green Valley Farms',
-        rating: 4.7,
-        verified: true
-      }
-    },
-    {
-      id: '3',
-      name: 'Basmati Rice',
-      category: 'grains',
-      subcategory: 'Rice',
-      description: 'Aromatic basmati rice with long grains. Perfect for biryani and pulao dishes.',
-      price: 120.00,
-      unit: 'kg',
-      quantity: 300,
-      location: 'UP',
-      harvestDate: '2024-01-08',
-      organic: true,
-      grade: 'A',
+    };
+
+    loadCrops();
+  }, []);
+
+  // Convert MarketplaceCrop to Product format
+  const products: Product[] = crops.map((crop: MarketplaceCrop) => ({
+    id: crop.id,
+    name: crop.name,
+    category: crop.category || 'crops',
+    subcategory: crop.variety || 'Unknown',
+    description: crop.description || 'Fresh crop from local farmer',
+    price: crop.price,
+    unit: crop.unit || 'kg',
+    quantity: crop.quantity,
+    location: crop.location || 'Unknown',
+    harvestDate: crop.harvestDate || new Date().toISOString(),
+    organic: crop.organic || false,
+    grade: crop.grade || 'A',
+    rating: 4.5, // Default rating
+    reviewCount: 0, // Default review count
+    images: crop.images || ['/images/default-crop.jpg'],
+    tags: crop.organic ? ['Organic'] : ['Fresh'],
+    certifications: crop.organic ? ['Organic Certified'] : [],
+    supplier: {
+      id: crop.farmerId || 'unknown',
+      name: crop.farmerName || 'Local Farmer',
       rating: 4.9,
-      reviewCount: 156,
-      images: ['/images/rice1.jpg', '/images/rice2.jpg'],
-      tags: ['Aromatic', 'Long Grain', 'Premium'],
-      certifications: ['Organic India', 'FSSAI', 'GI Tag'],
-      supplier: {
-        id: 'supplier3',
-        name: 'Fresh Harvest Co.',
-        rating: 4.8,
-        verified: true
-      }
-    },
-    {
-      id: '4',
-      name: 'Sweet Corn',
-      category: 'vegetables',
-      subcategory: 'Corn',
-      description: 'Sweet and tender corn kernels. Great for salads, soups, and direct consumption.',
-      price: 25.00,
-      unit: 'kg',
-      quantity: 150,
-      location: 'Maharashtra',
-      harvestDate: '2024-01-12',
-      organic: false,
-      grade: 'B',
-      rating: 4.4,
-      reviewCount: 67,
-      images: ['/images/corn1.jpg'],
-      tags: ['Sweet', 'Tender', 'Fresh'],
-      certifications: ['FSSAI'],
-      supplier: {
-        id: 'supplier4',
-        name: 'Organic Paradise',
-        rating: 4.5,
-        verified: false
-      }
-    },
-    {
-      id: '5',
-      name: 'Green Peas',
-      category: 'vegetables',
-      subcategory: 'Peas',
-      description: 'Fresh green peas, rich in protein and fiber. Perfect for curries and salads.',
-      price: 40.00,
-      unit: 'kg',
-      quantity: 100,
-      location: 'Karnataka',
-      harvestDate: '2024-01-14',
-      organic: true,
-      grade: 'A',
-      rating: 4.7,
-      reviewCount: 93,
-      images: ['/images/peas1.jpg'],
-      tags: ['Fresh', 'Protein Rich', 'Fiber'],
-      certifications: ['Organic India', 'FSSAI'],
-      supplier: {
-        id: 'supplier5',
-        name: 'Fresh Foods Co.',
-        rating: 4.6,
-        verified: true
-      }
-    },
-    {
-      id: '6',
-      name: 'Red Lentils',
-      category: 'pulses',
-      subcategory: 'Lentils',
-      description: 'High-quality red lentils, rich in protein and essential nutrients.',
-      price: 85.00,
-      unit: 'kg',
-      quantity: 250,
-      location: 'Rajasthan',
-      harvestDate: '2024-01-05',
-      organic: false,
-      grade: 'B',
-      rating: 4.5,
-      reviewCount: 78,
-      images: ['/images/lentils1.jpg'],
-      tags: ['Protein Rich', 'Nutritious', 'Traditional'],
-      certifications: ['FSSAI'],
-      supplier: {
-        id: 'supplier6',
-        name: 'Traditional Farms',
-        rating: 4.4,
-        verified: true
-      }
+      verified: true
     }
-  ];
+  }));
 
   const categoryOptions: SelectOption[] = [
     { value: '', label: 'All Categories' },
@@ -214,6 +117,18 @@ const ProductListing: React.FC = () => {
     { value: 'newest', label: 'Newest First' },
     { value: 'popularity', label: 'Most Popular' }
   ];
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading crops from database...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
