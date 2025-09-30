@@ -335,25 +335,51 @@ router.get('/farmer/:farmerId', auth, async (req, res) => {
   try {
     const { farmerId } = req.params;
     
-    // Verify farmer owns the crops
-    if (req.user.userId !== farmerId && req.user.userType !== 'admin') {
+    console.log(`🔍 FARMER CROP LOAD DEBUG:`);
+    console.log(`📱 Requested farmerId: ${farmerId}`);
+    console.log(`🔑 Authenticated user:`, {
+      userId: req.user.userId,
+      userType: req.user.userType,
+      phone: req.user.phone
+    });
+    
+    // More flexible verification - check by phone or userId
+    const isOwner = req.user.userId === farmerId || 
+                   req.user.phone === farmerId || 
+                   req.user.userType === 'admin';
+    
+    if (!isOwner) {
+      console.log(`❌ ACCESS DENIED: User ${req.user.userId} cannot access crops for farmer ${farmerId}`);
       return res.status(403).json({
         success: false,
-        message: 'Access denied'
+        message: 'Access denied - user mismatch'
       });
     }
+    
+    console.log(`✅ ACCESS GRANTED: User can access crops for farmer ${farmerId}`);
 
     console.log(`🌾 PERMANENT LOAD: Loading crops for farmer ${farmerId}`);
     console.log(`📱 This will load crops from any device, any session - PERMANENT DATA`);
 
     // Load crops with permanent persistence markers
+    // Try multiple farmerId formats for better compatibility
     const crops = await CropListing.find({ 
-      farmerId,
+      $or: [
+        { farmerId: farmerId },
+        { farmerId: req.user.userId },
+        { farmerPhone: req.user.phone }
+      ],
       isPermanent: true,
       crossDeviceAccess: true,
       sessionIndependent: true
     })
     .sort({ uploadedAt: -1 });
+    
+    console.log(`🔍 CROP QUERY DEBUG: Searching for crops with:`);
+    console.log(`📱 farmerId: ${farmerId}`);
+    console.log(`🔑 req.user.userId: ${req.user.userId}`);
+    console.log(`📞 req.user.phone: ${req.user.phone}`);
+    console.log(`🌾 Found ${crops.length} crops`);
 
     console.log(`✅ PERMANENT LOAD: Found ${crops.length} permanent crops for farmer ${farmerId}`);
     console.log(`🌐 These crops are available across all devices and sessions`);

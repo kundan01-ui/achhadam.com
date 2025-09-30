@@ -1010,6 +1010,24 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       console.log(`🔄 DATABASE LOAD: Loading crops from database for farmer: ${actualUserId}`);
       console.log(`🌐 This will ensure data is available from any device, any session`);
       
+      // DEBUG: Check if we have valid user ID
+      if (!actualUserId || actualUserId === userProfile.id) {
+        console.log(`⚠️ WARNING: Using generated userProfile.id instead of database _id`);
+        console.log(`🔍 This might cause cross-device sync issues`);
+        console.log(`📱 User should login with same credentials on all devices`);
+      }
+      
+      // Try multiple ID formats for better compatibility
+      const userIdsToTry = [
+        actualUserId,
+        user?._id,
+        user?.id,
+        userProfile.id,
+        userProfile.phone
+      ].filter(Boolean);
+      
+      console.log(`🔍 Will try these user IDs:`, userIdsToTry);
+      
       const authToken = localStorage.getItem('authToken');
       console.log(`🔑 Auth token check:`, { 
         hasToken: !!authToken, 
@@ -1024,22 +1042,44 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         return [];
       }
       
-      const response = await authenticatedFetch(`http://localhost:5000/api/crops/farmer/${actualUserId}`, {
-        method: 'GET'
-      });
+      // Try multiple user IDs to find crops
+      let crops = [];
+      let lastError = null;
       
-      console.log(`📡 Database response status: ${response.status}`);
+      for (const userId of userIdsToTry) {
+        try {
+          console.log(`🔄 Trying to load crops with user ID: ${userId}`);
+          const response = await authenticatedFetch(`http://localhost:5000/api/crops/farmer/${userId}`, {
+            method: 'GET'
+          });
+          
+          console.log(`📡 Database response status for ${userId}: ${response.status}`);
+          
+          if (response.ok) {
+            const data = await response.json();
+            crops = data.data || [];
+            console.log(`✅ DATABASE LOAD SUCCESS: Found ${crops.length} crops with user ID: ${userId}`);
+            console.log(`🌐 TRUE CROSS-DEVICE SYNC: These crops are available from any device`);
+            console.log(`📊 Database response:`, {
+              success: data.success,
+              count: data.count,
+              persistence: data.persistence
+            });
+            break; // Success, stop trying other IDs
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.log(`❌ Failed to load crops with user ID ${userId}: ${response.status} - ${errorData.message || 'Unknown error'}`);
+            lastError = errorData;
+          }
+        } catch (error) {
+          console.log(`❌ Error loading crops with user ID ${userId}:`, error.message);
+          lastError = error;
+        }
+      }
       
-      if (response.ok) {
-        const data = await response.json();
-        const crops = data.data || [];
-        console.log(`✅ DATABASE LOAD SUCCESS: Found ${crops.length} crops in database for farmer ${userProfile.name}`);
+      if (crops.length > 0) {
+        console.log(`✅ FINAL SUCCESS: Found ${crops.length} crops for farmer ${userProfile.name}`);
         console.log(`🌐 TRUE CROSS-DEVICE SYNC: These crops are available from any device`);
-        console.log(`📊 Database response:`, {
-          success: data.success,
-          count: data.count,
-          persistence: data.persistence
-        });
         
         // Save to localStorage ONLY for offline access (not as primary source)
         const userKey = `farmer_${userProfile.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
@@ -1060,15 +1100,15 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         
         return crops;
       } else {
-        // Handle non-JSON error responses
-        let errorMessage = `HTTP ${response.status}`;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-          console.log(`⚠️ Database load failed with status ${response.status}:`, errorData);
-        } catch (jsonError) {
-          console.log(`⚠️ Database load failed with status ${response.status}: ${errorMessage}`);
+        // Handle case where no crops were found with any user ID
+        console.log(`❌ NO CROPS FOUND: Tried all user IDs but found no crops`);
+        console.log(`🔍 Tried user IDs:`, userIdsToTry);
+        console.log(`📱 This might be a new farmer or crops not yet uploaded`);
+        
+        if (lastError) {
+          console.log(`⚠️ Last error:`, lastError);
         }
+        
         console.log(`❌ Database failed, falling back to localStorage`);
         console.log(`🔄 Loading from localStorage for offline access`);
         // Fallback to localStorage when database fails
@@ -1182,6 +1222,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         saveCropsToStorage(migratedCrops);
         return migratedCrops;
       }
+      
+      console.log(`❌ No crops found in any storage location`);
+      return [];
       
     } catch (error) {
       console.error('❌ Database load error:', error);
@@ -3592,15 +3635,15 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       case 'weather':
         return (
           <div className="space-y-4">
-            {/* Orders Header */}
+            {/* Weather Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Orders Management</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Weather & Climate</h2>
               <div className="mt-2 sm:mt-0 flex space-x-2">
                 <button className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
-                  New Order
+                  Refresh
                 </button>
                 <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
-                  Filter
+                  Settings
                 </button>
               </div>
             </div>
@@ -3892,209 +3935,37 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           </div>
         );
       case 'analytics':
-        return (
-          <div className="space-y-4">
-            {/* Analytics Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Farm Analytics</h2>
-              <div className="mt-2 sm:mt-0 flex space-x-2">
-                <button className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
-                  Export Data
-                </button>
-                <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
-                  Filter
-                </button>
-              </div>
-            </div>
+        return renderAnalytics();
+      case 'settings':
+        return <div className="text-center py-12"><h3 className="text-lg font-semibold text-gray-900">Settings Page - Coming Soon</h3></div>;
+      default:
+        return renderOverview();
+    }
+  };
 
-            {/* Key Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">Revenue</p>
-                    <p className="text-2xl font-bold text-green-600">₹2.5L</p>
-                    <p className="text-xs text-green-600">+15% vs last month</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-green-600" />
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">Yield</p>
-                    <p className="text-2xl font-bold text-blue-600">85%</p>
-                    <p className="text-xs text-blue-600">+8% vs last season</p>
-                  </div>
-                  <Leaf className="h-8 w-8 text-blue-600" />
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">Efficiency</p>
-                    <p className="text-2xl font-bold text-purple-600">92%</p>
-                    <p className="text-xs text-purple-600">+5% vs last year</p>
-                  </div>
-                  <Zap className="h-8 w-8 text-purple-600" />
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">Costs</p>
-                    <p className="text-2xl font-bold text-orange-600">₹1.2L</p>
-                    <p className="text-xs text-orange-600">-3% vs last month</p>
-                  </div>
-                  <Package className="h-8 w-8 text-orange-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Crop Performance Chart */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Crop Performance</h3>
-              </div>
-              <div className="p-4">
-                <div className="space-y-4">
-                  {/* Wheat */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Wheat className="h-5 w-5 text-amber-600" />
-                      <span className="text-sm font-medium text-gray-900">Wheat</span>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div className="bg-green-500 h-2 rounded-full" style={{width: '85%'}}></div>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">85%</span>
-                    </div>
-                  </div>
-                  
-                  {/* Rice */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Carrot className="h-5 w-5 text-blue-600" />
-                      <span className="text-sm font-medium text-gray-900">Rice</span>
-                    </div>
-                    <div className="flex items-center space-x-4">
+  return (
+    <>
+      {/* Image Gallery Modal */}
+      {renderImageGalleryModal()}
+      
+      {/* Crop Upload Modal */}
+      {renderCropUploadModal()}
+      
+      {/* KYC Verification Modal */}
+      {showKYCModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                       <div className="w-32 bg-gray-200 rounded-full h-2">
                         <div className="bg-blue-500 h-2 rounded-full" style={{width: '78%'}}></div>
                       </div>
                       <span className="text-sm font-semibold text-gray-900">78%</span>
                     </div>
                   </div>
-                  
-                  {/* Tomato */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Apple className="h-5 w-5 text-red-600" />
-                      <span className="text-sm font-medium text-gray-900">Tomato</span>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div className="bg-red-500 h-2 rounded-full" style={{width: '92%'}}></div>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">92%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Monthly Revenue Chart */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Monthly Revenue</h3>
-              </div>
-              <div className="p-4">
-                <div className="flex items-end justify-between h-32 space-x-2">
-                  <div className="flex flex-col items-center space-y-2">
-                    <div className="w-8 bg-blue-500 rounded-t" style={{height: '60%'}}></div>
-                    <span className="text-xs text-gray-600">Jan</span>
-                  </div>
-                  <div className="flex flex-col items-center space-y-2">
-                    <div className="w-8 bg-blue-500 rounded-t" style={{height: '80%'}}></div>
-                    <span className="text-xs text-gray-600">Feb</span>
-                  </div>
-                  <div className="flex flex-col items-center space-y-2">
-                    <div className="w-8 bg-blue-500 rounded-t" style={{height: '70%'}}></div>
-                    <span className="text-xs text-gray-600">Mar</span>
-                  </div>
-                  <div className="flex flex-col items-center space-y-2">
-                    <div className="w-8 bg-blue-500 rounded-t" style={{height: '90%'}}></div>
-                    <span className="text-xs text-gray-600">Apr</span>
-                  </div>
-                  <div className="flex flex-col items-center space-y-2">
-                    <div className="w-8 bg-blue-500 rounded-t" style={{height: '85%'}}></div>
-                    <span className="text-xs text-gray-600">May</span>
-                  </div>
-                  <div className="flex flex-col items-center space-y-2">
-                    <div className="w-8 bg-green-500 rounded-t" style={{height: '100%'}}></div>
-                    <span className="text-xs text-gray-600">Jun</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Top Performing Crops */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Top Performing Crops</h3>
-              </div>
-              <div className="divide-y divide-gray-200">
-                <div className="p-4 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                      <Apple className="h-4 w-4 text-red-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Tomato</p>
-                      <p className="text-xs text-gray-500">200 kg harvested</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-900">₹9,000</p>
-                    <p className="text-xs text-green-600">+12% profit</p>
-                  </div>
-                </div>
-                <div className="p-4 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
-                      <Wheat className="h-4 w-4 text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Wheat</p>
-                      <p className="text-xs text-gray-500">50 quintals harvested</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-900">₹1,22,500</p>
-                    <p className="text-xs text-green-600">+8% profit</p>
-                  </div>
-                </div>
-                <div className="p-4 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Carrot className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Rice</p>
-                      <p className="text-xs text-gray-500">30 quintals harvested</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-900">₹96,000</p>
-                    <p className="text-xs text-green-600">+5% profit</p>
-                  </div>
                 </div>
               </div>
             </div>
           </div>
         );
-      case 'settings':
-        return <div className="text-center py-12"><h3 className="text-lg font-semibold text-gray-900">Settings Page - Coming Soon</h3></div>;
       default:
         return renderOverview();
     }
@@ -4116,44 +3987,174 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 rounded-t-xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">🔐 KYC Verification Required</h2>
-                  <p className="text-sm sm:text-base text-gray-600 mt-1">Complete your profile to start listing crops</p>
+                  <h2 className="text-xl font-bold text-gray-900">📋 KYC Verification</h2>
+                  <p className="text-gray-600 text-sm">Complete your profile to start selling</p>
                 </div>
                 <button
                   onClick={() => setShowKYCModal(false)}
-                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  <X className="h-5 sm:h-6 w-5 sm:w-6" />
+                  <X className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
             </div>
-
-            {/* Content */}
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto">
-              {/* Warning Message */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 animate-pulse">
-                <div className="flex items-start">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 mr-2 sm:mr-3 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-sm font-medium text-yellow-800">KYC Verification Required</h3>
-                    <p className="text-xs sm:text-sm text-yellow-700 mt-1">
-                      You need to complete your KYC verification and bank details to start listing crops on our platform.
-                    </p>
+            
+            {/* KYC Form Content */}
+            <div className="p-4 sm:p-6">
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="h-8 w-8 text-green-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">KYC Verification Required</h3>
+                  <p className="text-gray-600 text-sm">
+                    Complete your profile verification to start selling crops on our platform.
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-semibold text-sm">1</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Personal Information</p>
+                      <p className="text-sm text-gray-600">Name, Phone, Address</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-semibold text-sm">2</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Identity Verification</p>
+                      <p className="text-sm text-gray-600">Aadhaar, PAN, or Driving License</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-semibold text-sm">3</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Bank Account</p>
+                      <p className="text-sm text-gray-600">For secure payments</p>
+                    </div>
                   </div>
                 </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <button
+                    onClick={() => setShowKYCModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Complete Later
+                  </button>
+                  <button
+                    onClick={() => setShowKYCModal(false)}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Start Verification
+                  </button>
+                </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Main Dashboard Content */}
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveTab('overview')}
+                  className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
+                >
+                  <Home className="h-5 w-5" />
+                  <span className="font-medium">Farmer Dashboard</span>
+                </button>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <button className="p-2 text-gray-400 hover:text-gray-600">
+                  <Bell className="h-5 w-5" />
+                </button>
+                
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
+                  >
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-green-600" />
+                    </div>
+                    <span className="font-medium">{userProfile.name}</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                  
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                      <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Profile
+                      </button>
+                      <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Settings
+                      </button>
+                      <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Help
+                      </button>
+                      <hr className="my-1" />
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
 
-              {/* KYC Form */}
-              <div className="space-y-4 sm:space-y-6">
-                {/* PAN Card Section */}
-                <div className="space-y-3 sm:space-y-4 animate-fadeIn">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">📄 PAN Card Details</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                        PAN Card Number *
-                      </label>
-                      <input
+        {/* Navigation Tabs */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav className="flex space-x-8 overflow-x-auto">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'border-green-500 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  <span>{tab.name}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {renderActiveTab()}
+        </main>
+      </div>
+    </>
+  );
+};
+
+export default FarmerDashboard;
                         type="text"
                         value={kycData.panNumber}
                         onChange={(e) => setKycData(prev => ({ ...prev, panNumber: e.target.value }))}
