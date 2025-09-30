@@ -18,21 +18,60 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 5000;
 
-// Rate limiting
+// Rate limiting - VERY GENEROUS FOR DEVELOPMENT
 const limiter = rateLimit({
-  windowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000, // 15 minutes
-  max: process.env.RATE_LIMIT_MAX_REQUESTS || 1000 // limit each IP to 1000 requests per windowMs (increased for development)
+  windowMs: process.env.RATE_LIMIT_WINDOW_MS || 1 * 60 * 1000, // 1 minute window
+  max: process.env.RATE_LIMIT_MAX_REQUESTS || 1000, // 1000 requests per minute (very high for development)
+  message: {
+    error: 'Too many requests. Please wait before trying again.',
+    retryAfter: 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Skip rate limiting for localhost in development
+  skip: (req) => {
+    const isLocalhost = req.ip === '127.0.0.1' ||
+                       req.ip === '::1' ||
+                       req.ip?.startsWith('192.168.') ||
+                       req.ip?.startsWith('10.') ||
+                       req.hostname === 'localhost';
+    return isLocalhost;
+  }
+});
+
+// Auth specific rate limiting (very lenient for development)
+const authLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // 100 login attempts per minute
+  message: {
+    error: 'Too many login attempts. Please wait 1 minute.',
+    retryAfter: 60
+  },
+  skip: (req) => {
+    const isLocalhost = req.ip === '127.0.0.1' ||
+                       req.ip === '::1' ||
+                       req.ip?.startsWith('192.168.') ||
+                       req.hostname === 'localhost';
+    return isLocalhost;
+  }
 });
 
 // OTP specific rate limiting (more lenient)
 const otpLimiter = rateLimit({
   windowMs: process.env.OTP_RATE_LIMIT_WINDOW_MS || 1 * 60 * 1000, // 1 minute
-  max: process.env.OTP_RATE_LIMIT_MAX_REQUESTS || 10, // limit each IP to 10 OTP requests per minute
+  max: process.env.OTP_RATE_LIMIT_MAX_REQUESTS || 20, // 20 OTP requests per minute
   message: {
     error: 'Too many OTP requests. Please wait 1 minute before trying again.',
     retryAfter: 60
+  },
+  skip: (req) => {
+    const isLocalhost = req.ip === '127.0.0.1' ||
+                       req.ip === '::1' ||
+                       req.ip?.startsWith('192.168.') ||
+                       req.hostname === 'localhost';
+    return isLocalhost;
   }
 });
 
@@ -672,12 +711,24 @@ app.options('/api/*', (req, res) => {
   res.status(200).end();
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authLimiter, async (req, res) => {
+  const requestId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+
   try {
-    const origin = req.headers.origin;
-    console.log('🔍 Login request from origin:', origin);
-    
+    // ========================================
+    // STEP 1: Log incoming request details
+    // ========================================
+    console.log('\n========================================');
+    console.log(`📥 [${requestId}] NEW LOGIN REQUEST`);
+    console.log('========================================');
+    console.log(`🕐 Timestamp: ${new Date().toISOString()}`);
+    console.log(`🌐 Origin: ${req.headers.origin || 'No origin header'}`);
+    console.log(`🔗 IP Address: ${req.ip}`);
+    console.log(`📱 User-Agent: ${req.headers['user-agent']}`);
+    console.log(`📦 Request Body: ${JSON.stringify({ phone: req.body.phone, password: '[REDACTED]' })}`);
+
     // Set CORS headers explicitly for login - ENHANCED FOR ACHHADAM.COM
+    const origin = req.headers.origin;
     if (['https://www.achhadam.com', 'https://achhadam.com'].includes(origin)) {
       res.header('Access-Control-Allow-Origin', origin);
       console.log('✅ CORS: Login origin explicitly allowed:', origin);
@@ -686,69 +737,213 @@ app.post('/api/auth/login', async (req, res) => {
       console.log('⚠️ CORS: Login using wildcard for:', origin);
     }
     res.header('Access-Control-Allow-Credentials', 'true');
-    
-    console.time('Login Request');
+
+    console.time(`[${requestId}] Total Login Time`);
     const { phone, password } = req.body;
 
-    // Validation
+    // ========================================
+    // STEP 2: Validate input fields
+    // ========================================
+    console.log(`\n🔍 [${requestId}] STEP 2: Input Validation`);
     if (!phone || !password) {
-      console.timeEnd('Login Request');
-      return res.status(400).json({ 
-        error: 'Phone and password are required' 
+      console.error(`❌ [${requestId}] Validation failed: Missing required fields`);
+      console.error(`   - Phone provided: ${!!phone}`);
+      console.error(`   - Password provided: ${!!password}`);
+      console.timeEnd(`[${requestId}] Total Login Time`);
+      return res.status(400).json({
+        error: 'Phone and password are required',
+        requestId
+      });
+    }
+    console.log(`✅ [${requestId}] Validation passed`);
+    console.log(`   - Phone: ${phone}`);
+    console.log(`   - Password length: ${password.length} characters`);
+
+    // ========================================
+    // STEP 3: Check MongoDB connection status
+    // ========================================
+    console.log(`\n🗄️  [${requestId}] STEP 3: Database Connection Check`);
+    const mongoState = mongoose.connection.readyState;
+    const stateMap = {
+      0: 'disconnected',
+      1: 'connected',
+      2: 'connecting',
+      3: 'disconnecting'
+    };
+    console.log(`   - MongoDB State: ${mongoState} (${stateMap[mongoState]})`);
+
+    if (mongoState !== 1) {
+      console.error(`❌ [${requestId}] MongoDB is NOT connected!`);
+      console.error(`   - Current State: ${stateMap[mongoState]}`);
+      console.error(`   - Connection URI: ${mongoose.connection.host || 'Not available'}`);
+      console.timeEnd(`[${requestId}] Total Login Time`);
+      return res.status(503).json({
+        error: 'Database connection unavailable. Please try again later.',
+        details: 'MongoDB is not connected',
+        state: stateMap[mongoState],
+        requestId
+      });
+    }
+    console.log(`✅ [${requestId}] MongoDB connected successfully`);
+    console.log(`   - Host: ${mongoose.connection.host}`);
+    console.log(`   - Database: ${mongoose.connection.name}`);
+
+    // ========================================
+    // STEP 4: Find user in database
+    // ========================================
+    console.log(`\n👤 [${requestId}] STEP 4: Finding User`);
+    console.time(`[${requestId}] Database Query Time`);
+
+    let user;
+    try {
+      user = await User.findOne({ phone }).maxTimeMS(5000).lean();
+      console.timeEnd(`[${requestId}] Database Query Time`);
+    } catch (dbError) {
+      console.timeEnd(`[${requestId}] Database Query Time`);
+      console.error(`❌ [${requestId}] Database query failed!`);
+      console.error(`   - Error Type: ${dbError.name}`);
+      console.error(`   - Error Message: ${dbError.message}`);
+      console.error(`   - Stack Trace: ${dbError.stack}`);
+      console.timeEnd(`[${requestId}] Total Login Time`);
+
+      return res.status(503).json({
+        error: 'Database query failed. Please try again.',
+        details: dbError.message,
+        requestId
       });
     }
 
-    // Find user - with lean() for better performance
-    console.time('Find User');
-    const user = await User.findOne({ phone }).lean();
-    console.timeEnd('Find User');
-    
     if (!user) {
-      console.timeEnd('Login Request');
-      return res.status(401).json({ 
-        error: 'Invalid credentials' 
+      console.error(`❌ [${requestId}] User not found`);
+      console.error(`   - Phone searched: ${phone}`);
+      console.timeEnd(`[${requestId}] Total Login Time`);
+      return res.status(401).json({
+        error: 'Invalid credentials',
+        requestId
       });
     }
 
-    // Check password
-    console.time('Password Verification');
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.timeEnd('Password Verification');
-    
+    console.log(`✅ [${requestId}] User found successfully`);
+    console.log(`   - User ID: ${user._id}`);
+    console.log(`   - User Type: ${user.userType}`);
+    console.log(`   - Has Password Hash: ${!!user.password}`);
+
+    // ========================================
+    // STEP 5: Verify password
+    // ========================================
+    console.log(`\n🔐 [${requestId}] STEP 5: Password Verification`);
+    console.time(`[${requestId}] Password Comparison Time`);
+
+    let isPasswordValid;
+    try {
+      if (!user.password) {
+        console.error(`❌ [${requestId}] User has no password hash stored!`);
+        console.timeEnd(`[${requestId}] Password Comparison Time`);
+        console.timeEnd(`[${requestId}] Total Login Time`);
+        return res.status(500).json({
+          error: 'Account configuration error. Please contact support.',
+          requestId
+        });
+      }
+
+      isPasswordValid = await bcrypt.compare(password, user.password);
+      console.timeEnd(`[${requestId}] Password Comparison Time`);
+    } catch (bcryptError) {
+      console.timeEnd(`[${requestId}] Password Comparison Time`);
+      console.error(`❌ [${requestId}] Password comparison failed!`);
+      console.error(`   - Error Type: ${bcryptError.name}`);
+      console.error(`   - Error Message: ${bcryptError.message}`);
+      console.timeEnd(`[${requestId}] Total Login Time`);
+
+      return res.status(500).json({
+        error: 'Password verification failed',
+        details: bcryptError.message,
+        requestId
+      });
+    }
+
     if (!isPasswordValid) {
-      console.timeEnd('Login Request');
-      return res.status(401).json({ 
-        error: 'Invalid credentials' 
+      console.error(`❌ [${requestId}] Invalid password`);
+      console.error(`   - Password hash exists: ${!!user.password}`);
+      console.error(`   - Password provided length: ${password.length}`);
+      console.timeEnd(`[${requestId}] Total Login Time`);
+      return res.status(401).json({
+        error: 'Invalid credentials',
+        requestId
       });
     }
 
-    // Generate JWT token
-    console.time('JWT Generation');
-    const token = jwt.sign(
-      { 
-        userId: user._id, 
-        userType: user.userType,
-        phone: user.phone 
-      },
-      process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-      { expiresIn: process.env.JWT_EXPIRY || '24h' }
-    );
-    console.timeEnd('JWT Generation');
+    console.log(`✅ [${requestId}] Password verified successfully`);
+
+    // ========================================
+    // STEP 6: Generate JWT token
+    // ========================================
+    console.log(`\n🎟️  [${requestId}] STEP 6: JWT Token Generation`);
+    console.time(`[${requestId}] JWT Generation Time`);
+
+    let token;
+    try {
+      token = jwt.sign(
+        {
+          userId: user._id,
+          userType: user.userType,
+          phone: user.phone
+        },
+        process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+        { expiresIn: process.env.JWT_EXPIRY || '24h' }
+      );
+      console.timeEnd(`[${requestId}] JWT Generation Time`);
+    } catch (jwtError) {
+      console.timeEnd(`[${requestId}] JWT Generation Time`);
+      console.error(`❌ [${requestId}] JWT generation failed!`);
+      console.error(`   - Error Type: ${jwtError.name}`);
+      console.error(`   - Error Message: ${jwtError.message}`);
+      console.timeEnd(`[${requestId}] Total Login Time`);
+
+      return res.status(500).json({
+        error: 'Token generation failed',
+        details: jwtError.message,
+        requestId
+      });
+    }
+
+    console.log(`✅ [${requestId}] JWT token generated successfully`);
+    console.log(`   - Token length: ${token.length} characters`);
 
     // Remove password from response
     delete user.password;
 
-    console.timeEnd('Login Request');
+    console.timeEnd(`[${requestId}] Total Login Time`);
+    console.log(`\n✅ [${requestId}] LOGIN SUCCESSFUL`);
+    console.log('========================================\n');
+
     res.json({
       message: 'Login successful',
       token,
-      user: user
+      user: user,
+      requestId
     });
 
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ 
-      error: 'Internal server error during login' 
+    // ========================================
+    // GLOBAL ERROR HANDLER
+    // ========================================
+    console.error(`\n❌❌❌ [${requestId}] CRITICAL LOGIN ERROR ❌❌❌`);
+    console.error('========================================');
+    console.error(`Error Type: ${error.name}`);
+    console.error(`Error Message: ${error.message}`);
+    console.error(`Error Stack: ${error.stack}`);
+    console.error(`MongoDB State: ${mongoose.connection.readyState}`);
+    console.error(`Request Body: ${JSON.stringify({ phone: req.body.phone, password: '[REDACTED]' })}`);
+    console.error('========================================\n');
+
+    console.timeEnd(`[${requestId}] Total Login Time`);
+
+    res.status(500).json({
+      error: 'Internal server error during login',
+      details: error.message,
+      type: error.name,
+      requestId
     });
   }
 });
@@ -1045,6 +1240,43 @@ app.use('*', (req, res) => {
   res.status(404).json({ 
     error: 'Endpoint not found' 
   });
+});
+
+// Cookie preferences endpoint
+app.get('/api/cookies/preferences', (req, res) => {
+  try {
+    console.log('🍪 Cookie preferences request received');
+    res.json({
+      success: true,
+      preferences: {
+        analytics: true,
+        marketing: true,
+        personalization: true
+      }
+    });
+  } catch (error) {
+    console.error('❌ Cookie preferences error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get cookie preferences'
+    });
+  }
+});
+
+app.post('/api/cookies/preferences', (req, res) => {
+  try {
+    console.log('🍪 Cookie preferences update received:', req.body);
+    res.json({
+      success: true,
+      message: 'Cookie preferences updated successfully'
+    });
+  } catch (error) {
+    console.error('❌ Cookie preferences update error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update cookie preferences'
+    });
+  }
 });
 
 // Start server

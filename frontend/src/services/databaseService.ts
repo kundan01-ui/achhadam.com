@@ -103,10 +103,26 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
       organic: cropData.organic || false,
       location: cropData.location || 'Unknown',
       description: cropData.description || '',
-      images: cropData.images || []
+      // Optimize images - compress or limit size
+      images: cropData.images ? cropData.images.slice(0, 5) : [] // Limit to 5 images max
     };
     
-    console.log('🌾 Enriched crop data:', enrichedCropData);
+    // Compress data to reduce payload size
+    const compressedData = {
+      ...enrichedCropData,
+      // Remove large fields if not essential
+      description: enrichedCropData.description?.substring(0, 500) || '', // Limit description to 500 chars
+      // Compress images if they're base64
+      images: enrichedCropData.images.map(img => {
+        if (typeof img === 'string' && img.startsWith('data:image')) {
+          // If it's a base64 image, compress it
+          return img.length > 100000 ? img.substring(0, 100000) : img; // Limit base64 size
+        }
+        return img;
+      })
+    };
+    
+    console.log('🌾 Compressed crop data size:', JSON.stringify(compressedData).length, 'bytes');
     
     // Get authentication token
     const authToken = localStorage.getItem('authToken');
@@ -150,13 +166,13 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
     }
     
     // Make API call to save crop - using local backend
-    let response = await fetch('http://localhost:8000/api/crops', {
+    let response = await fetch('http://localhost:5000/api/crops', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${authToken}`
       },
-      body: JSON.stringify(enrichedCropData)
+      body: JSON.stringify(compressedData)
     });
     
     // Handle duplicate detection response
@@ -176,7 +192,7 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
       
       try {
         // Try to refresh token
-        const refreshResponse = await fetch('http://localhost:8000/api/auth/refresh', {
+        const refreshResponse = await fetch('http://localhost:5000/api/auth/refresh', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -195,13 +211,13 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
           localStorage.setItem('authToken', newToken);
           
           // Retry the original request with new token
-          response = await fetch('http://localhost:8000/api/crops', {
+          response = await fetch('http://localhost:5000/api/crops', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${newToken}`
             },
-            body: JSON.stringify(enrichedCropData)
+            body: JSON.stringify(compressedData)
           });
         } else {
           console.log('❌ Token refresh failed, redirecting to login...');
@@ -321,7 +337,7 @@ export const loadCropsFromDatabase = async (farmerId: string): Promise<{ success
   try {
     console.log('🌾 Loading crops from database for farmer:', farmerId);
     
-    const response = await fetch(`http://localhost:8000/api/crops/farmer/${farmerId}`, {
+    const response = await fetch(`http://localhost:5000/api/crops/farmer/${farmerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

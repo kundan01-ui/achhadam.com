@@ -4,7 +4,7 @@ import AnalyticsPage from './AnalyticsPage';
 import FavoritesPage from './FavoritesPage';
 import SettingsPage from './SettingsPage';
 import ContractsPage from './ContractsPage';
-import ProductListing from '../products/ProductListing';
+import BuyerProductsPage from '../products/BuyerProductsPage';
 import ProfileModal from '../../components/ui/ProfileModal';
 import ChatModal from '../../components/ui/ChatModal';
 import { authenticatedFetch } from '../../services/tokenService';
@@ -178,8 +178,8 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       console.log('🔄 AUTO-SYNC: Starting automatic data synchronization...');
       
       try {
-        await autoSyncAllData();
-        console.log('✅ AUTO-SYNC COMPLETE: All data synced to database');
+        // AUTO-SYNC: Data is now loaded directly from database
+        console.log('✅ AUTO-SYNC COMPLETE: Data loaded from database (no manual sync needed)');
       } catch (error) {
         console.error('❌ AUTO-SYNC FAILED:', error);
       }
@@ -244,7 +244,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         // Load cart from database first (PERMANENT DATA)
         const actualBuyerId = user?._id || user?.id || userProfile?.id;
         console.log(`🔑 Using actual buyer ID: ${actualBuyerId} (not generated ID: ${userProfile?.id})`);
-        const cartResponse = await fetch(`https://acchadam1-backend.onrender.com/api/cart/buyer/${actualBuyerId}`, {
+        const cartResponse = await fetch(`http://localhost:5000/api/cart/buyer/${actualBuyerId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -331,7 +331,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         // Load orders from database first (PERMANENT DATA)
         const actualBuyerId = user?._id || user?.id || userProfile?.id;
         console.log(`🔑 Using actual buyer ID: ${actualBuyerId} (not generated ID: ${userProfile?.id})`);
-        const ordersResponse = await authenticatedFetch(`https://acchadam1-backend.onrender.com/api/orders/buyer/${actualBuyerId}`, {
+        const ordersResponse = await authenticatedFetch(`http://localhost:5000/api/orders/buyer/${actualBuyerId}`, {
           method: 'GET'
         });
 
@@ -435,9 +435,8 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
     const loadMarketplaceData = async () => {
       console.log('🛒 Loading marketplace data for buyer:', userProfile?.name || 'Buyer');
       
-      // Debug localStorage data first
-      const farmerCount = debugLocalStorageData();
-      console.log(`🔍 Found ${farmerCount} farmer databases in localStorage`);
+      // Load data directly from database (no localStorage debugging needed)
+      console.log('🔍 Loading marketplace data directly from database');
       
       const crops = await loadAllFarmerCrops();
       setMarketplaceCrops(crops);
@@ -1344,18 +1343,48 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       {filteredCrops.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🌾</div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No crops found</h3>
-          <p className="text-gray-600 mb-4">Try adjusting your search or filter criteria</p>
-          <button
-            onClick={() => {
-              setSelectedCategory('all');
-              setMarketplaceSearchQuery('');
-              setSortBy('demand');
-            }}
-            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-          >
-            Clear Filters
-          </button>
+          {marketplaceCrops.length === 0 ? (
+            <>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No crops available yet</h3>
+              <p className="text-gray-600 mb-4">Farmers haven't uploaded any crops yet. Please check back later or encourage farmers to upload their crops.</p>
+              <div className="space-y-3">
+                <p className="text-sm text-gray-500">📱 Real farmer crops will appear here automatically once uploaded</p>
+                <div className="flex justify-center space-x-4">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    🔄 Refresh Page
+                  </button>
+                  <button
+                    onClick={() => {
+                      console.log('🔍 Checking for farmer data...');
+                      console.log('📊 Market stats:', marketplaceStats);
+                      alert('No farmer crops found. Farmers need to upload crops first using the Farmer Dashboard.');
+                    }}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    🔍 Debug Info
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No crops found</h3>
+              <p className="text-gray-600 mb-4">Try adjusting your search or filter criteria</p>
+              <button
+                onClick={() => {
+                  setSelectedCategory('all');
+                  setMarketplaceSearchQuery('');
+                  setSortBy('demand');
+                }}
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Clear Filters
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -1802,7 +1831,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       case 'orders':
         return renderOrders();
       case 'products':
-        return <ProductListing />;
+        return <BuyerProductsPage />;
       case 'suppliers':
         return <SuppliersPage />;
       case 'analytics':

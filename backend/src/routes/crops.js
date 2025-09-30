@@ -275,10 +275,44 @@ router.get('/marketplace', async (req, res) => {
     console.log(`✅ MARKETPLACE: Found ${crops.length} crops available for marketplace`);
     console.log(`🌐 These crops are available across all devices and sessions`);
 
+    // Fix incomplete crop data for buyer dashboard display
+    const processedCrops = crops.map((crop, index) => {
+      const cropObj = crop.toObject();
+
+      // Fix missing name and type fields for display
+      if (!cropObj.name) {
+        cropObj.name = `फसल ${index + 1}`;
+      }
+      if (!cropObj.type) {
+        // Guess type based on available data or use default
+        if (cropObj.quantity?.unit === 'quintal') {
+          cropObj.type = 'wheat'; // Default for quintal
+        } else {
+          cropObj.type = 'vegetable'; // Default for kg
+        }
+      }
+
+      // Ensure pricing is accessible
+      if (!cropObj.price && cropObj.pricing?.pricePerUnit) {
+        cropObj.price = cropObj.pricing.pricePerUnit;
+      }
+
+      // Ensure location is a simple string for compatibility
+      if (cropObj.location?.farmAddress) {
+        cropObj.location = cropObj.location.farmAddress;
+      } else if (typeof cropObj.location === 'object') {
+        cropObj.location = cropObj.location.city || 'Unknown Location';
+      }
+
+      return cropObj;
+    });
+
+    console.log(`✨ MARKETPLACE: Processed ${processedCrops.length} crops for buyer dashboard display`);
+
     res.json({
       success: true,
-      data: crops,
-      count: crops.length,
+      data: processedCrops,
+      count: processedCrops.length,
       message: 'Marketplace crops loaded successfully',
       persistence: {
         isPermanent: true,

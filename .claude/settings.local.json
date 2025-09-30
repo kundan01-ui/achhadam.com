@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(npm run dev:*)",
+      "Bash(node -e \"\n// Check localStorage for farmer data\nconst keys = [''farmer_database_'', ''farmer_crops_'', ''farmer_data_''];\nconsole.log(''🔍 Checking for real farmer crop data...'');\nkeys.forEach(prefix => {\n  for(let i = 0; i < 10; i++) {\n    const key = prefix + i;\n    try {\n      const data = require(''fs'').readFileSync(''./.vite_storage.json'', ''utf8'');\n      if(data.includes(key)) {\n        console.log(''✅ Found farmer data key:'', key);\n      }\n    } catch(e) {\n      // File doesn''t exist or other error\n    }\n  }\n});\nconsole.log(''✅ Check complete. If no keys found, farmers need to upload crops first.'');\n\")",
+      "Bash(python:*)",
+      "Bash(npm install:*)",
+      "Bash(npm start)",
+      "Bash(timeout:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

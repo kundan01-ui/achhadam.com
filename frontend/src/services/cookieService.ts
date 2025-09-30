@@ -65,23 +65,20 @@ export const hasConsentBeenGiven = (): boolean => {
  * Save cookie preferences to server and localStorage
  */
 export const saveCookiePreferences = async (preferences: CookiePreferences): Promise<void> => {
+  // Save to localStorage first (instant, always works)
+  localStorage.setItem('cookie-consent', 'true');
+  localStorage.setItem('cookie-preferences', JSON.stringify(preferences));
+
+  // Apply the cookie preferences immediately
+  applyCookiePreferences(preferences);
+
+  // Try to save to backend in background (non-blocking)
   try {
-    // Save preferences to backend
     await api.post('/api/cookies/preferences', preferences);
-    
-    // Also save to localStorage as a fallback
-    localStorage.setItem('cookie-consent', 'true');
-    localStorage.setItem('cookie-preferences', JSON.stringify(preferences));
-    
-    // Apply the cookie preferences
-    applyCookiePreferences(preferences);
+    console.log('✅ Cookie preferences synced to server');
   } catch (error) {
-    console.error('Error saving cookie preferences to server:', error);
-    
-    // Fallback to localStorage only
-    localStorage.setItem('cookie-consent', 'true');
-    localStorage.setItem('cookie-preferences', JSON.stringify(preferences));
-    applyCookiePreferences(preferences);
+    // Silent fail - localStorage is enough for cookie preferences
+    console.log('⚠️ Could not sync to server, using localStorage only');
   }
 };
 
@@ -89,10 +86,24 @@ export const saveCookiePreferences = async (preferences: CookiePreferences): Pro
  * Get saved cookie preferences from server or localStorage
  */
 export const getCookiePreferences = async (): Promise<CookiePreferences> => {
+  // First check localStorage (instant, no rate limiting)
+  const storedPreferences = localStorage.getItem('cookie-preferences');
+  if (storedPreferences) {
+    try {
+      const parsed = JSON.parse(storedPreferences);
+      console.log('📦 Loaded cookie preferences from localStorage');
+      return parsed;
+    } catch (e) {
+      console.error('Error parsing stored preferences:', e);
+    }
+  }
+
+  // Only try server if localStorage doesn't have preferences
   try {
-    // Try to get preferences from backend with timeout
     const response = await api.get('/api/cookies/preferences');
     if (response && response.success && response.data && response.data.preferences) {
+      // Cache to localStorage for future
+      localStorage.setItem('cookie-preferences', JSON.stringify(response.data.preferences));
       return response.data.preferences;
     }
   } catch (error: any) {
