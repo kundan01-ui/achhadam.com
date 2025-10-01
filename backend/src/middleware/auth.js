@@ -52,7 +52,8 @@ const auth = async (req, res, next) => {
       if (userById) {
         console.log('🔍 AUTH MIDDLEWARE: User found by _id, using that user');
         req.user = {
-          userId: userById.userId,
+          userId: userById._id.toString(),
+          _id: userById._id.toString(),
           userType: userById.userType,
           email: userById.email,
           phone: userById.phone
@@ -69,7 +70,8 @@ const auth = async (req, res, next) => {
       if (userByPhone) {
         console.log('🔍 AUTH MIDDLEWARE: User found by phone, using that user');
         req.user = {
-          userId: userByPhone.userId,
+          userId: userByPhone._id.toString(),
+          _id: userByPhone._id.toString(),
           userType: userByPhone.userType,
           email: userByPhone.email,
           phone: userByPhone.phone
@@ -95,7 +97,8 @@ const auth = async (req, res, next) => {
     });
 
     req.user = {
-      userId: user.userId,
+      userId: user._id.toString(),
+      _id: user._id.toString(),
       userType: user.userType,
       email: user.email,
       phone: user.phone

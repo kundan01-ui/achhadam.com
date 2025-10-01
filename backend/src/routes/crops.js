@@ -404,17 +404,36 @@ router.get('/farmer/:farmerId', auth, async (req, res) => {
 
     // Load crops with permanent persistence markers
     // Try multiple farmerId formats for better compatibility
-    const crops = await CropListing.find({ 
-      $or: [
-        { farmerId: farmerId },
-        { farmerId: req.user.userId },
-        { farmerPhone: req.user.phone }
-      ],
+    const query = {
       isPermanent: true,
       crossDeviceAccess: true,
       sessionIndependent: true
-    })
-    .sort({ uploadedAt: -1 });
+    };
+
+    // Build farmerId query - accept ObjectId, phone, or userId
+    const farmerQueries = [];
+
+    // If farmerId is a valid ObjectId, add it
+    if (/^[0-9a-fA-F]{24}$/.test(farmerId)) {
+      farmerQueries.push({ farmerId: farmerId });
+    }
+
+    // If req.user.userId is a valid ObjectId, add it
+    if (/^[0-9a-fA-F]{24}$/.test(req.user.userId)) {
+      farmerQueries.push({ farmerId: req.user.userId });
+    }
+
+    // Search by farmerAssociation.farmerId (for farmers who uploaded crops)
+    if (/^[0-9a-fA-F]{24}$/.test(req.user.userId)) {
+      farmerQueries.push({ 'farmerAssociation.farmerId': req.user.userId });
+    }
+
+    // Always add phone search
+    farmerQueries.push({ 'farmerAssociation.farmerName': req.user.phone });
+
+    query.$or = farmerQueries;
+
+    const crops = await CropListing.find(query).sort({ uploadedAt: -1 });
     
     console.log(`🔍 CROP QUERY DEBUG: Searching for crops with:`);
     console.log(`📱 farmerId: ${farmerId}`);
