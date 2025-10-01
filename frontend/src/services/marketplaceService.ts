@@ -89,9 +89,9 @@ async function loadFromLocalStorage(): Promise<MarketplaceCrop[]> {
               ...crop,
               farmer: {
                 id: farmerData.farmerId || 'unknown',
-                name: farmerData.farmerName || 'Unknown Farmer',
-                phone: farmerData.farmerPhone || '+91-XXXX-XXXX',
-                location: 'Unknown Location',
+                name: crop.farmerAssociation?.farmerName || crop.farmerName || farmerData.farmerName || 'Unknown Farmer',
+                phone: crop.farmerAssociation?.farmerPhone || farmerData.farmerPhone || '+91-XXXX-XXXX',
+                location: crop.location || farmerData.farmerLocation || 'Unknown Location',
                 rating: Math.random() * 2 + 3,
                 totalCrops: validCrops.length,
                 joinedDate: new Date().toISOString(),
@@ -264,9 +264,9 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
             ...crop,
             farmer: {
               id: crop.farmerId?._id || 'unknown',
-              name: crop.farmerId?.profile?.fullName || 'Unknown Farmer',
-              phone: crop.farmerId?.phone || '+91-XXXX-XXXX',
-              location: crop.farmerId?.address?.current?.city || 'Unknown Location',
+              name: crop.farmerAssociation?.farmerName || crop.farmerName || crop.farmerId?.profile?.fullName || 'Unknown Farmer',
+              phone: crop.farmerAssociation?.farmerPhone || crop.farmerId?.phone || '+91-XXXX-XXXX',
+              location: crop.location || crop.farmerId?.address?.current?.city || 'Unknown Location',
               rating: Math.random() * 2 + 3,
               totalCrops: 1,
               joinedDate: new Date().toISOString(),
@@ -360,11 +360,11 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
               // Create unique ID for each crop to avoid duplicates
               const uniqueCropId = `${farmerData.farmerId}_${crop.id}_${index}_${Date.now()}`;
               
-              // Create farmer info from actual data
+              // Create farmer info from actual data - prioritize crop's farmerAssociation
               const farmer: FarmerData = {
                 id: farmerData.farmerId,
-                name: crop.farmerName || farmerData.farmerName || 'Unknown Farmer',
-                phone: farmerData.farmerPhone || '+91-XXXX-XXXX',
+                name: crop.farmerAssociation?.farmerName || crop.farmerName || farmerData.farmerName || 'Unknown Farmer',
+                phone: crop.farmerAssociation?.farmerPhone || farmerData.farmerPhone || '+91-XXXX-XXXX',
                 location: crop.location || farmerData.farmerLocation || 'Unknown Location',
                 rating: Math.random() * 2 + 3, // Random rating between 3-5
                 totalCrops: farmerData.totalCrops || 1,
