@@ -1358,24 +1358,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     }
   }, []);
 
-  // Auto-sync all data to database on component mount
-  useEffect(() => {
-    const performAutoSync = async () => {
-      console.log('🔄 AUTO-SYNC: Starting automatic data synchronization...');
-      
-      try {
-        await autoSyncAllData();
-        console.log('✅ AUTO-SYNC COMPLETE: All data synced to database');
-      } catch (error) {
-        console.error('❌ AUTO-SYNC FAILED:', error);
-      }
-    };
-
-    // Run auto-sync after a short delay to ensure component is fully loaded
-    const syncTimeout = setTimeout(performAutoSync, 2000);
-    
-    return () => clearTimeout(syncTimeout);
-  }, []);
+  // Auto-sync handled by forceRefreshFromDatabase in loadCrops useEffect
+  // No separate auto-sync needed - crops are loaded automatically from database
   
   // NO MANUAL SYNC - AUTOMATIC DATABASE SAVE ONLY
   // Manual sync buttons removed - crops are saved to database immediately
@@ -1489,20 +1473,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         console.log(`📊 Showing zero state: 0 crops, 0 earnings, 0 land`);
       }
       
-      // NO MANUAL REFRESH - AUTOMATIC DATABASE LOAD ONLY
-      console.log(`✅ ARCHITECTURE: Automatic database load - no manual refresh needed`);
-      // Crops will be loaded automatically from database
-      setUploadedCrops([]);
-        console.log(`🌐 These crops are now available on this device`);
-      } else {
-        // Fallback to localStorage only if database has no data
-        console.log(`⚠️ No fresh data from database, trying localStorage fallback`);
-        // No fallback - database is required for cross-device sync
-        console.log(`❌ No crops found in database for farmer ${userProfile.name}`);
-        console.log(`🌐 Cross-device sync requires database connection`);
-        setUploadedCrops([]);
-      }
-      
+      // AUTOMATIC DATABASE LOAD - FORCE REFRESH
+      console.log(`✅ ARCHITECTURE: Automatic database load - fetching from backend`);
+      // Load crops from database with force refresh
+      const freshCrops = await forceRefreshFromDatabase();
+      setUploadedCrops(freshCrops);
+      console.log(`🌐 These crops are now available on this device`);
+
       // Log each crop to verify user-specific data
       const currentCrops = freshCrops.length > 0 ? freshCrops : [];
       currentCrops.forEach((crop, index) => {
