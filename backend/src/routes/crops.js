@@ -402,14 +402,6 @@ router.get('/farmer/:farmerId', auth, async (req, res) => {
     console.log(`🌾 PERMANENT LOAD: Loading crops for farmer ${farmerId}`);
     console.log(`📱 This will load crops from any device, any session - PERMANENT DATA`);
 
-    // Load crops with permanent persistence markers
-    // Try multiple farmerId formats for better compatibility
-    const query = {
-      isPermanent: true,
-      crossDeviceAccess: true,
-      sessionIndependent: true
-    };
-
     // Build farmerId query - accept ObjectId, phone, or userId
     const farmerQueries = [];
 
@@ -431,7 +423,11 @@ router.get('/farmer/:farmerId', auth, async (req, res) => {
     // Always add phone search
     farmerQueries.push({ 'farmerAssociation.farmerName': req.user.phone });
 
-    query.$or = farmerQueries;
+    // SIMPLIFIED QUERY - Only filter by farmerId, no strict persistence markers
+    // This allows us to load ALL crops for the farmer regardless of how they were saved
+    const query = {
+      $or: farmerQueries
+    };
 
     const crops = await CropListing.find(query).sort({ uploadedAt: -1 });
     
