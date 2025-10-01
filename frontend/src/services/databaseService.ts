@@ -75,9 +75,37 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
     
     // Get farmer ID from localStorage or user profile
     const farmerId = localStorage.getItem('farmer_user_id') || localStorage.getItem('farmer_user_key') || 'unknown';
-    const farmerName = localStorage.getItem('farmer_name') || 'Unknown Farmer';
-    const farmerPhone = localStorage.getItem('farmer_phone') || 'unknown';
-    
+
+    // Try to get farmer name from multiple sources
+    let farmerName = localStorage.getItem('farmer_name');
+    let farmerPhone = localStorage.getItem('farmer_phone');
+
+    // If not found, try userData
+    if (!farmerName || farmerName === 'Unknown Farmer') {
+      try {
+        const userDataStr = localStorage.getItem('userData');
+        if (userDataStr) {
+          const userData = JSON.parse(userDataStr);
+          farmerName = userData.user?.firstName
+            ? `${userData.user.firstName} ${userData.user.lastName || ''}`.trim()
+            : (userData.user?.name || 'Unknown Farmer');
+          farmerPhone = userData.user?.phone || 'unknown';
+
+          // Save to localStorage for next time
+          localStorage.setItem('farmer_name', farmerName);
+          if (farmerPhone) localStorage.setItem('farmer_phone', farmerPhone);
+
+          console.log('✅ Extracted farmer details from userData:', { farmerName, farmerPhone });
+        }
+      } catch (error) {
+        console.error('Error parsing userData:', error);
+      }
+    }
+
+    // Final fallback
+    farmerName = farmerName || 'Unknown Farmer';
+    farmerPhone = farmerPhone || 'unknown';
+
     console.log('🌾 Farmer details:', { farmerId, farmerName, farmerPhone });
     
     // Enrich crop data with farmer information
