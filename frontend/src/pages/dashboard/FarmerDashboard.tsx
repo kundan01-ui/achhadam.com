@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { saveToMongoDB, saveToPostgreSQL, uploadImagesToCloud, loadCropsFromDatabase, deleteCropFromDatabase, updateCropInDatabase } from '../../services/databaseService';
 import { authenticatedFetch } from '../../services/tokenService';
+import { cropCacheService } from '../../services/cropCacheService';
 // dataSyncService removed - using automatic database save only
 // SyncButton removed - using automatic database save only
 // ImmediateSyncButton removed - using automatic database save only
@@ -1581,40 +1582,64 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   // PERMANENT DATA LOADING - Cross-device, Cross-session
   useEffect(() => {
     if (userProfile.id) {
-      console.log(`🌾 PERMANENT LOAD: Loading crops for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
-      console.log(`📱 This will load crops from any device, any session - PERMANENT DATA`);
-      
+      console.log(`🌾 SMART LOAD: Loading crops for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
+      console.log(`⚡ Using hybrid cache + database strategy for instant loading`);
+
       const loadCrops = async () => {
         try {
-          // Load from database first (PERMANENT DATA)
-          const result = await loadCropsFromDatabase(userProfile.id);
-          
-          if (result.success && result.data) {
-            console.log(`✅ PERMANENT LOAD: Loaded ${result.data.length} crops from database`);
-            console.log(`🌐 These crops are available across all devices and sessions`);
-            setUploadedCrops(result.data);
+          // STEP 1: Try to load from cache INSTANTLY (0ms)
+          const cachedCrops = cropCacheService.getCropsFromCache(userProfile.id, userProfile.phone || '');
+          if (cachedCrops && cachedCrops.length > 0) {
+            console.log(`⚡ INSTANT LOAD: Showing ${cachedCrops.length} crops from cache`);
+            setUploadedCrops(cachedCrops);
+
+            const cacheAge = cropCacheService.getCacheAge();
+            console.log(`📦 Cache age: ${cacheAge}s - Background sync will update if needed`);
           } else {
-            console.log('No permanent crops found in database, loading from localStorage');
-            
-            // Fallback to localStorage
-            const userKey = localStorage.getItem('farmer_user_key');
-            if (userKey) {
-              const data = localStorage.getItem(`farmer_database_${userKey}`);
-              if (data) {
-                const parsed = JSON.parse(data);
-                console.log(`📱 Loaded ${parsed.crops?.length || 0} crops from localStorage as fallback`);
-                setUploadedCrops(parsed.crops || []);
-              }
+            console.log(`📭 No cache found - First time on this device or different user`);
+          }
+
+          // STEP 2: Always check database in background (even if cache exists)
+          console.log(`🔄 Background: Checking database for latest crops...`);
+          const result = await loadCropsFromDatabase(userProfile.id);
+
+          if (result.success && result.data) {
+            console.log(`✅ DATABASE SYNC: Loaded ${result.data.length} crops from database`);
+
+            // Update UI with latest data
+            setUploadedCrops(result.data);
+
+            // Update cache for next time
+            cropCacheService.saveCropsToCache(
+              result.data,
+              userProfile.id,
+              userProfile.phone || ''
+            );
+
+            console.log(`💾 Cache updated - Next load will be INSTANT`);
+          } else {
+            console.log('⚠️ No crops found in database');
+
+            // If cache had data but database is empty, keep showing cache
+            if (!cachedCrops || cachedCrops.length === 0) {
+              setUploadedCrops([]);
             }
           }
         } catch (error) {
-          console.error('Error loading permanent crops from database:', error);
+          console.error('❌ Error loading crops:', error);
+
+          // On error, keep showing cached data if available
+          const cachedCrops = cropCacheService.getCropsFromCache(userProfile.id, userProfile.phone || '');
+          if (cachedCrops) {
+            console.log(`📦 Using cached data due to error`);
+            setUploadedCrops(cachedCrops);
+          }
         }
       };
-      
+
       loadCrops();
     }
-  }, [userProfile.id, userProfile.name]);
+  }, [userProfile.id, userProfile.name, userProfile.phone]);
 
   // NO LOCALSTORAGE SAVE - DATABASE ONLY TO PREVENT DUPLICATES
   // useEffect(() => {
