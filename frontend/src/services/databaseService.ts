@@ -166,7 +166,7 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
     }
     
     // Make API call to save crop - using local backend
-    let response = await fetch('http://localhost:5000/api/crops', {
+    let response = await fetch('https://acchadam1-backend.onrender.com/api/crops', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -192,7 +192,7 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
       
       try {
         // Try to refresh token
-        const refreshResponse = await fetch('http://localhost:5000/api/auth/refresh', {
+        const refreshResponse = await fetch('https://acchadam1-backend.onrender.com/api/auth/refresh', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -211,7 +211,7 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
           localStorage.setItem('authToken', newToken);
           
           // Retry the original request with new token
-          response = await fetch('http://localhost:5000/api/crops', {
+          response = await fetch('https://acchadam1-backend.onrender.com/api/crops', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -337,7 +337,7 @@ export const loadCropsFromDatabase = async (farmerId: string): Promise<{ success
   try {
     console.log('🌾 Loading crops from database for farmer:', farmerId);
     
-    const response = await fetch(`http://localhost:5000/api/crops/farmer/${farmerId}`, {
+    const response = await fetch(`https://acchadam1-backend.onrender.com/api/crops/farmer/${farmerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

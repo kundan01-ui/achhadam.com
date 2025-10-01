@@ -1060,7 +1060,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       for (const userId of userIdsToTry) {
         try {
           console.log(`🔄 Trying to load crops with user ID: ${userId}`);
-          const response = await authenticatedFetch(`http://localhost:5000/api/crops/farmer/${userId}`, {
+          const response = await authenticatedFetch(`https://acchadam1-backend.onrender.com/api/crops/farmer/${userId}`, {
             method: 'GET'
           });
           
@@ -1395,7 +1395,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       console.log(`🌐 This ensures latest data is loaded from any device`);
       console.log(`📱 Cross-device sync: Mobile crops will be available on desktop and vice versa`);
       
-      const response = await authenticatedFetch(`http://localhost:5000/api/crops/farmer/${actualUserId}`, {
+      const response = await authenticatedFetch(`https://acchadam1-backend.onrender.com/api/crops/farmer/${actualUserId}`, {
         method: 'GET'
       });
 
