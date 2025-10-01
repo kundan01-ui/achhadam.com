@@ -89,6 +89,90 @@ export interface SignupResponse {
 class ApiService {
   private requestCache: Map<string, Promise<any>> = new Map();
 
+  private async requestWithTimeout<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    timeoutMs: number = 15000
+  ): Promise<T> {
+    const url = `${API_BASE_URL}${endpoint}`;
+
+    console.log('🔗 Making request to:', url);
+    console.log(`⏱️ Timeout set to: ${timeoutMs}ms (${timeoutMs/1000}s)`);
+
+    const config: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Origin': window.location.origin,
+        ...options.headers,
+      },
+      mode: 'cors',
+      credentials: 'omit',
+      ...options,
+    };
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.log(`⏰ Request timeout for ${endpoint} after ${timeoutMs}ms`);
+        controller.abort();
+      }, timeoutMs);
+
+      config.signal = controller.signal;
+
+      const timerKey = `API Request: ${endpoint}`;
+      if (console.time && console.timeEnd) {
+        try {
+          console.time(timerKey);
+        } catch (e) {
+          // Timer already exists
+        }
+      }
+
+      const response = await fetch(url, config);
+
+      clearTimeout(timeoutId);
+
+      if (console.time && console.timeEnd) {
+        try {
+          console.timeEnd(timerKey);
+        } catch (e) {
+          // Timer doesn't exist
+        }
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+
+        if (response.status === 429) {
+          const retryAfter = errorData.retryAfter || 60;
+          throw new Error(`Too many requests. Please wait ${retryAfter} seconds before trying again.`);
+        }
+
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error: any) {
+      console.error(`API request failed for ${endpoint}:`, error);
+
+      if (error.name === 'AbortError') {
+        throw new Error(`Request timed out after ${timeoutMs/1000} seconds. The server might be starting up. Please try again in a moment.`);
+      }
+
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Network error. Please check your internet connection and try again.');
+      }
+
+      if (error instanceof Error) {
+        throw error;
+      }
+
+      throw new Error(error.message || 'An unexpected error occurred');
+    }
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -255,10 +339,13 @@ class ApiService {
   async login(data: LoginRequest): Promise<LoginResponse> {
     try {
       console.log('🔄 Attempting login for phone:', data.phone);
-      const response = await this.request<LoginResponse>('/api/auth/login', {
+      console.log('⏱️ Using 60 second timeout to handle backend cold start');
+
+      const response = await this.requestWithTimeout<LoginResponse>('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify(data),
-      });
+      }, 60000); // 60 second timeout for login
+
       console.log('✅ Login successful');
       return response;
     } catch (error: any) {
