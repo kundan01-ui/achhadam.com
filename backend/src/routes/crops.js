@@ -279,29 +279,70 @@ router.get('/marketplace', async (req, res) => {
     const processedCrops = crops.map((crop, index) => {
       const cropObj = crop.toObject();
 
-      // Fix missing name and type fields for display
-      if (!cropObj.name) {
-        cropObj.name = `फसल ${index + 1}`;
+      // Use REAL crop name from database - cropName field
+      cropObj.name = cropObj.cropName || `फसल ${index + 1}`;
+
+      // Use REAL crop type from database - cropType field
+      cropObj.type = cropObj.cropType || 'Unknown';
+
+      // Use REAL variety from database
+      if (cropObj.variety) {
+        cropObj.subcategory = cropObj.variety;
       }
-      if (!cropObj.type) {
-        // Guess type based on available data or use default
-        if (cropObj.quantity?.unit === 'quintal') {
-          cropObj.type = 'wheat'; // Default for quintal
-        } else {
-          cropObj.type = 'vegetable'; // Default for kg
-        }
-      }
+
+      // Use REAL farmer name from database
+      cropObj.farmerName = cropObj.farmerAssociation?.farmerName || 'Unknown Farmer';
+
+      // Use REAL grade/quality from database
+      cropObj.grade = cropObj.quality || 'B';
 
       // Ensure pricing is accessible
       if (!cropObj.price && cropObj.pricing?.pricePerUnit) {
         cropObj.price = cropObj.pricing.pricePerUnit;
       }
 
+      // Extract quantity from nested structure
+      if (!cropObj.quantity && cropObj.quantity?.available) {
+        cropObj.quantity = cropObj.quantity.available;
+      }
+
+      // Extract unit from nested structure
+      if (!cropObj.unit && cropObj.quantity?.unit) {
+        cropObj.unit = cropObj.quantity.unit;
+      }
+
       // Ensure location is a simple string for compatibility
       if (cropObj.location?.farmAddress) {
         cropObj.location = cropObj.location.farmAddress;
+      } else if (cropObj.location?.city) {
+        cropObj.location = cropObj.location.city;
       } else if (typeof cropObj.location === 'object') {
         cropObj.location = cropObj.location.city || 'Unknown Location';
+      }
+
+      // Ensure images array is properly formatted
+      if (cropObj.images && Array.isArray(cropObj.images)) {
+        cropObj.images = cropObj.images.map(img => {
+          if (typeof img === 'object' && img.url) {
+            return img.url;
+          }
+          return img;
+        }).filter(url => url && url !== '');
+      } else {
+        cropObj.images = [];
+      }
+
+      // Add harvest date in readable format
+      if (cropObj.harvest?.harvestDate) {
+        cropObj.harvestDate = cropObj.harvest.harvestDate;
+      }
+
+      // Add storage and packaging info
+      if (cropObj.harvest?.storageMethod) {
+        cropObj.storageMethod = cropObj.harvest.storageMethod;
+      }
+      if (cropObj.harvest?.packaging?.type) {
+        cropObj.packagingType = cropObj.harvest.packaging.type;
       }
 
       return cropObj;

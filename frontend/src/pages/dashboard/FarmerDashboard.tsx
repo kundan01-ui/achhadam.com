@@ -240,7 +240,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     location: '',
     description: '',
     images: [],
-    uploadedAt: null // For edit mode
+    uploadedAt: null, // For edit mode
+    videoUrl: '',
+    storageMethod: 'farm_storage',
+    packagingType: 'loose',
+    minimumOrder: 1,
+    shelfLife: '',
+    certifications: []
   });
 
   // State for uploaded crops (user's actual crops)
@@ -289,7 +295,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       'Chickpeas': ['Desi', 'Kabuli', 'Green Gram'],
       'Black Gram': ['Urad Dal', 'Black Gram Whole'],
       'Green Gram': ['Moong Dal', 'Green Gram Whole'],
-      'Pigeon Pea': ['Toor Dal', 'Arhar Dal', 'Red Gram']
+      'Pigeon Pea': ['Toor Dal', 'Arhar Dal', 'Red Gram'],
+      'Arhar/Tur (अरहर/तूर)': ['Pusa-992', 'Maruti', 'Asha', 'ICPL-87119'],
+      'Soyabean (सोयाबीन)': ['JS-335', 'JS-95-60', 'MACS-1188', 'Pusa-16']
     },
     'Vegetables': {
       'Tomato': ['Cherry', 'Roma', 'Beefsteak', 'Heirloom'],
@@ -311,6 +319,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       'Cumin': ['Jeera', 'Black Cumin', 'White Cumin'],
       'Coriander': ['Dhaniya', 'Coriander Seeds', 'Coriander Leaves'],
       'Cardamom': ['Green Cardamom', 'Black Cardamom', 'White Cardamom']
+    },
+    'Cash Crops (नकदी फसल)': {
+      'Cotton/Kapas (कपास)': ['BT Cotton', 'Desi Cotton', 'Hybrid Cotton', 'American Cotton']
     }
   };
 
@@ -1821,52 +1832,62 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   );
 
   // Crop Upload Section
+  // Handle video upload
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // For now, just show filename. Later implement upload to cloud storage
+      setCropFormData(prev => ({ ...prev, videoUrl: `video://${file.name}` }));
+      console.log('Video selected:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+    }
+  };
+
   // Crop upload modal component
   const renderCropUploadModal = () => (
     showCropUploadModal && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-full sm:max-w-4xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-4">
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
+          <div className="sticky top-0 bg-white border-b border-gray-200 p-3 sm:p-4 md:p-6 rounded-t-xl">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
                   {cropFormData.id ? '✏️ Edit Crop' : '🌾 Crop Upload'}
                 </h2>
-                <p className="text-gray-600 mt-1">
+                <p className="text-sm sm:text-base text-gray-600 mt-1">
                   {cropFormData.id ? 'अपनी फसल की जानकारी अपडेट करें' : 'सरल तरीके से अपनी फसल अपलोड करें'}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setShowCropUploadModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
-                <X className="h-6 w-6 text-gray-500" />
+                <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-500" />
               </button>
             </div>
           </div>
 
           {/* Form Content */}
-          <div className="p-6 space-y-6">
+          <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
             {/* Step 1: Crop Selection */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
-                <Leaf className="h-5 w-5 mr-2" />
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-semibold text-green-800 mb-3 sm:mb-4 flex items-center">
+                <Leaf className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Step 1: अपनी फसल चुनें (Select Your Crop)
               </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {/* Crop Category */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     फसल का प्रकार (Crop Category)
                   </label>
-                  <select 
+                  <select
                     value={cropFormData.cropType}
                     onChange={(e) => {
                       setCropFormData(prev => ({ ...prev, cropType: e.target.value, variety: '' }));
                     }}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base min-h-[44px]"
                   >
                     <option value="">-- चुनें (Select) --</option>
                     {Object.keys(cropCategories).map(category => (
@@ -1877,17 +1898,17 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
                 {/* Crop Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     फसल का नाम (Crop Name)
                   </label>
-                  <select 
+                  <select
                     value={cropFormData.cropName}
                     onChange={(e) => setCropFormData(prev => ({ ...prev, cropName: e.target.value }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base min-h-[44px]"
                     disabled={!cropFormData.cropType}
                   >
                     <option value="">-- पहले प्रकार चुनें (Select Category First) --</option>
-                    {cropFormData.cropType && cropCategories[cropFormData.cropType] && 
+                    {cropFormData.cropType && cropCategories[cropFormData.cropType] &&
                       Object.keys(cropCategories[cropFormData.cropType]).map(crop => (
                         <option key={crop} value={crop}>{crop}</option>
                       ))
@@ -1897,17 +1918,17 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
                 {/* Variety */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     किस्म (Variety)
                   </label>
-                  <select 
+                  <select
                     value={cropFormData.variety}
                     onChange={(e) => setCropFormData(prev => ({ ...prev, variety: e.target.value }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base min-h-[44px]"
                     disabled={!cropFormData.cropName}
                   >
                     <option value="">-- किस्म चुनें (Select Variety) --</option>
-                    {cropFormData.cropType && cropFormData.cropName && 
+                    {cropFormData.cropType && cropFormData.cropName &&
                       cropCategories[cropFormData.cropType][cropFormData.cropName]?.map(variety => (
                         <option key={variety} value={variety}>{variety}</option>
                       ))
@@ -1917,13 +1938,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
                 {/* Quality Grade */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     गुणवत्ता (Quality Grade)
                   </label>
-                  <select 
+                  <select
                     value={cropFormData.quality}
                     onChange={(e) => setCropFormData(prev => ({ ...prev, quality: e.target.value }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base min-h-[44px]"
                   >
                     {qualityGrades.map(grade => (
                       <option key={grade.value} value={grade.value}>
@@ -1936,36 +1957,36 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             </div>
 
             {/* Step 2: Quantity & Pricing */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-blue-800 mb-4 flex items-center">
-                <Package className="h-5 w-5 mr-2" />
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-semibold text-blue-800 mb-3 sm:mb-4 flex items-center">
+                <Package className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Step 2: मात्रा और मूल्य (Quantity & Pricing)
               </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {/* Quantity */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     मात्रा (Quantity)
                   </label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={cropFormData.quantity}
                     onChange={(e) => setCropFormData(prev => ({ ...prev, quantity: e.target.value }))}
                     placeholder="उदाहरण: 10"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[44px]"
                   />
                 </div>
 
                 {/* Unit */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     इकाई (Unit)
                   </label>
-                  <select 
+                  <select
                     value={cropFormData.unit}
                     onChange={(e) => setCropFormData(prev => ({ ...prev, unit: e.target.value }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[44px]"
                   >
                     {quantityUnits.map(unit => (
                       <option key={unit.value} value={unit.value}>
@@ -1977,15 +1998,15 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
                 {/* Price */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     मूल्य प्रति इकाई (Price per Unit)
                   </label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={cropFormData.price}
                     onChange={(e) => setCropFormData(prev => ({ ...prev, price: e.target.value }))}
                     placeholder="₹ रुपये में"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[44px]"
                   />
                 </div>
               </div>
@@ -2004,46 +2025,46 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             </div>
 
             {/* Step 3: Harvest & Location */}
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-purple-800 mb-4 flex items-center">
-                <Calendar className="h-5 w-5 mr-2" />
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-semibold text-purple-800 mb-3 sm:mb-4 flex items-center">
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Step 3: कटाई और स्थान (Harvest & Location)
               </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {/* Harvest Date */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     कटाई की तारीख (Harvest Date)
                   </label>
-                  <input 
-                    type="date" 
+                  <input
+                    type="date"
                     value={cropFormData.harvestDate}
                     onChange={(e) => setCropFormData(prev => ({ ...prev, harvestDate: e.target.value }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm sm:text-base min-h-[44px]"
                   />
                 </div>
 
                 {/* Location */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     स्थान (Location)
                   </label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={cropFormData.location}
                     onChange={(e) => setCropFormData(prev => ({ ...prev, location: e.target.value }))}
                     placeholder="गाँव, जिला, राज्य"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm sm:text-base min-h-[44px]"
                   />
                 </div>
               </div>
 
               {/* Organic Checkbox */}
-              <div className="mt-4">
-                <label className="flex items-center">
-                  <input 
-                    type="checkbox" 
+              <div className="mt-3 sm:mt-4">
+                <label className="flex items-center min-h-[44px]">
+                  <input
+                    type="checkbox"
                     checked={cropFormData.organic}
                     onChange={(e) => setCropFormData(prev => ({ ...prev, organic: e.target.checked }))}
                     className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
@@ -2056,21 +2077,21 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             </div>
 
             {/* Step 4: Photos & Description */}
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-orange-800 mb-4 flex items-center">
-                <Camera className="h-5 w-5 mr-2" />
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-semibold text-orange-800 mb-3 sm:mb-4 flex items-center">
+                <Camera className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Step 4: फोटो और विवरण (Photos & Description)
               </h3>
-              
+
               {/* Photo Upload */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="mb-3 sm:mb-4">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   फसल की तस्वीरें (Crop Photos)
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">फोटो अपलोड करने के लिए यहाँ क्लिक करें</p>
-                  <p className="text-sm text-gray-500">JPG, PNG (Max 5MB each)</p>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center">
+                  <Camera className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-2 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-gray-600 mb-2">फोटो अपलोड करने के लिए यहाँ क्लिक करें</p>
+                  <p className="text-xs sm:text-sm text-gray-500">JPG, PNG (Max 5MB each)</p>
                   <input 
                     type="file" 
                     multiple 
@@ -2082,9 +2103,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       setCropFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
                     }}
                   />
-                  <label 
+                  <label
                     htmlFor="crop-photos"
-                    className="mt-2 inline-block bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 cursor-pointer"
+                    className="mt-2 inline-block bg-orange-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg hover:bg-orange-700 cursor-pointer text-sm sm:text-base min-h-[44px] flex items-center justify-center"
                   >
                     Choose Photos
                   </label>
@@ -2120,33 +2141,198 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                 </div>
               </div>
 
+              {/* Video Upload - NEW */}
+              <div className="mb-3 sm:mb-4">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  फसल का वीडियो (Crop Video) 📹 <span className="text-xs text-gray-500">(Optional)</span>
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center">
+                  <Video className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-2 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-gray-600 mb-2">वीडियो अपलोड करें या YouTube लिंक पेस्ट करें</p>
+                  <p className="text-xs sm:text-sm text-gray-500">MP4, MOV (Max 50MB) या YouTube URL</p>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                    id="video-upload"
+                  />
+                  <input
+                    type="text"
+                    value={cropFormData.videoUrl || ''}
+                    onChange={(e) => setCropFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
+                    placeholder="या YouTube लिंक यहाँ पेस्ट करें"
+                    className="mt-3 w-full p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+                  />
+                  <label htmlFor="video-upload" className="mt-3 inline-block px-3 sm:px-4 py-2 sm:py-3 bg-orange-100 text-orange-700 rounded-lg cursor-pointer hover:bg-orange-200 transition-colors text-sm sm:text-base min-h-[44px] flex items-center justify-center">
+                    📹 वीडियो फाइल चुनें
+                  </label>
+                </div>
+                {cropFormData.videoUrl && (
+                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-xs sm:text-sm text-green-700">✓ Video URL: {cropFormData.videoUrl.substring(0, 50)}...</p>
+                  </div>
+                )}
+              </div>
+
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   अतिरिक्त जानकारी (Additional Information)
                 </label>
-                <textarea 
+                <textarea
                   value={cropFormData.description}
                   onChange={(e) => setCropFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="फसल के बारे में कोई विशेष जानकारी..."
                   rows={3}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm sm:text-base"
                 />
+              </div>
+            </div>
+
+            {/* Step 5: Additional Details - NEW */}
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-semibold text-indigo-800 mb-3 sm:mb-4 flex items-center">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                Step 5: अतिरिक्त विवरण (Additional Details)
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                {/* Storage Method */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    भंडारण विधि (Storage Method)
+                  </label>
+                  <select
+                    value={cropFormData.storageMethod || 'farm_storage'}
+                    onChange={(e) => setCropFormData(prev => ({ ...prev, storageMethod: e.target.value }))}
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+                  >
+                    <option value="cold_storage">Cold Storage (कोल्ड स्टोरेज)</option>
+                    <option value="warehouse">Warehouse (गोदाम)</option>
+                    <option value="farm_storage">Farm Storage (खेत में)</option>
+                    <option value="open_storage">Open Storage (खुला)</option>
+                  </select>
+                </div>
+
+                {/* Packaging Type */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    पैकेजिंग (Packaging)
+                  </label>
+                  <select
+                    value={cropFormData.packagingType || 'loose'}
+                    onChange={(e) => setCropFormData(prev => ({ ...prev, packagingType: e.target.value }))}
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+                  >
+                    <option value="loose">Loose (खुला)</option>
+                    <option value="packed">Packed (पैक)</option>
+                    <option value="vacuum_sealed">Vacuum Sealed (वैक्यूम पैक)</option>
+                    <option value="modified_atmosphere">Modified Atmosphere (विशेष पैकेजिंग)</option>
+                  </select>
+                </div>
+
+                {/* Minimum Order Quantity */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    न्यूनतम ऑर्डर (Minimum Order)
+                  </label>
+                  <input
+                    type="number"
+                    value={cropFormData.minimumOrder || 1}
+                    onChange={(e) => setCropFormData(prev => ({ ...prev, minimumOrder: e.target.value }))}
+                    placeholder="1"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+                  />
+                </div>
+
+                {/* Shelf Life */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    ताजगी अवधि (Shelf Life - Days)
+                  </label>
+                  <input
+                    type="number"
+                    value={cropFormData.shelfLife || ''}
+                    onChange={(e) => setCropFormData(prev => ({ ...prev, shelfLife: e.target.value }))}
+                    placeholder="दिनों में"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+                  />
+                </div>
+              </div>
+
+              {/* Certification */}
+              <div className="mt-3 sm:mt-4">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  प्रमाणपत्र (Certifications) 🏅
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <label className="flex items-center p-2 sm:p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cropFormData.certifications?.includes('organic')}
+                      onChange={(e) => {
+                        const certs = cropFormData.certifications || [];
+                        if (e.target.checked) {
+                          setCropFormData(prev => ({ ...prev, certifications: [...certs, 'organic'] }));
+                        } else {
+                          setCropFormData(prev => ({ ...prev, certifications: certs.filter(c => c !== 'organic') }));
+                        }
+                      }}
+                      className="h-4 w-4 text-green-600"
+                    />
+                    <span className="ml-2 text-xs sm:text-sm">Organic (जैविक)</span>
+                  </label>
+
+                  <label className="flex items-center p-2 sm:p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cropFormData.certifications?.includes('fair_trade')}
+                      onChange={(e) => {
+                        const certs = cropFormData.certifications || [];
+                        if (e.target.checked) {
+                          setCropFormData(prev => ({ ...prev, certifications: [...certs, 'fair_trade'] }));
+                        } else {
+                          setCropFormData(prev => ({ ...prev, certifications: certs.filter(c => c !== 'fair_trade') }));
+                        }
+                      }}
+                      className="h-4 w-4 text-green-600"
+                    />
+                    <span className="ml-2 text-xs sm:text-sm">Fair Trade</span>
+                  </label>
+
+                  <label className="flex items-center p-2 sm:p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cropFormData.certifications?.includes('rainforest_alliance')}
+                      onChange={(e) => {
+                        const certs = cropFormData.certifications || [];
+                        if (e.target.checked) {
+                          setCropFormData(prev => ({ ...prev, certifications: [...certs, 'rainforest_alliance'] }));
+                        } else {
+                          setCropFormData(prev => ({ ...prev, certifications: certs.filter(c => c !== 'rainforest_alliance') }));
+                        }
+                      }}
+                      className="h-4 w-4 text-green-600"
+                    />
+                    <span className="ml-2 text-xs sm:text-sm">Rainforest Alliance</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Footer Actions */}
-          <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-xl">
-            <div className="flex items-center justify-between">
-              <button 
+          <div className="sticky bottom-0 bg-white border-t border-gray-200 p-3 sm:p-4 md:p-6 rounded-b-xl">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <button
                 onClick={() => setShowCropUploadModal(false)}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 sm:px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base min-h-[44px]"
               >
                 Cancel
               </button>
-              <div className="flex space-x-3">
-                <button 
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
                   onClick={() => {
                     // Reset form
                     setCropFormData({
@@ -2163,10 +2349,16 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       location: '',
                       description: '',
                       images: [],
-                      uploadedAt: null // Clear upload date for new crop
+                      uploadedAt: null, // Clear upload date for new crop
+                      videoUrl: '',
+                      storageMethod: 'farm_storage',
+                      packagingType: 'loose',
+                      minimumOrder: 1,
+                      shelfLife: '',
+                      certifications: []
                     });
                   }}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 sm:px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base min-h-[44px]"
                 >
                   Reset
                 </button>
@@ -2255,7 +2447,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                             location: '',
                             description: '',
                             images: [],
-                            uploadedAt: null
+                            uploadedAt: null,
+                            videoUrl: '',
+                            storageMethod: 'farm_storage',
+                            packagingType: 'loose',
+                            minimumOrder: 1,
+                            shelfLife: '',
+                            certifications: []
                           });
 
                           alert('फसल सफलतापूर्वक अपलोड हो गई! 🎉 (Crop uploaded successfully!)');
@@ -2273,9 +2471,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       alert('Error uploading crop. Please try again.');
                     }
                   }}
-                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                  className="px-4 sm:px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 text-sm sm:text-base min-h-[44px]"
                 >
-                  <Upload className="h-5 w-5" />
+                  <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span>{cropFormData.id ? 'Update Crop' : 'Upload Crop'}</span>
                 </button>
               </div>
@@ -3950,431 +4148,6 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       
       {/* Crop Upload Modal */}
       {renderCropUploadModal()}
-      
-      {/* KYC Verification Modal */}
-      {showKYCModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-500 h-2 rounded-full" style={{width: '78%'}}></div>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">78%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      default:
-        return renderOverview();
-    }
-  };
-
-  return (
-    <>
-      {/* Image Gallery Modal */}
-      {renderImageGalleryModal()}
-      
-      {/* Crop Upload Modal */}
-      {renderCropUploadModal()}
-      
-      {/* KYC Verification Modal */}
-      {showKYCModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 rounded-t-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">📋 KYC Verification</h2>
-                  <p className="text-gray-600 text-sm">Complete your profile to start selling</p>
-                </div>
-                <button
-                  onClick={() => setShowKYCModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
-              </div>
-            </div>
-            
-            {/* KYC Form Content */}
-            <div className="p-4 sm:p-6">
-              <div className="space-y-6">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle className="h-8 w-8 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">KYC Verification Required</h3>
-                  <p className="text-gray-600 text-sm">
-                    Complete your profile verification to start selling crops on our platform.
-                  </p>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-semibold text-sm">1</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Personal Information</p>
-                      <p className="text-sm text-gray-600">Name, Phone, Address</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-semibold text-sm">2</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Identity Verification</p>
-                      <p className="text-sm text-gray-600">Aadhaar, PAN, or Driving License</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-semibold text-sm">3</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Bank Account</p>
-                      <p className="text-sm text-gray-600">For secure payments</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  <button
-                    onClick={() => setShowKYCModal(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Complete Later
-                  </button>
-                  <button
-                    onClick={() => setShowKYCModal(false)}
-                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Start Verification
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Main Dashboard Content */}
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => setActiveTab('overview')}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
-                >
-                  <Home className="h-5 w-5" />
-                  <span className="font-medium">Farmer Dashboard</span>
-                </button>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <button className="p-2 text-gray-400 hover:text-gray-600">
-                  <Bell className="h-5 w-5" />
-                </button>
-                
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
-                  >
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <User className="h-4 w-4 text-green-600" />
-                    </div>
-                    <span className="font-medium">{userProfile.name}</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </button>
-                  
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                      <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        Profile
-                      </button>
-                      <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        Settings
-                      </button>
-                      <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        Help
-                      </button>
-                      <hr className="my-1" />
-                      <button 
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Navigation Tabs */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <nav className="flex space-x-8 overflow-x-auto">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <tab.icon className="h-4 w-4" />
-                  <span>{tab.name}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {renderActiveTab()}
-        </main>
-      </div>
-    </>
-  );
-};
-
-export default FarmerDashboard;
-                        type="text"
-                        value={kycData.panNumber}
-                        onChange={(e) => setKycData(prev => ({ ...prev, panNumber: e.target.value }))}
-                        placeholder="ABCDE1234F"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
-                        maxLength={10}
-                      />
-                    </div>
-                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                        Upload PAN Card *
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*,.pdf"
-                        onChange={(e) => setKycFiles(prev => ({ ...prev, panCardFile: e.target.files?.[0] || null }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs sm:text-sm transition-all duration-300 hover:border-green-300"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Aadhar Card Section */}
-                <div className="space-y-3 sm:space-y-4 animate-fadeIn" style={{animationDelay: '0.2s'}}>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">🆔 Aadhar Card Details</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                        Aadhar Card Number *
-                      </label>
-                      <input
-                        type="text"
-                        value={kycData.aadharNumber}
-                        onChange={(e) => setKycData(prev => ({ ...prev, aadharNumber: e.target.value }))}
-                        placeholder="1234 5678 9012"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
-                        maxLength={12}
-                      />
-                    </div>
-                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                        Upload Aadhar Front *
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*,.pdf"
-                        onChange={(e) => setKycFiles(prev => ({ ...prev, aadharFrontFile: e.target.files?.[0] || null }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs sm:text-sm transition-all duration-300 hover:border-green-300"
-                      />
-                    </div>
-                    <div className="sm:col-span-2 transition-all duration-300 hover:shadow-md rounded-lg p-2">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                        Upload Aadhar Back *
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*,.pdf"
-                        onChange={(e) => setKycFiles(prev => ({ ...prev, aadharBackFile: e.target.files?.[0] || null }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs sm:text-sm transition-all duration-300 hover:border-green-300"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bank Details Section */}
-                <div className="space-y-3 sm:space-y-4 animate-fadeIn" style={{animationDelay: '0.4s'}}>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">🏦 Bank Account Details</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                        Account Holder Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={kycData.accountHolderName}
-                        onChange={(e) => setKycData(prev => ({ ...prev, accountHolderName: e.target.value }))}
-                        placeholder="Enter full name as per bank records"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
-                      />
-                    </div>
-                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                        Bank Account Number *
-                      </label>
-                      <input
-                        type="text"
-                        value={kycData.bankAccountNumber}
-                        onChange={(e) => setKycData(prev => ({ ...prev, bankAccountNumber: e.target.value }))}
-                        placeholder="Enter bank account number"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
-                      />
-                    </div>
-                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                        IFSC Code *
-                      </label>
-                      <input
-                        type="text"
-                        value={kycData.ifscCode}
-                        onChange={(e) => setKycData(prev => ({ ...prev, ifscCode: e.target.value.toUpperCase() }))}
-                        placeholder="SBIN0001234"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
-                        maxLength={11}
-                      />
-                    </div>
-                    <div className="transition-all duration-300 hover:shadow-md rounded-lg p-2">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                        Bank Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={kycData.bankName}
-                        onChange={(e) => setKycData(prev => ({ ...prev, bankName: e.target.value }))}
-                        placeholder="State Bank of India"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
-                      />
-                    </div>
-                    <div className="sm:col-span-2 transition-all duration-300 hover:shadow-md rounded-lg p-2">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                        Branch Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={kycData.branchName}
-                        onChange={(e) => setKycData(prev => ({ ...prev, branchName: e.target.value }))}
-                        placeholder="Enter branch name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base transition-all duration-300 hover:border-green-300"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 sm:p-6 rounded-b-xl shadow-lg animate-fadeIn" style={{animationDelay: '0.6s'}}>
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
-                <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
-                  <p>🔐 Complete KYC verification to start listing crops</p>
-                </div>
-                <div className="flex flex-col sm:flex-row w-full sm:w-auto space-y-2 sm:space-y-0 sm:space-x-3">
-                  <button
-                    onClick={() => {
-                      // Set session flag to not show KYC popup again this session
-                      sessionStorage.setItem('kyc_dismissed_this_session', 'true');
-                      setKycDismissedThisSession(true);
-                      setShowKYCModal(false);
-                      console.log('📝 KYC dismissed for this session');
-                      // Allow crop upload after dismissing KYC
-                      setShowCropUploadModal(true);
-                    }}
-                    className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-300 border border-gray-200 rounded-lg hover:bg-gray-50 hover:shadow-md text-sm"
-                  >
-                    Complete Later
-                  </button>
-                  <button
-                    onClick={() => {
-                      // Generate unique farmer KYC ID
-                      const farmerKYCId = generateFarmerKYCId();
-                      
-                      // Validate required fields
-                      if (!kycData.panNumber || !kycData.bankAccountNumber || !kycData.ifscCode) {
-                        alert('Please fill all required fields');
-                        return;
-                      }
-                      
-                      if (!kycFiles.panCardFile || !kycFiles.aadharFrontFile || !kycFiles.aadharBackFile) {
-                        alert('Please upload all required documents');
-                        return;
-                      }
-                      
-                      // Save KYC data to localStorage
-                      const kycDataToSave = {
-                        farmerKYCId,
-                        panNumber: kycData.panNumber,
-                        bankAccountNumber: kycData.bankAccountNumber,
-                        ifscCode: kycData.ifscCode,
-                        completedAt: new Date().toISOString()
-                      };
-                      localStorage.setItem('farmer_kyc_data', JSON.stringify(kycDataToSave));
-                      
-                      // Save PAN card data separately
-                      const panCardData = {
-                        farmerKYCId,
-                        panNumber: kycData.panNumber,
-                        fileName: kycFiles.panCardFile?.name,
-                        uploadedAt: new Date().toISOString()
-                      };
-                      localStorage.setItem(`farmer_pan_${farmerKYCId}`, JSON.stringify(panCardData));
-                      
-                      // Save Aadhar card data separately
-                      const aadharCardData = {
-                        farmerKYCId,
-                        aadharNumber: kycData.aadharNumber,
-                        aadharFrontFile: kycFiles.aadharFrontFile?.name,
-                        aadharBackFile: kycFiles.aadharBackFile?.name,
-                        uploadedAt: new Date().toISOString()
-                      };
-                      localStorage.setItem(`farmer_aadhar_${farmerKYCId}`, JSON.stringify(aadharCardData));
-                      
-                      setKycCompleted(true);
-                      setKycDismissedThisSession(false);
-                      setShowKYCModal(false);
-                      setShowCropUploadModal(true);
-                      
-                      // Clear session flag since KYC is now completed
-                      sessionStorage.removeItem('kyc_dismissed_this_session');
-                      
-                      alert(`✅ KYC verification completed! Your KYC ID: ${farmerKYCId}\nYou can now list crops.`);
-                    }}
-                    className="w-full sm:w-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300 hover:shadow-md text-sm"
-                  >
-                    Complete KYC
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       
       <div className="min-h-screen bg-gray-50">
         {/* Mobile Header */}

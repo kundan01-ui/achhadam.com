@@ -115,7 +115,7 @@ const OptimizedProductCard: React.FC<ProductCardProps> = ({
   const isNewHarvest = getDaysFromHarvest() <= 3;
 
   const handleImageClick = () => {
-    if (product.images && product.images.length > 1) {
+    if (product.images && product.images.length > 0) {
       setShowImageGallery(true);
     }
   };
@@ -411,7 +411,7 @@ const OptimizedProductCard: React.FC<ProductCardProps> = ({
       </Card>
 
       {/* Image Gallery Modal */}
-      {showImageGallery && product.images && product.images.length > 1 && (
+      {showImageGallery && product.images && product.images.length > 0 && (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onClick={() => setShowImageGallery(false)}>
           <div className="relative max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
             {/* Close Button */}

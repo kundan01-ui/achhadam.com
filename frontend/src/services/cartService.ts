@@ -267,7 +267,7 @@ const syncCartToBackend = async (cart: Cart): Promise<void> => {
     const token = localStorage.getItem('authToken');
     if (!token) return; // Skip sync if not logged in
 
-    await authenticatedFetch('https://acchadam1-backend.onrender.com/api/cart/sync', {
+    await authenticatedFetch('http://localhost:5000/api/cart/sync', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -289,7 +289,7 @@ export const loadCartFromBackend = async (): Promise<Cart> => {
       return loadCart(); // Fall back to local cart
     }
 
-    const response = await authenticatedFetch('https://acchadam1-backend.onrender.com/api/cart', {
+    const response = await authenticatedFetch('http://localhost:5000/api/cart', {
       method: 'GET'
     });
 

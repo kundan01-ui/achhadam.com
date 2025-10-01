@@ -71,9 +71,9 @@ const cropListingSchema = new mongoose.Schema({
   // Quantity & Pricing
   quantity: {
     available: { type: Number, required: true },
-    unit: { 
-      type: String, 
-      enum: ['kg', 'quintal', 'tonne', 'pieces', 'bags'],
+    unit: {
+      type: String,
+      enum: ['kg', 'quintal', 'tonne', 'ton', 'pieces', 'piece', 'bags', 'bag'],
       default: 'kg'
     },
     minimumOrder: { type: Number, default: 1 },
