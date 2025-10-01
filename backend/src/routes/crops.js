@@ -8,10 +8,18 @@ router.get('/', async (req, res) => {
   try {
     console.log('🌾 GET CROPS: Fetching all crops...');
 
-    const crops = await CropListing.find({})
-      .populate('farmerId', 'firstName lastName name phone')  // ← POPULATE FARMER DATA!
-      .sort({ uploadedAt: -1 })
-      .limit(50);
+    let crops;
+    try {
+      crops = await CropListing.find({})
+        .populate('farmerId', 'firstName lastName name phone')
+        .sort({ uploadedAt: -1 })
+        .limit(50);
+    } catch (populateError) {
+      console.log('⚠️  Populate failed, fetching without populate:', populateError.message);
+      crops = await CropListing.find({})
+        .sort({ uploadedAt: -1 })
+        .limit(50);
+    }
 
     console.log(`✅ GET CROPS: Found ${crops.length} crops`);
 
@@ -282,13 +290,20 @@ router.get('/marketplace', async (req, res) => {
       query.quality = quality;
     }
 
-    const crops = await CropListing.find(query)
-      .populate('farmerId', 'firstName lastName name phone')  // ← POPULATE USER DATA!
-      .sort({ uploadedAt: -1 })
-      .limit(100);
+    let crops;
+    try {
+      crops = await CropListing.find(query)
+        .populate('farmerId', 'firstName lastName name phone')
+        .sort({ uploadedAt: -1 })
+        .limit(100);
+    } catch (populateError) {
+      console.log('⚠️  Populate failed, fetching without populate:', populateError.message);
+      crops = await CropListing.find(query)
+        .sort({ uploadedAt: -1 })
+        .limit(100);
+    }
 
     console.log(`✅ MARKETPLACE: Found ${crops.length} crops available for marketplace`);
-    console.log(`🌐 These crops are available across all devices and sessions`);
 
     // Fix incomplete crop data for buyer dashboard display
     const processedCrops = crops.map((crop, index) => {
@@ -312,7 +327,6 @@ router.get('/marketplace', async (req, res) => {
           ? `${farmer.firstName} ${farmer.lastName || ''}`.trim()
           : (farmer.name || 'Unknown Farmer');
         cropObj.farmerPhone = farmer.phone || 'Unknown';
-        console.log(`✅ Real farmer name: ${cropObj.farmerName}`);
       } else {
         cropObj.farmerName = cropObj.farmerAssociation?.farmerName || 'Unknown Farmer';
       }
