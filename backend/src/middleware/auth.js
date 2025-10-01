@@ -7,13 +7,13 @@ const auth = async (req, res, next) => {
     console.log('🔍 AUTH MIDDLEWARE: Starting authentication...');
     console.log('🔍 AUTH MIDDLEWARE: Request URL:', req.url);
     console.log('🔍 AUTH MIDDLEWARE: Request Method:', req.method);
-    
+
     const authHeader = req.header('Authorization');
     console.log('🔍 AUTH MIDDLEWARE: Authorization header:', authHeader);
-    
+
     const token = authHeader?.replace('Bearer ', '');
     console.log('🔍 AUTH MIDDLEWARE: Extracted token:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
-    
+
     if (!token) {
       console.log('❌ AUTH MIDDLEWARE: No token provided');
       return res.status(401).json({
@@ -22,14 +22,37 @@ const auth = async (req, res, next) => {
       });
     }
 
-    console.log('🔍 AUTH MIDDLEWARE: Verifying token with JWT_SECRET...');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    console.log('🔍 AUTH MIDDLEWARE: Verifying token with current JWT_SECRET...');
+    let decoded;
+    let needsTokenRefresh = false;
+
+    try {
+      // Try with current JWT_SECRET
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      console.log('✅ AUTH MIDDLEWARE: Token verified with current JWT_SECRET');
+    } catch (currentSecretError) {
+      console.log('⚠️ AUTH MIDDLEWARE: Token verification failed with current secret');
+      console.log('⚠️ AUTH MIDDLEWARE: Trying with old JWT_SECRET for migration...');
+
+      try {
+        // Try with old JWT_SECRET (migration fallback)
+        const oldSecret = 'achhadam_jwt_secret_key_change_in_production_2024';
+        decoded = jwt.verify(token, oldSecret);
+        console.log('✅ AUTH MIDDLEWARE: Token verified with OLD JWT_SECRET - migration needed');
+        needsTokenRefresh = true; // Flag that we need to issue new token
+      } catch (oldSecretError) {
+        console.log('❌ AUTH MIDDLEWARE: Token verification failed with both old and new secrets');
+        throw currentSecretError; // Throw original error
+      }
+    }
+
     console.log('🔍 AUTH MIDDLEWARE: Token decoded successfully:', {
       userId: decoded.userId,
       userType: decoded.userType,
       phone: decoded.phone,
       exp: decoded.exp,
-      iat: decoded.iat
+      iat: decoded.iat,
+      needsTokenRefresh: needsTokenRefresh
     });
     
     console.log('🔍 AUTH MIDDLEWARE: Looking up user in database with ID:', decoded.userId);
@@ -103,7 +126,23 @@ const auth = async (req, res, next) => {
       email: user.email,
       phone: user.phone
     };
-    
+
+    // If token was verified with old JWT_SECRET, generate new token
+    if (needsTokenRefresh) {
+      console.log('🔄 AUTH MIDDLEWARE: Generating new token with current JWT_SECRET...');
+      const newToken = jwt.sign(
+        {
+          userId: user._id.toString(),
+          userType: user.userType,
+          phone: user.phone
+        },
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: process.env.JWT_EXPIRY || '365d' }
+      );
+      console.log('✅ AUTH MIDDLEWARE: New token generated - will be sent in response header');
+      res.setHeader('X-New-Token', newToken); // Send new token in response header
+    }
+
     console.log('✅ AUTH MIDDLEWARE: Authentication successful');
     next();
   } catch (error) {

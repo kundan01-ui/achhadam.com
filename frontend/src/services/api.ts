@@ -141,6 +141,14 @@ class ApiService {
         }
       }
 
+      // Check for automatic token migration from backend
+      const newToken = response.headers.get('X-New-Token');
+      if (newToken) {
+        console.log('🔄 AUTH: Backend sent new token - updating localStorage automatically');
+        console.log('✅ AUTH: Old token migrated to new JWT_SECRET seamlessly');
+        localStorage.setItem('authToken', newToken);
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
 
@@ -225,10 +233,10 @@ class ApiService {
     }
       
       const response = await fetch(url, config);
-      
+
       // Clear timeout since request completed
       clearTimeout(timeoutId);
-      
+
       if (console.time && console.timeEnd) {
         try {
           console.timeEnd(timerKey);
@@ -236,16 +244,24 @@ class ApiService {
           // Timer doesn't exist, that's fine
         }
       }
-      
+
+      // Check for automatic token migration from backend
+      const newToken = response.headers.get('X-New-Token');
+      if (newToken) {
+        console.log('🔄 AUTH: Backend sent new token - updating localStorage automatically');
+        console.log('✅ AUTH: Old token migrated to new JWT_SECRET seamlessly');
+        localStorage.setItem('authToken', newToken);
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        
+
         // Handle rate limiting specifically
         if (response.status === 429) {
           const retryAfter = errorData.retryAfter || 60;
           throw new Error(`Too many requests. Please wait ${retryAfter} seconds before trying again.`);
         }
-        
+
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
       
