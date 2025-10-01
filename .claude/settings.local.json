@@ -9,7 +9,9 @@
       "Bash(npm start)",
       "Bash(timeout:*)",
       "Bash(npm run build:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFix cross-device authentication and farmer crop loading\n\nCritical Fixes:\n- auth.js: Fixed req.user.userId undefined bug - now correctly uses _id.toString() from MongoDB\n- crops.js: Fixed farmer crop loading to support ObjectId and phone number queries\n- Added flexible farmerId query with $or conditions for farmerAssociation lookup\n- Fixed CastError when querying crops by phone number\n\ncartService.ts: Reverted URLs to production Render backend (https://acchadam1-backend.onrender.com)\n\nThese fixes resolve:\n1. Mobile login network error (403 access denied)\n2. Farmer crops not loading after re-login\n3. Cross-device data synchronization issues\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

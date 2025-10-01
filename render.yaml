@@ -33,11 +33,15 @@ services:
     name: achhadam-frontend
     env: static
     plan: free
-    buildCommand: cd frontend && npm install && npm run build
+    buildCommand: cd frontend && rm -rf node_modules/.vite && rm -rf dist && npm install && npm run build
     staticPublishPath: ./frontend/dist
     envVars:
       - key: VITE_API_URL
-        value: https://achhadam-backend.onrender.com
+        value: https://acchadam1-backend.onrender.com
+      - key: NODE_ENV
+        value: production
+      - key: CACHE_BUST
+        value: v2
 
 databases:
   # MongoDB Database
