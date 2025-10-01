@@ -1418,8 +1418,26 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         console.log(`🔄 FORCE REFRESH COMPLETE: Fresh data loaded and synced`);
         console.log(`🌐 Cross-device sync successful - crops available on all devices`);
         return crops;
+      } else if (response.status === 401) {
+        // Token is invalid - force logout and redirect to login
+        console.log(`❌ 401 Unauthorized - Token is invalid. Logging out...`);
+        console.log(`🔑 This usually happens when:`);
+        console.log(`   1. Token has expired`);
+        console.log(`   2. JWT_SECRET changed on backend`);
+        console.log(`   3. User needs to login again`);
+
+        // Clear all auth data
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+
+        // Show alert to user
+        alert('Your session has expired. Please login again.');
+
+        // Redirect to login
+        window.location.href = '/login';
+        return [];
       } else {
-        // Handle non-JSON error responses
+        // Handle other error responses
         let errorMessage = `HTTP ${response.status}`;
         try {
           const errorData = await response.json();
