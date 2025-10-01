@@ -7,18 +7,32 @@ const auth = require('../middleware/auth');
 router.get('/', async (req, res) => {
   try {
     console.log('🌾 GET CROPS: Fetching all crops...');
-    
+
     const crops = await CropListing.find({})
+      .populate('farmerId', 'firstName lastName name phone')  // ← POPULATE FARMER DATA!
       .sort({ uploadedAt: -1 })
       .limit(50);
 
     console.log(`✅ GET CROPS: Found ${crops.length} crops`);
 
+    // Add real farmer names to response
+    const cropsWithFarmerNames = crops.map(crop => {
+      const cropObj = crop.toObject();
+      if (cropObj.farmerId && typeof cropObj.farmerId === 'object') {
+        const farmer = cropObj.farmerId;
+        cropObj.farmerName = farmer.firstName
+          ? `${farmer.firstName} ${farmer.lastName || ''}`.trim()
+          : (farmer.name || 'Unknown Farmer');
+        cropObj.farmerPhone = farmer.phone || 'Unknown';
+      }
+      return cropObj;
+    });
+
     res.json({
       success: true,
-      data: crops,
-      count: crops.length,
-      message: 'Crops loaded successfully'
+      data: cropsWithFarmerNames,
+      count: cropsWithFarmerNames.length,
+      message: 'Crops loaded successfully with real farmer names'
     });
   } catch (error) {
     console.error('Error fetching crops:', error);
@@ -269,6 +283,7 @@ router.get('/marketplace', async (req, res) => {
     }
 
     const crops = await CropListing.find(query)
+      .populate('farmerId', 'firstName lastName name phone')  // ← POPULATE USER DATA!
       .sort({ uploadedAt: -1 })
       .limit(100);
 
@@ -290,8 +305,17 @@ router.get('/marketplace', async (req, res) => {
         cropObj.subcategory = cropObj.variety;
       }
 
-      // Use REAL farmer name from database
-      cropObj.farmerName = cropObj.farmerAssociation?.farmerName || 'Unknown Farmer';
+      // Use REAL farmer name from User database (POPULATED)
+      if (cropObj.farmerId && typeof cropObj.farmerId === 'object') {
+        const farmer = cropObj.farmerId;
+        cropObj.farmerName = farmer.firstName
+          ? `${farmer.firstName} ${farmer.lastName || ''}`.trim()
+          : (farmer.name || 'Unknown Farmer');
+        cropObj.farmerPhone = farmer.phone || 'Unknown';
+        console.log(`✅ Real farmer name: ${cropObj.farmerName}`);
+      } else {
+        cropObj.farmerName = cropObj.farmerAssociation?.farmerName || 'Unknown Farmer';
+      }
 
       // Use REAL grade/quality from database
       cropObj.grade = cropObj.quality || 'B';
