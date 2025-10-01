@@ -16,11 +16,10 @@ router.get('/buyer/:buyerId', auth, async (req, res) => {
       });
     }
 
-    console.log(`🛒 PERMANENT LOAD: Loading cart for buyer ${buyerId}`);
-    console.log(`📱 This will load cart from any device, any session - PERMANENT DATA`);
+    console.log(`🛒 CART LOAD: Loading cart for buyer ${buyerId}`);
 
-    // Load cart with permanent persistence markers
-    const cartItems = await Cart.find({ 
+    // Try to load cart - prioritize permanent items, fallback to all items
+    let cartItems = await Cart.find({
       buyerId,
       isPermanent: true,
       crossDeviceAccess: true,
@@ -28,8 +27,13 @@ router.get('/buyer/:buyerId', auth, async (req, res) => {
     })
     .sort({ addedAt: -1 });
 
-    console.log(`✅ PERMANENT LOAD: Found ${cartItems.length} permanent cart items for buyer ${buyerId}`);
-    console.log(`🌐 These cart items are available across all devices and sessions`);
+    // Fallback: If no permanent items, load all items for this buyer
+    if (cartItems.length === 0) {
+      console.log(`📦 No permanent cart items found, loading all cart items for buyer`);
+      cartItems = await Cart.find({ buyerId }).sort({ addedAt: -1 });
+    }
+
+    console.log(`✅ CART LOAD: Found ${cartItems.length} cart items for buyer ${buyerId}`);
 
     res.json({
       success: true,
