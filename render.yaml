@@ -41,7 +41,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: CACHE_BUST
-        value: v2
+        value: v1.0.4-cors-fix
 
 databases:
   # MongoDB Database
