@@ -1420,22 +1420,23 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         console.log(`🌐 Cross-device sync successful - crops available on all devices`);
         return crops;
       } else if (response.status === 401) {
-        // Token is invalid - force logout and redirect to login
-        console.log(`❌ 401 Unauthorized - Token is invalid. Logging out...`);
-        console.log(`🔑 This usually happens when:`);
-        console.log(`   1. Token has expired`);
-        console.log(`   2. JWT_SECRET changed on backend`);
-        console.log(`   3. User needs to login again`);
+        // Token is invalid - silently handle it
+        console.log(`⚠️ 401 Unauthorized - Token may be invalid or expired`);
+        console.log(`🔄 Attempting silent recovery...`);
 
-        // Clear all auth data
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userData');
+        // Try to use cached data instead of forcing logout
+        const cachedCrops = cropCacheService.getCropsFromCache(userProfile.id, userProfile.phone || '');
+        if (cachedCrops && cachedCrops.length > 0) {
+          console.log(`✅ Using ${cachedCrops.length} cached crops - No logout needed`);
+          return cachedCrops;
+        }
 
-        // Show alert to user
-        alert('Your session has expired. Please login again.');
+        // Only logout if no cache available AND user wants to
+        console.log(`⚠️ No cached data available`);
+        console.log(`💡 User can try: Clear browser data → Fresh login`);
 
-        // Redirect to login
-        window.location.href = '/login';
+        // Return empty array instead of forcing logout
+        // User can manually logout if needed
         return [];
       } else {
         // Handle other error responses
