@@ -1,6 +1,6 @@
 {
   "name": "achhadam-backend",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "ACHHADAM Backend API Server",
   "main": "server.js",
   "scripts": {
