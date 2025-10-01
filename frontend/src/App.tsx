@@ -1,6 +1,12 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/homepage/HomePage';
+import LoginPage from './pages/auth/LoginPage';
+import UserTypeSelectionPage from './pages/auth/UserTypeSelectionPage';
+import FarmerSignupPage from './pages/auth/FarmerSignupPage';
+import BuyerSignupPage from './pages/auth/BuyerSignupPage';
+import TransporterSignupPage from './pages/auth/TransporterSignupPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
 import TermsAndConditions from './pages/legal/TermsAndConditions';
 import CancellationRefundPolicy from './pages/legal/CancellationRefundPolicy';
@@ -33,6 +39,12 @@ const App: React.FC = () => {
         <div className="App">
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<UserTypeSelectionPage />} />
+            <Route path="/farmer-signup" element={<FarmerSignupPage />} />
+            <Route path="/buyer-signup" element={<BuyerSignupPage />} />
+            <Route path="/transporter-signup" element={<TransporterSignupPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-conditions" element={<TermsAndConditions />} />
             <Route path="/cancellation-refund" element={<CancellationRefundPolicy />} />
