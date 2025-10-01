@@ -32,16 +32,33 @@ const auth = async (req, res, next) => {
       console.log('✅ AUTH MIDDLEWARE: Token verified with current JWT_SECRET');
     } catch (currentSecretError) {
       console.log('⚠️ AUTH MIDDLEWARE: Token verification failed with current secret');
-      console.log('⚠️ AUTH MIDDLEWARE: Trying with old JWT_SECRET for migration...');
+      console.log('⚠️ AUTH MIDDLEWARE: Trying with old JWT_SECRETs for migration...');
 
-      try {
-        // Try with old JWT_SECRET (migration fallback)
-        const oldSecret = 'achhadam_jwt_secret_key_change_in_production_2024';
-        decoded = jwt.verify(token, oldSecret);
-        console.log('✅ AUTH MIDDLEWARE: Token verified with OLD JWT_SECRET - migration needed');
-        needsTokenRefresh = true; // Flag that we need to issue new token
-      } catch (oldSecretError) {
-        console.log('❌ AUTH MIDDLEWARE: Token verification failed with both old and new secrets');
+      // List of old secrets to try (in reverse chronological order)
+      const oldSecrets = [
+        'achhadam_jwt_secret_key_change_in_production_2024',
+        'your-secret-key-change-in-production',
+        'your-secret-key',
+        'achhadam_jwt_secret_key_2025_production',
+        'default-jwt-secret-change-in-production'
+      ];
+
+      let migrationSuccessful = false;
+      for (const oldSecret of oldSecrets) {
+        try {
+          decoded = jwt.verify(token, oldSecret);
+          console.log(`✅ AUTH MIDDLEWARE: Token verified with OLD JWT_SECRET: ${oldSecret.substring(0, 20)}...`);
+          needsTokenRefresh = true; // Flag that we need to issue new token
+          migrationSuccessful = true;
+          break;
+        } catch (oldSecretError) {
+          // Try next secret
+          continue;
+        }
+      }
+
+      if (!migrationSuccessful) {
+        console.log('❌ AUTH MIDDLEWARE: Token verification failed with all known secrets');
         throw currentSecretError; // Throw original error
       }
     }
