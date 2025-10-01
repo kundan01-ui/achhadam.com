@@ -28,9 +28,9 @@ const config = {
   // JWT Configuration
   jwt: {
     secret: process.env.JWT_SECRET || 'default-jwt-secret-change-in-production',
-    expiresIn: process.env.JWT_EXPIRY || '24h',
+    expiresIn: process.env.JWT_EXPIRY || '365d', // Changed from 24h to 365 days
     refreshSecret: process.env.JWT_REFRESH_SECRET || 'default-refresh-secret',
-    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRY || '7d',
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRY || '365d', // Changed from 7d to 365 days
   },
 
   // Session Configuration

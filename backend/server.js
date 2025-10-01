@@ -890,7 +890,7 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
           phone: user.phone
         },
         process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-        { expiresIn: process.env.JWT_EXPIRY || '24h' }
+        { expiresIn: process.env.JWT_EXPIRY || '365d' } // Changed from 24h to 365 days
       );
       console.timeEnd(`[${requestId}] JWT Generation Time`);
     } catch (jwtError) {
@@ -1139,13 +1139,13 @@ app.post('/api/auth/refresh', async (req, res) => {
     
     // Generate new token with extended expiry
     const newToken = jwt.sign(
-      { 
-        userId: decoded.userId, 
+      {
+        userId: decoded.userId,
         userType: decoded.userType,
-        phone: decoded.phone 
+        phone: decoded.phone
       },
       process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-      { expiresIn: process.env.JWT_EXPIRY || '24h' }
+      { expiresIn: process.env.JWT_EXPIRY || '365d' } // Changed from 24h to 365 days
     );
 
     res.json({
