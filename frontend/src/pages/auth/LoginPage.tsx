@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -7,6 +7,7 @@ import GoogleSignInButton from '../../components/ui/GoogleSignInButton';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { apiService, type LoginRequest } from '../../services/api';
 import { googleAuthService } from '../../services/googleAuth';
+import { serverWarmupService } from '../../services/serverWarmup';
 import type { GoogleUserData } from '../../types/auth';
 
 interface LoginPageProps {
@@ -24,6 +25,21 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
   });
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [isWarmingUp, setIsWarmingUp] = useState(false);
+
+  // Pre-warm backend server when login page loads
+  useEffect(() => {
+    console.log('🔥 LoginPage mounted - starting backend warmup...');
+    setIsWarmingUp(true);
+
+    serverWarmupService.warmupServer().then(() => {
+      console.log('✅ Backend warmup complete - login should be fast now');
+      setIsWarmingUp(false);
+    }).catch(err => {
+      console.log('⚠️ Backend warmup had issues but continuing:', err);
+      setIsWarmingUp(false);
+    });
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -213,10 +229,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
               </div>
             )}
             
+            {/* Server Warmup Status */}
+            {isWarmingUp && (
+              <div className="bg-blue-50 text-blue-700 p-2 rounded-md text-xs sm:text-sm border border-blue-200">
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                  <span>Starting server (first time may take 30-60s)...</span>
+                </div>
+              </div>
+            )}
+
             {/* Submit Button */}
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isWarmingUp}
               className="w-full py-2 sm:py-3"
             >
               {isLoading ? (
