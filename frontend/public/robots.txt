@@ -1,27 +1,49 @@
+# Achhadam Robots.txt - SEO Configuration for Digital Farming Platform
 User-agent: *
 Allow: /
-
-# Sitemap
-Sitemap: https://www.achhadam.com/sitemap.xml
-
-# Crawl-delay
-Crawl-delay: 1
-
-# Disallow admin areas (if any)
-Disallow: /admin/
-Disallow: /api/
-Disallow: /private/
-
-# Allow important pages
-Allow: /
+Allow: /products
 Allow: /about
 Allow: /features
 Allow: /contact
+Allow: /farmer
+Allow: /buyer
+Allow: /transporter
+Allow: /login
+Allow: /signup
 Allow: /privacy-policy
 Allow: /terms-conditions
 Allow: /cancellation-refund
 Allow: /shipping-delivery
 Allow: /legal-compliance
+
+# Disallow private/admin areas
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /api
+Disallow: /checkout
+Disallow: /payment
+Disallow: /*.json
+Disallow: /*/edit
+Disallow: /*/delete
+Disallow: /settings
+
+# Sitemap Location
+Sitemap: https://www.achhadam.com/sitemap.xml
+
+# Crawl Delay
+Crawl-delay: 1
+
+# Google Bot Specific
+User-agent: Googlebot
+Allow: /
+Disallow: /api
+Crawl-delay: 1
+
+# Bing Bot Specific
+User-agent: Bingbot
+Allow: /
+Disallow: /api
+Crawl-delay: 1
 
 
 
