@@ -20,7 +20,7 @@ services:
           name: achhadam-postgres
           property: connectionString
       - key: JWT_SECRET
-        generateValue: true
+        value: achhadam_jwt_secret_key_2025_production_do_not_share
       - key: FIREBASE_PROJECT_ID
         value: your-firebase-project-id
       - key: FIREBASE_PRIVATE_KEY
