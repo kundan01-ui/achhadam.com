@@ -192,6 +192,8 @@ cropListingSchema.index({ 'pricing.pricePerUnit': 1 });
 cropListingSchema.index({ createdAt: -1 });
 cropListingSchema.index({ expiresAt: 1 });
 
-// Check if model already exists to prevent overwrite error
-module.exports = mongoose.models.CropListing || mongoose.model('CropListing', cropListingSchema);
+// Export CropListing model
+// Fix: Direct export without mongoose.models check
+const CropListing = mongoose.model('CropListing', cropListingSchema);
+module.exports = CropListing;
 

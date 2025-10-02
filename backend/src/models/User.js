@@ -142,5 +142,8 @@ userSchema.index({ 'accountStatus.isActive': 1 });
 userSchema.index({ createdAt: -1 });
 
 // Check if model already exists to prevent overwrite error
-module.exports = mongoose.models.User || mongoose.model('User', userSchema);
+// Export User model
+// Fix: Don't use mongoose.models.User check - causes issues with populate
+const User = mongoose.model('User', userSchema);
+module.exports = User;
 
