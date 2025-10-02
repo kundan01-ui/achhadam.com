@@ -13,6 +13,10 @@ import CancellationRefundPolicy from './pages/legal/CancellationRefundPolicy';
 import ShippingDeliveryPolicy from './pages/legal/ShippingDeliveryPolicy';
 import ContactUs from './pages/legal/ContactUs';
 import LegalCompliance from './pages/legal/LegalCompliance';
+import IoTServicePage from './pages/services/IoTServicePage';
+import DroneServicePage from './pages/services/DroneServicePage';
+import SeedServicePage from './pages/services/SeedServicePage';
+import AdvisoryServicePage from './pages/services/AdvisoryServicePage';
 import { LanguageProvider } from './contexts/LanguageContext';
 import CookieConsent from './components/CookieConsent';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
@@ -51,6 +55,12 @@ const App: React.FC = () => {
             <Route path="/shipping-delivery" element={<ShippingDeliveryPolicy />} />
             <Route path="/contact-us" element={<ContactUs />} />
             <Route path="/legal-compliance" element={<LegalCompliance />} />
+
+            {/* Service Routes */}
+            <Route path="/services/iot" element={<IoTServicePage />} />
+            <Route path="/services/drone" element={<DroneServicePage />} />
+            <Route path="/services/seeds" element={<SeedServicePage />} />
+            <Route path="/services/advisory" element={<AdvisoryServicePage />} />
           </Routes>
           <CookieConsent companyName="Achhadam" position="bottom" />
           <PWAInstallPrompt />

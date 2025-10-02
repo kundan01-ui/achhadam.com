@@ -3290,62 +3290,99 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         </div>
       </div>
 
-      {/* Farm Inputs Store */}
+      {/* Farm Services - Professional & Functional */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="p-6 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Farm Inputs Store</h3>
+          <h3 className="text-lg font-semibold text-gray-900">कृषि सेवाएं - हमारी कंपनी द्वारा</h3>
+          <p className="text-sm text-gray-600 mt-1">उच्च गुणवत्ता वाली सेवाओं तक पहुंचें</p>
         </div>
         <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* IoT Service */}
+            <button
+              onClick={() => navigate('/services/iot')}
+              className="text-center p-6 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:shadow-lg transition-all group"
+            >
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition">
+                <Wifi className="h-8 w-8 text-green-600" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">IoT Monitoring</h4>
+              <p className="text-sm text-gray-600 mb-3">स्मार्ट सेंसर से खेत की निगरानी</p>
+              <span className="text-xs text-green-600 font-medium">₹5,000/महीना से शुरू →</span>
+            </button>
+
+            {/* Drone Service */}
+            <button
+              onClick={() => navigate('/services/drone')}
+              className="text-center p-6 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all group"
+            >
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition">
+                <Navigation className="h-8 w-8 text-blue-600" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">Drone Spraying</h4>
+              <p className="text-sm text-gray-600 mb-3">तेज़ और सटीक छिड़काव</p>
+              <span className="text-xs text-blue-600 font-medium">₹300/एकड़ से शुरू →</span>
+            </button>
+
+            {/* Seeds & Fertilizers */}
+            <button
+              onClick={() => navigate('/services/seeds')}
+              className="text-center p-6 rounded-lg border-2 border-gray-200 hover:border-yellow-500 hover:shadow-lg transition-all group"
+            >
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-yellow-200 transition">
+                <Sprout className="h-8 w-8 text-yellow-600" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">Seeds & Inputs</h4>
+              <p className="text-sm text-gray-600 mb-3">गुणवत्ता वाले बीज और उर्वरक</p>
+              <span className="text-xs text-yellow-600 font-medium">होम डिलीवरी उपलब्ध →</span>
+            </button>
+
+            {/* Advisory Service */}
+            <button
+              onClick={() => navigate('/services/advisory')}
+              className="text-center p-6 rounded-lg border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all group"
+            >
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition">
+                <MessageCircle className="h-8 w-8 text-purple-600" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">Expert Advisory</h4>
+              <p className="text-sm text-gray-600 mb-3">विशेषज्ञों से सीधे सलाह</p>
+              <span className="text-xs text-purple-600 font-medium">मुफ्त परामर्श →</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Services - Coming Soon */}
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl shadow-sm border border-gray-100">
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">जल्द आ रही सेवाएं</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Sprout className="h-8 w-8 text-green-600" />
+            <div className="text-center p-4 bg-white rounded-lg opacity-75">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Truck className="h-6 w-6 text-gray-400" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Seeds & Fertilizers</h4>
-              <p className="text-sm text-gray-600">Quality certified products with bulk discounts</p>
+              <h4 className="font-medium text-gray-700 mb-1">Equipment Rental</h4>
+              <p className="text-xs text-gray-500">ट्रैक्टर और यंत्र किराये पर</p>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Truck className="h-8 w-8 text-blue-600" />
+            <div className="text-center p-4 bg-white rounded-lg opacity-75">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Shield className="h-6 w-6 text-gray-400" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Equipment Rental</h4>
-              <p className="text-sm text-gray-600">Tractors, harvesters on hourly/daily basis</p>
+              <h4 className="font-medium text-gray-700 mb-1">Crop Insurance</h4>
+              <p className="text-xs text-gray-500">फसल बीमा और ऋण</p>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-8 w-8 text-purple-600" />
+            <div className="text-center p-4 bg-white rounded-lg opacity-75">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <TrendingUp className="h-6 w-6 text-gray-400" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Insurance & Credit</h4>
-              <p className="text-sm text-gray-600">Crop insurance and quick loan options</p>
+              <h4 className="font-medium text-gray-700 mb-1">Market Linkage</h4>
+              <p className="text-xs text-gray-500">सीधे खरीदारों से जुड़ें</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Technology Services */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Technology Services</h3>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Wifi className="h-8 w-8 text-orange-600" />
-              </div>
-              <h4 className="font-semibold text-gray-900 mb-2">IoT Solutions</h4>
-              <p className="text-sm text-gray-600">Soil sensors, weather monitoring, crop health tracking</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Navigation className="h-8 w-8 text-red-600" />
-              </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Drone Services</h4>
-              <p className="text-sm text-gray-600">Pesticide spraying, crop assessment, aerial photography</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 
