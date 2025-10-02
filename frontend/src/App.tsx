@@ -17,6 +17,7 @@ import IoTServicePage from './pages/services/IoTServicePage';
 import DroneServicePage from './pages/services/DroneServicePage';
 import SeedServicePage from './pages/services/SeedServicePage';
 import AdvisoryServicePage from './pages/services/AdvisoryServicePage';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import { LanguageProvider } from './contexts/LanguageContext';
 import CookieConsent from './components/CookieConsent';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
@@ -61,6 +62,10 @@ const App: React.FC = () => {
             <Route path="/services/drone" element={<DroneServicePage />} />
             <Route path="/services/seeds" element={<SeedServicePage />} />
             <Route path="/services/advisory" element={<AdvisoryServicePage />} />
+
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
           </Routes>
           <CookieConsent companyName="Achhadam" position="bottom" />
           <PWAInstallPrompt />

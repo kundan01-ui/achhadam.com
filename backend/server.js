@@ -1052,6 +1052,10 @@ app.use('/api/cart', cartRoutes);
 const servicesRoutes = require('./src/routes/services');
 app.use('/api/services', servicesRoutes);
 
+// Admin routes - Dashboard, service management
+const adminRoutes = require('./src/routes/admin');
+app.use('/api/admin', adminRoutes);
+
 // Razorpay Routes - Temporarily commented out
 // app.use('/api/razorpay', require('./src/routes/razorpay.js'));
 
