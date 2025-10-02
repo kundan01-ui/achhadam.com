@@ -295,17 +295,27 @@ router.get('/marketplace', async (req, res) => {
 
     let crops;
     try {
-      // PERFORMANCE FIX: Exclude images field to reduce payload size
-      // Images are loaded separately when user clicks on a crop
+      // Load crops with farmer data populated
       crops = await CropListing.find(query)
-        .select('-images')  // Exclude images for fast loading
         .populate('farmerId', 'firstName lastName name phone')
         .sort({ uploadedAt: -1 })
         .limit(100);
+
+      console.log(`✅ MARKETPLACE: Loaded ${crops.length} crops with populate`);
+
+      // Debug: Check first crop's farmer data
+      if (crops.length > 0) {
+        const firstCrop = crops[0];
+        console.log(`🔍 First crop debug:`, {
+          cropId: firstCrop._id,
+          farmerId: firstCrop.farmerId,
+          farmerIdType: typeof firstCrop.farmerId,
+          farmerIsObject: firstCrop.farmerId && typeof firstCrop.farmerId === 'object'
+        });
+      }
     } catch (populateError) {
       console.log('⚠️  Populate failed, fetching without populate:', populateError.message);
       crops = await CropListing.find(query)
-        .select('-images')  // Exclude images for fast loading
         .sort({ uploadedAt: -1 })
         .limit(100);
     }
