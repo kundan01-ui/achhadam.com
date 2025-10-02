@@ -510,7 +510,7 @@ router.get('/:cropId', async (req, res) => {
     const { cropId } = req.params;
     
     const crop = await CropListing.findById(cropId)
-      .populate('farmerId', 'profile.fullName address.current.city address.current.state');
+      .populate('farmerId', 'firstName lastName name phone');
 
     if (!crop) {
       return res.status(404).json({
@@ -519,9 +519,19 @@ router.get('/:cropId', async (req, res) => {
       });
     }
 
+    // Extract farmer name from populated data
+    const cropObj = crop.toObject();
+    if (cropObj.farmerId && typeof cropObj.farmerId === 'object') {
+      const farmer = cropObj.farmerId;
+      cropObj.farmerName = farmer.firstName
+        ? `${farmer.firstName} ${farmer.lastName || ''}`.trim()
+        : (farmer.name || 'Unknown Farmer');
+      cropObj.farmerPhone = farmer.phone || 'Unknown';
+    }
+
     res.json({
       success: true,
-      data: crop
+      data: cropObj
     });
   } catch (error) {
     console.error('Error fetching crop:', error);
