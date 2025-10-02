@@ -337,15 +337,31 @@ router.get('/marketplace', async (req, res) => {
         cropObj.subcategory = cropObj.variety;
       }
 
-      // Use REAL farmer name from User database (POPULATED)
+      // CRITICAL FIX: Use multiple fallbacks for farmer name
+      // Priority: 1. Populated farmerId, 2. farmerAssociation, 3. Direct farmerName field
       if (cropObj.farmerId && typeof cropObj.farmerId === 'object') {
+        // Case 1: farmerId was successfully populated from User collection
         const farmer = cropObj.farmerId;
         cropObj.farmerName = farmer.firstName
           ? `${farmer.firstName} ${farmer.lastName || ''}`.trim()
           : (farmer.name || 'Unknown Farmer');
         cropObj.farmerPhone = farmer.phone || 'Unknown';
+        console.log(`✅ Farmer name from populate: ${cropObj.farmerName}`);
       } else {
-        cropObj.farmerName = cropObj.farmerAssociation?.farmerName || 'Unknown Farmer';
+        // Case 2: farmerId not populated, use farmerAssociation or direct farmerName
+        cropObj.farmerName = cropObj.farmerAssociation?.farmerName || cropObj.farmerName || 'Unknown Farmer';
+        cropObj.farmerPhone = cropObj.farmerAssociation?.farmerPhone || cropObj.farmerPhone || 'Unknown';
+        console.log(`⚠️ Farmer name from association/direct: ${cropObj.farmerName} (farmerId: ${cropObj.farmerId})`);
+
+        // Debug: Log why populate failed
+        if (cropObj.farmerId) {
+          console.log(`❌ POPULATE FAILED: farmerId exists but is not an object:`, {
+            farmerId: cropObj.farmerId,
+            type: typeof cropObj.farmerId,
+            hasAssociation: !!cropObj.farmerAssociation,
+            associationName: cropObj.farmerAssociation?.farmerName
+          });
+        }
       }
 
       // Use REAL grade/quality from database
