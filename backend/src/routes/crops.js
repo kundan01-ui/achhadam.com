@@ -295,13 +295,17 @@ router.get('/marketplace', async (req, res) => {
 
     let crops;
     try {
+      // PERFORMANCE FIX: Exclude images field to reduce payload size
+      // Images are loaded separately when user clicks on a crop
       crops = await CropListing.find(query)
+        .select('-images')  // Exclude images for fast loading
         .populate('farmerId', 'firstName lastName name phone')
         .sort({ uploadedAt: -1 })
         .limit(100);
     } catch (populateError) {
       console.log('⚠️  Populate failed, fetching without populate:', populateError.message);
       crops = await CropListing.find(query)
+        .select('-images')  // Exclude images for fast loading
         .sort({ uploadedAt: -1 })
         .limit(100);
     }
@@ -407,6 +411,36 @@ router.get('/marketplace', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch marketplace crops',
+      error: error.message
+    });
+  }
+});
+
+// Get crop images separately (for performance optimization)
+router.get('/:cropId/images', async (req, res) => {
+  try {
+    const { cropId } = req.params;
+
+    console.log(`🖼️ IMAGES: Loading images for crop ${cropId}`);
+
+    const crop = await CropListing.findById(cropId).select('images');
+
+    if (!crop) {
+      return res.status(404).json({
+        success: false,
+        message: 'Crop not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      images: crop.images || []
+    });
+  } catch (error) {
+    console.error('Error fetching crop images:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch crop images',
       error: error.message
     });
   }
