@@ -1004,6 +1004,23 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     };
   };
 
+  // Helper function to get user ID from JWT token
+  const getUserIdFromToken = (): string | null => {
+    try {
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) return null;
+
+      const tokenParts = authToken.split('.');
+      if (tokenParts.length !== 3) return null;
+
+      const payload = JSON.parse(atob(tokenParts[1]));
+      return payload.userId || payload.id || payload._id || null;
+    } catch (error) {
+      console.error('❌ Failed to decode token:', error);
+      return null;
+    }
+  };
+
   // Enhanced function to load crops from DATABASE ONLY - TRUE CROSS-DEVICE SYNC
   const loadCropsFromDatabase = async () => {
     try {
@@ -1016,11 +1033,12 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       console.log(`🌐 TRUE CROSS-DEVICE SYNC: Loading ONLY from database - no localStorage dependency`);
       console.log(`📱 This ensures mobile crops show on desktop and vice versa`);
 
-      // ONLY: Load from database (TRUE CROSS-DEVICE SYNC)
-      // Use actual user ID from authentication, not generated ID
-      const actualUserId = user?._id || user?.id || userProfile.id;
-      console.log(`🔑 Using actual user ID: ${actualUserId} (not generated ID: ${userProfile.id})`);
-      console.log(`🔍 User object:`, { _id: user?._id, id: user?.id, userProfileId: userProfile.id });
+      // CRITICAL FIX: Get user ID from JWT token, not from props
+      // This ensures we use the real MongoDB _id for cross-device sync
+      const tokenUserId = getUserIdFromToken();
+      const actualUserId = tokenUserId || user?._id || user?.id || userProfile.id;
+      console.log(`🔑 Using actual user ID from token: ${actualUserId}`);
+      console.log(`🔍 Token user ID: ${tokenUserId}, User object:`, { _id: user?._id, id: user?.id, userProfileId: userProfile.id });
       console.log(`🔄 DATABASE LOAD: Loading crops from database for farmer: ${actualUserId}`);
       console.log(`🌐 This will ensure data is available from any device, any session`);
       
