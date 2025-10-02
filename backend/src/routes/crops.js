@@ -78,9 +78,11 @@ router.post('/', async (req, res) => {
       farmerName
     } = req.body;
 
-    // TEMPORARY: Use farmerId from request body instead of auth
-    const actualFarmerId = farmerId || 'temp_farmer_' + Date.now();
-    console.log('🌾 CROP UPLOAD: Using farmer ID:', actualFarmerId);
+    // CRITICAL FIX: Use authenticated user ID from token, NOT from request body
+    // This ensures crops are saved with the REAL MongoDB _id for cross-device sync
+    const actualFarmerId = req.user.userId;
+    console.log('🌾 CROP UPLOAD: Using authenticated farmer ID:', actualFarmerId);
+    console.log('🔑 Auth token user:', { userId: req.user.userId, userType: req.user.userType, phone: req.user.phone });
     
     // Check database connection
     const mongoose = require('mongoose');
@@ -212,6 +214,7 @@ router.post('/', async (req, res) => {
       farmerAssociation: {
         farmerId: farmerObjectId,
         farmerName: farmerName || 'Unknown Farmer',
+        farmerPhone: req.user.phone || 'unknown',
         permanentLink: true
       }
     });
