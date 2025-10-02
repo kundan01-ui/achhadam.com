@@ -167,7 +167,7 @@ router.put('/drone/:serviceId', auth, async (req, res) => {
       serviceId,
       { ...updateData, updatedAt: new Date() },
       { new: true }
-    });
+    );
 
     if (!service) {
       return res.status(404).json({
