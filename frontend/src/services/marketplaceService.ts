@@ -228,13 +228,16 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
       }
       
       console.log('✅ Token validation passed, making API request');
-      
+      console.log('⏳ IMPORTANT: Marketplace API may take 30-60 seconds due to large images...');
+      console.log('🔄 Loading crops from database, please wait...');
+
       // Use authenticated fetch with automatic token management
       const response = await authenticatedFetch('https://acchadam1-backend.onrender.com/api/crops/marketplace', {
         method: 'GET'
       });
-      
+
       console.log(`📡 API Response Status: ${response.status} ${response.statusText}`);
+      console.log('✅ API request completed!');
       
       if (response.status === 401) {
         console.error('❌ 401 Unauthorized - Token rejected by server');

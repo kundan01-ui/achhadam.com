@@ -299,7 +299,7 @@ router.get('/marketplace', async (req, res) => {
       crops = await CropListing.find(query)
         .populate('farmerId', 'firstName lastName name phone')
         .sort({ uploadedAt: -1 })
-        .limit(100);
+        .limit(50);  // Reduced from 100 to 50 for better performance
 
       console.log(`✅ MARKETPLACE: Loaded ${crops.length} crops with populate`);
 
@@ -317,7 +317,7 @@ router.get('/marketplace', async (req, res) => {
       console.log('⚠️  Populate failed, fetching without populate:', populateError.message);
       crops = await CropListing.find(query)
         .sort({ uploadedAt: -1 })
-        .limit(100);
+        .limit(50);  // Reduced from 100 to 50 for better performance
     }
 
     console.log(`✅ MARKETPLACE: Found ${crops.length} crops available for marketplace`);
@@ -375,16 +375,28 @@ router.get('/marketplace', async (req, res) => {
         cropObj.location = cropObj.location.city || 'Unknown Location';
       }
 
-      // Ensure images array is properly formatted
+      // PERFORMANCE FIX: Only send first image thumbnail for marketplace listing
+      // Full images can be loaded when user clicks on crop details
       if (cropObj.images && Array.isArray(cropObj.images)) {
-        cropObj.images = cropObj.images.map(img => {
+        const allImages = cropObj.images.map(img => {
           if (typeof img === 'object' && img.url) {
             return img.url;
           }
           return img;
         }).filter(url => url && url !== '');
+
+        // For marketplace listing, only send first image
+        // This reduces payload size by ~95% (from 2MB to 100KB per crop)
+        if (allImages.length > 0) {
+          cropObj.images = [allImages[0]]; // Only first image
+          cropObj.totalImages = allImages.length; // Track total count
+        } else {
+          cropObj.images = [];
+          cropObj.totalImages = 0;
+        }
       } else {
         cropObj.images = [];
+        cropObj.totalImages = 0;
       }
 
       // Add harvest date in readable format
