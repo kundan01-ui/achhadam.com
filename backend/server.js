@@ -1048,6 +1048,10 @@ app.use('/api/orders', orderRoutes);
 const cartRoutes = require('./src/routes/cart');
 app.use('/api/cart', cartRoutes);
 
+// Services routes - IoT, Drone, Seeds, Advisory
+const servicesRoutes = require('./src/routes/services');
+app.use('/api/services', servicesRoutes);
+
 // Razorpay Routes - Temporarily commented out
 // app.use('/api/razorpay', require('./src/routes/razorpay.js'));
 
