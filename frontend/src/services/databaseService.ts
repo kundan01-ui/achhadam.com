@@ -379,8 +379,9 @@ export const loadCropsFromDatabase = async (farmerId: string): Promise<{ success
     }
     
     const result = await response.json();
-    console.log('✅ Crops loaded from database successfully:', result.crops?.length || 0);
-    return { success: true, data: result.crops || [] };
+    console.log('✅ Crops loaded from database successfully:', result.data?.length || 0);
+    console.log('🌾 Backend response:', result);
+    return { success: true, data: result.data || [] };
   } catch (error) {
     console.error('❌ Database load error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
