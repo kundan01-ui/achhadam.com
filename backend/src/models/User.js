@@ -143,7 +143,16 @@ userSchema.index({ createdAt: -1 });
 
 // Check if model already exists to prevent overwrite error
 // Export User model
-// Fix: Don't use mongoose.models.User check - causes issues with populate
-const User = mongoose.model('User', userSchema);
+// Fix: Prevent OverwriteModelError by checking if model exists
+// But use try-catch to handle registration properly
+let User;
+try {
+  // Try to get existing model
+  User = mongoose.model('User');
+} catch (error) {
+  // Model doesn't exist, create it
+  User = mongoose.model('User', userSchema);
+}
+
 module.exports = User;
 

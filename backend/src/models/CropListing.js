@@ -193,7 +193,15 @@ cropListingSchema.index({ createdAt: -1 });
 cropListingSchema.index({ expiresAt: 1 });
 
 // Export CropListing model
-// Fix: Direct export without mongoose.models check
-const CropListing = mongoose.model('CropListing', cropListingSchema);
+// Fix: Prevent OverwriteModelError by checking if model exists
+let CropListing;
+try {
+  // Try to get existing model
+  CropListing = mongoose.model('CropListing');
+} catch (error) {
+  // Model doesn't exist, create it
+  CropListing = mongoose.model('CropListing', cropListingSchema);
+}
+
 module.exports = CropListing;
 
