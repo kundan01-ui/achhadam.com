@@ -236,7 +236,7 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
       console.log('🔄 Loading crops from database, please wait...');
 
       // Use authenticated fetch with automatic token management
-      const response = await authenticatedFetch('${API_BASE_URL}/api/crops/marketplace', {
+      const response = await authenticatedFetch(`${API_BASE_URL}/api/crops/marketplace`, {
         method: 'GET'
       });
 

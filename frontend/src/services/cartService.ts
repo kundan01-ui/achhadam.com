@@ -271,7 +271,7 @@ const syncCartToBackend = async (cart: Cart): Promise<void> => {
     const token = localStorage.getItem('authToken');
     if (!token) return; // Skip sync if not logged in
 
-    await authenticatedFetch('${API_BASE_URL}/api/cart/sync', {
+    await authenticatedFetch(`${API_BASE_URL}/api/cart/sync', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -293,7 +293,7 @@ export const loadCartFromBackend = async (): Promise<Cart> => {
       return loadCart(); // Fall back to local cart
     }
 
-    const response = await authenticatedFetch('${API_BASE_URL}/api/cart', {
+    const response = await authenticatedFetch(`${API_BASE_URL}/api/cart', {
       method: 'GET'
     });
 

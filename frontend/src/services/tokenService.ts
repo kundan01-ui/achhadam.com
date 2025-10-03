@@ -156,7 +156,7 @@ class TokenService {
       console.log('🔄 TOKEN REFRESH: Current token:', currentToken.substring(0, 20) + '...');
       console.log('🔄 TOKEN REFRESH: Making refresh request to backend...');
 
-      const response = await fetch('${API_BASE_URL}/api/auth/refresh', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/refresh', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ class TokenService {
 
       console.log('🔄 Attempting fresh login for:', userPhone);
       
-      const response = await fetch('${API_BASE_URL}/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

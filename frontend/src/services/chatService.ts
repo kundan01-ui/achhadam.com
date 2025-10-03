@@ -365,7 +365,7 @@ const syncChatToBackend = async (thread: ChatThread, message: ChatMessage): Prom
     const token = localStorage.getItem('authToken');
     if (!token) return;
 
-    await authenticatedFetch('${API_BASE_URL}/api/chat/thread', {
+    await authenticatedFetch(`${API_BASE_URL}/api/chat/thread', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -388,7 +388,7 @@ const syncMessageToBackend = async (message: ChatMessage): Promise<void> => {
     const token = localStorage.getItem('authToken');
     if (!token) return;
 
-    await authenticatedFetch('${API_BASE_URL}/api/chat/message', {
+    await authenticatedFetch(`${API_BASE_URL}/api/chat/message', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

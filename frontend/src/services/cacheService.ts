@@ -180,7 +180,7 @@ export const getMarketplaceData = async (): Promise<any> => {
 
   // Fetch from API
   console.log(`🌐 MARKETPLACE: Fetching from API`);
-  const data = await smartFetch('${API_BASE_URL}/api/crops/marketplace', {
+  const data = await smartFetch(`${API_BASE_URL}/api/crops/marketplace', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

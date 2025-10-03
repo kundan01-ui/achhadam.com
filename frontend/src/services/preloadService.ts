@@ -136,7 +136,7 @@ export const preloadService = new PreloadService({
 export const preloadMarketplaceData = (): void => {
   preloadService.addTask(
     'marketplace_data',
-    '${API_BASE_URL}/api/crops/marketplace',
+    `${API_BASE_URL}/api/crops/marketplace',
     (data) => {
       console.log('🎯 MARKETPLACE PRELOADED: Ready for instant display');
       // Store in cache for instant access
