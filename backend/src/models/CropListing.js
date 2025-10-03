@@ -192,16 +192,12 @@ cropListingSchema.index({ 'pricing.pricePerUnit': 1 });
 cropListingSchema.index({ createdAt: -1 });
 cropListingSchema.index({ expiresAt: 1 });
 
-// Export CropListing model
-// Fix: Prevent OverwriteModelError by checking if model exists
-let CropListing;
-try {
-  // Try to get existing model
-  CropListing = mongoose.model('CropListing');
-} catch (error) {
-  // Model doesn't exist, create it
-  CropListing = mongoose.model('CropListing', cropListingSchema);
-}
+// CRITICAL FIX: Proper model registration to prevent both errors:
+// 1. "Schema hasn't been registered"
+// 2. "Cannot overwrite model"
+//
+// Solution: Check mongoose.models FIRST, then register if not exists
+const CropListing = mongoose.models.CropListing || mongoose.model('CropListing', cropListingSchema);
 
 module.exports = CropListing;
 

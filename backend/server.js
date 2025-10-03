@@ -1017,19 +1017,22 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Import routes
+// CRITICAL FIX: Pre-load models BEFORE routes to ensure proper registration
+// This ensures User model is registered before crops.js tries to use populate('farmerId')
+console.log('📦 Pre-loading models before routes...');
+require('./src/models/User');  // Load User first
+require('./src/models/CropListing');  // Then CropListing
+console.log('✅ Models pre-loaded successfully');
+
+// Import routes AFTER models are loaded
 const authRoutes = require('./src/routes/auth/index.js');
 const passwordResetRoutes = require('./routes/auth.js');
 const cookieRoutes = require('./src/routes/cookieRoutes.js');
 const cropRoutes = require('./src/routes/crops.js');
 const orderRoutes = require('./src/routes/orders.js');
 
-// Clear mongoose models to prevent overwrite errors
-if (mongoose.models) {
-  Object.keys(mongoose.models).forEach(modelName => {
-    delete mongoose.models[modelName];
-  });
-}
+// DO NOT clear mongoose models - this was causing "Schema not registered" errors!
+// The mongoose.models.User || mongoose.model() pattern in model files handles duplicates
 
 // Register auth routes
 app.use('/api/auth', otpLimiter, authRoutes);

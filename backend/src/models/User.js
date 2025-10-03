@@ -141,18 +141,12 @@ userSchema.index({ 'verification.isKYCCompleted': 1 });
 userSchema.index({ 'accountStatus.isActive': 1 });
 userSchema.index({ createdAt: -1 });
 
-// Check if model already exists to prevent overwrite error
-// Export User model
-// Fix: Prevent OverwriteModelError by checking if model exists
-// But use try-catch to handle registration properly
-let User;
-try {
-  // Try to get existing model
-  User = mongoose.model('User');
-} catch (error) {
-  // Model doesn't exist, create it
-  User = mongoose.model('User', userSchema);
-}
+// CRITICAL FIX: Proper model registration to prevent both errors:
+// 1. "Schema hasn't been registered"
+// 2. "Cannot overwrite model"
+//
+// Solution: Check mongoose.models FIRST, then register if not exists
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 module.exports = User;
 
