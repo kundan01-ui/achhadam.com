@@ -125,6 +125,8 @@ const cropListingSchema = new mongoose.Schema({
   // Images & Media
   images: [{
     url: { type: String, default: '' },
+    publicId: { type: String }, // Cloudinary public ID (null if stored in MongoDB)
+    storage: { type: String, enum: ['cloudinary', 'mongodb'], default: 'mongodb' },
     caption: { type: String },
     isPrimary: { type: Boolean, default: false },
     uploadedAt: { type: Date, default: Date.now }

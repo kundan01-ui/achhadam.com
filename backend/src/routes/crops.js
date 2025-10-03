@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { CropListing, Farmer, User } = require('../models');
 const auth = require('../middleware/auth');
+const cloudinaryService = require('../services/cloudinaryService');
 
 // Get all crops - Simple endpoint for testing
 router.get('/', async (req, res) => {
@@ -197,13 +198,8 @@ router.post('/', auth, async (req, res) => {
         storageMethod: 'farm_storage'
       },
       
-      // Images - Handle properly for validation
-      images: Array.isArray(images) ? images.map(img => ({
-        url: img.url || img.imageUrl || '',
-        caption: img.caption || '',
-        isPrimary: img.isPrimary || false,
-        uploadedAt: new Date()
-      })) : [],
+      // Images - Will be processed with Cloudinary after crop is created
+      images: [],
       
       // Status
       status: {
@@ -229,6 +225,64 @@ router.post('/', auth, async (req, res) => {
     });
     
     console.log('🌾 CROP UPLOAD: Crop listing object created:', cropListing);
+
+    // ========================================
+    // CLOUDINARY IMAGE UPLOAD (OPTIONAL)
+    // ========================================
+    console.log('📸 Processing crop images...');
+
+    if (Array.isArray(images) && images.length > 0) {
+      console.log(`📤 Found ${images.length} images to upload`);
+
+      try {
+        // Upload images to Cloudinary (with automatic fallback to MongoDB)
+        const uploadPromises = images.map(async (img, index) => {
+          const base64Image = img.url || img.imageUrl || '';
+
+          if (!base64Image) {
+            console.log(`⚠️  Image ${index + 1}: No image data found, skipping`);
+            return null;
+          }
+
+          // Upload to Cloudinary (will automatically fallback to Base64 if disabled)
+          const uploadResult = await cloudinaryService.uploadImage(base64Image, {
+            folder: `achhadam/crops/${listingId}`,
+            public_id: `crop_${listingId}_img_${index}`
+          });
+
+          console.log(`✅ Image ${index + 1} processed:`, {
+            storage: uploadResult.storage,
+            url: uploadResult.url.substring(0, 50) + '...'
+          });
+
+          return {
+            url: uploadResult.url,
+            publicId: uploadResult.publicId || null,
+            storage: uploadResult.storage,
+            caption: img.caption || '',
+            isPrimary: index === 0, // First image is primary
+            uploadedAt: new Date()
+          };
+        });
+
+        const processedImages = await Promise.all(uploadPromises);
+        cropListing.images = processedImages.filter(img => img !== null);
+
+        console.log(`✅ ${cropListing.images.length} images processed successfully`);
+
+        // Log storage statistics
+        const cloudinaryCount = cropListing.images.filter(img => img.storage === 'cloudinary').length;
+        const mongodbCount = cropListing.images.filter(img => img.storage === 'mongodb').length;
+        console.log(`📊 Storage: ${cloudinaryCount} in Cloudinary, ${mongodbCount} in MongoDB`);
+
+      } catch (imageError) {
+        console.error('❌ Image processing error:', imageError.message);
+        console.log('⚠️  Saving crop without images, images can be added later');
+        cropListing.images = [];
+      }
+    } else {
+      console.log('ℹ️  No images provided, crop will be saved without images');
+    }
 
     await cropListing.save();
     console.log('✅ CROP UPLOAD: Crop saved to MongoDB successfully');
