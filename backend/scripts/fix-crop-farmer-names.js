@@ -54,10 +54,13 @@ async function fixCropFarmerNames() {
         let farmerName = null;
         let farmerPhone = null;
 
+        let farmerIdToSet = crop.farmerId;
+
         // Strategy 1: Use farmerAssociation if available
         if (crop.farmerAssociation?.farmerName) {
           farmerName = crop.farmerAssociation.farmerName;
           farmerPhone = crop.farmerAssociation.farmerPhone;
+          farmerIdToSet = crop.farmerAssociation.farmerId || crop.farmerId;
           console.log(`✅ Using farmerAssociation for crop ${crop._id}: ${farmerName}`);
         }
         // Strategy 2: Try to find farmer by farmerId in User table
@@ -68,20 +71,34 @@ async function fixCropFarmerNames() {
               ? `${farmer.firstName} ${farmer.lastName || ''}`.trim()
               : (farmer.name || null);
             farmerPhone = farmer.phone;
+            farmerIdToSet = farmer._id;
             console.log(`✅ Found farmer in User table for crop ${crop._id}: ${farmerName}`);
           } else {
             console.log(`⚠️ No farmer found in User table for farmerId: ${crop.farmerId}`);
           }
         }
+        // Strategy 3: Try to find farmer by phone from farmerAssociation
+        else if (crop.farmerAssociation?.farmerPhone) {
+          const farmer = await User.findOne({ phone: crop.farmerAssociation.farmerPhone });
+          if (farmer) {
+            farmerName = farmer.firstName
+              ? `${farmer.firstName} ${farmer.lastName || ''}`.trim()
+              : (farmer.name || crop.farmerAssociation.farmerName || 'Unknown Farmer');
+            farmerPhone = farmer.phone;
+            farmerIdToSet = farmer._id;
+            console.log(`✅ Found farmer by phone lookup for crop ${crop._id}: ${farmerName}`);
+          }
+        }
 
         // Update crop if we found a farmer name
-        if (farmerName) {
+        if (farmerName && farmerIdToSet) {
           await CropListing.findByIdAndUpdate(crop._id, {
+            farmerId: farmerIdToSet,  // CRITICAL: Update farmerId so populate() works
             farmerName: farmerName,
             farmerPhone: farmerPhone || crop.farmerPhone || 'Unknown',
             // Also update farmerAssociation to ensure consistency
             farmerAssociation: {
-              farmerId: crop.farmerId,
+              farmerId: farmerIdToSet,
               farmerName: farmerName,
               farmerPhone: farmerPhone || crop.farmerPhone || 'Unknown',
               permanentLink: true

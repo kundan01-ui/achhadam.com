@@ -52,8 +52,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create new crop listing - TEMPORARY AUTH BYPASS FOR TESTING
-router.post('/', async (req, res) => {
+// Create new crop listing - REQUIRES AUTHENTICATION
+router.post('/', auth, async (req, res) => {
   try {
     console.log('🌾 CROP UPLOAD: Starting crop upload process...');
     console.log('🌾 CROP UPLOAD: Request headers:', req.headers);
@@ -80,6 +80,15 @@ router.post('/', async (req, res) => {
 
     // CRITICAL FIX: Use authenticated user ID from token, NOT from request body
     // This ensures crops are saved with the REAL MongoDB _id for cross-device sync
+
+    if (!req.user || !req.user.userId) {
+      console.log('❌ CROP UPLOAD: No authenticated user found');
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required. Please login first.'
+      });
+    }
+
     const actualFarmerId = req.user.userId;
     console.log('🌾 CROP UPLOAD: Using authenticated farmer ID:', actualFarmerId);
     console.log('🔑 Auth token user:', { userId: req.user.userId, userType: req.user.userType, phone: req.user.phone });
