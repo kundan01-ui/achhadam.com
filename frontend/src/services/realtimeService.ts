@@ -158,7 +158,7 @@ export const realtimeService = new RealtimeService({
 export const startMarketplaceSync = (callback: (data: any) => void): void => {
   realtimeService.addSyncTask(
     'marketplace_realtime',
-    `${API_BASE_URL}/api/crops/marketplace',
+    `${API_BASE_URL}/api/crops/marketplace`,
     callback
   );
 };
