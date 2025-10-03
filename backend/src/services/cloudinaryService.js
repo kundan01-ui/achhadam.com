@@ -9,30 +9,30 @@
  */
 
 const cloudinary = require('cloudinary').v2;
+const apiConfig = require('../config/apiConfig');
 
 // ========================================
-// CONFIGURATION
+// CONFIGURATION (FROM CENTRALIZED CONFIG)
 // ========================================
 let isCloudinaryEnabled = false;
 
 try {
-  if (
-    process.env.CLOUDINARY_CLOUD_NAME &&
-    process.env.CLOUDINARY_API_KEY &&
-    process.env.CLOUDINARY_API_SECRET &&
-    process.env.CLOUDINARY_ENABLED === 'true'
-  ) {
+  const config = apiConfig.cloudinary;
+
+  if (config.enabled && config.cloudName && config.apiKey && config.apiSecret) {
     cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET,
+      cloud_name: config.cloudName,
+      api_key: config.apiKey,
+      api_secret: config.apiSecret,
       secure: true
     });
 
     isCloudinaryEnabled = true;
     console.log('✅ Cloudinary enabled - Images will be uploaded to cloud storage');
+    console.log(`   Cloud Name: ${config.cloudName}`);
   } else {
     console.log('⚠️  Cloudinary disabled - Images will be stored in MongoDB as Base64');
+    console.log('   To enable: Update API keys in .env file');
   }
 } catch (error) {
   console.error('❌ Cloudinary configuration error:', error.message);

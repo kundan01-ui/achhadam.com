@@ -17,6 +17,9 @@ const dotenv = require('dotenv');
 // Load environment variables
 dotenv.config();
 
+// Load API Configuration
+const apiConfig = require('./src/config/apiConfig');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -1297,6 +1300,19 @@ async function startServer() {
     await connectMongoDB();
     await connectPostgreSQL();
 
+    // Validate API Configuration
+    console.log('\n========================================');
+    console.log('📋 API CONFIGURATION CHECK');
+    console.log('========================================\n');
+    apiConfig.validateConfig();
+
+    console.log('\n📊 Service Status:');
+    const summary = apiConfig.getSummary();
+    Object.entries(summary).forEach(([service, status]) => {
+      console.log(`   ${service.padEnd(15)}: ${status}`);
+    });
+    console.log('\n========================================\n');
+
     // Start server
     app.listen(PORT, () => {
       console.log(`🚀 ACHHADAM Backend Server running on port ${PORT}`);
@@ -1304,6 +1320,8 @@ async function startServer() {
       console.log(`📊 PostgreSQL: ${postgresConnection ? '✅ Connected' : '❌ Disconnected'}`);
       console.log(`🔗 Health Check: http://localhost:${PORT}/health`);
       console.log(`🌐 API Base: http://localhost:${PORT}/api`);
+      console.log('\nℹ️  To update API keys, edit backend/.env file');
+      console.log('ℹ️  See CLIENT_SETUP_GUIDE.md for detailed setup instructions\n');
     });
 
   } catch (error) {
