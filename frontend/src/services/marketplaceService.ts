@@ -1,5 +1,9 @@
 // Marketplace Service - Loads real farmer crop data for buyers
 import { authenticatedFetch } from './tokenService';
+import { apiConfig } from '../config/apiConfig';
+
+// Use centralized API configuration
+const API_BASE_URL = apiConfig.baseURL;
 
 // Enhanced token validation function
 function validateAuthToken(): { isValid: boolean; token: string | null; error?: string } {
@@ -232,7 +236,7 @@ export const loadAllFarmerCrops = async (): Promise<MarketplaceCrop[]> => {
       console.log('🔄 Loading crops from database, please wait...');
 
       // Use authenticated fetch with automatic token management
-      const response = await authenticatedFetch('https://acchadam1-backend.onrender.com/api/crops/marketplace', {
+      const response = await authenticatedFetch('${API_BASE_URL}/api/crops/marketplace', {
         method: 'GET'
       });
 

@@ -1,5 +1,9 @@
 // Intelligent Data Preloading Service
 // This service predicts what data user might need and preloads it
+import { apiConfig } from '../config/apiConfig';
+
+// Use centralized API configuration
+const API_BASE_URL = apiConfig.baseURL;
 
 interface PreloadConfig {
   enabled: boolean;
@@ -132,7 +136,7 @@ export const preloadService = new PreloadService({
 export const preloadMarketplaceData = (): void => {
   preloadService.addTask(
     'marketplace_data',
-    'https://acchadam1-backend.onrender.com/api/crops/marketplace',
+    '${API_BASE_URL}/api/crops/marketplace',
     (data) => {
       console.log('🎯 MARKETPLACE PRELOADED: Ready for instant display');
       // Store in cache for instant access
@@ -146,7 +150,7 @@ export const preloadMarketplaceData = (): void => {
 export const preloadFarmerData = (farmerId: string): void => {
   preloadService.addTask(
     `farmer_${farmerId}`,
-    `https://acchadam1-backend.onrender.com/api/crops/farmer/${farmerId}`,
+    `${API_BASE_URL}/api/crops/farmer/${farmerId}`,
     (data) => {
       console.log(`🎯 FARMER DATA PRELOADED: ${farmerId} ready for instant display`);
       localStorage.setItem(`preloaded_farmer_${farmerId}`, JSON.stringify(data));
@@ -159,7 +163,7 @@ export const preloadFarmerData = (farmerId: string): void => {
 export const preloadBuyerData = (buyerId: string): void => {
   preloadService.addTask(
     `buyer_${buyerId}`,
-    `https://acchadam1-backend.onrender.com/api/orders/buyer/${buyerId}`,
+    `${API_BASE_URL}/api/orders/buyer/${buyerId}`,
     (data) => {
       console.log(`🎯 BUYER DATA PRELOADED: ${buyerId} ready for instant display`);
       localStorage.setItem(`preloaded_buyer_${buyerId}`, JSON.stringify(data));

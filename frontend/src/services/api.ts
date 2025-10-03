@@ -1,13 +1,8 @@
 // API service for authentication and user management
-// Render Backend (Production)
-const API_BASE_URL = 'https://acchadam1-backend.onrender.com';
+import { apiConfig } from '../config/apiConfig';
 
-// Local Backend (Development) - Uncomment for local testing
-// const API_BASE_URL = 'http://localhost:5000';
-
-// Debug: Log the API URL being used
-console.log('🌐 API_BASE_URL:', API_BASE_URL);
-console.log('🌐 Environment VITE_API_URL:', import.meta.env.VITE_API_URL);
+// Use centralized API configuration
+const API_BASE_URL = apiConfig.baseURL;
 
 // API Response interface
 export interface ApiResponse {

@@ -1,5 +1,9 @@
 // Database Service for MongoDB and PostgreSQL Integration
 // This service handles all database operations for crops and images
+import { apiConfig } from '../config/apiConfig';
+
+// Use centralized API configuration
+const API_BASE_URL = apiConfig.baseURL;
 
 interface CropData {
   id: string;
@@ -194,7 +198,7 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
     }
     
     // Make API call to save crop - using local backend
-    let response = await fetch('https://acchadam1-backend.onrender.com/api/crops', {
+    let response = await fetch(`${API_BASE_URL}/api/crops`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -220,7 +224,7 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
       
       try {
         // Try to refresh token
-        const refreshResponse = await fetch('https://acchadam1-backend.onrender.com/api/auth/refresh', {
+        const refreshResponse = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -239,7 +243,7 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
           localStorage.setItem('authToken', newToken);
           
           // Retry the original request with new token
-          response = await fetch('https://acchadam1-backend.onrender.com/api/crops', {
+          response = await fetch(`${API_BASE_URL}/api/crops`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -365,7 +369,7 @@ export const loadCropsFromDatabase = async (farmerId: string): Promise<{ success
   try {
     console.log('🌾 Loading crops from database for farmer:', farmerId);
     
-    const response = await fetch(`https://acchadam1-backend.onrender.com/api/crops/farmer/${farmerId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/crops/farmer/${farmerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

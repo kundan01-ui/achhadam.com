@@ -5,8 +5,10 @@
  * This service pre-warms the backend before users try to login,
  * preventing timeout errors and improving user experience.
  */
+import { apiConfig } from '../config/apiConfig';
 
-const API_BASE_URL = 'https://acchadam1-backend.onrender.com';
+// Use centralized API configuration
+const API_BASE_URL = apiConfig.baseURL;
 
 interface WarmupStatus {
   isWarming: boolean;

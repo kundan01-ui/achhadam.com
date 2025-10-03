@@ -1,5 +1,9 @@
 // Chat Service - Buyer-Farmer Communication
 import { authenticatedFetch } from './tokenService';
+import { apiConfig } from '../config/apiConfig';
+
+// Use centralized API configuration
+const API_BASE_URL = apiConfig.baseURL;
 
 export interface ChatMessage {
   id: string;
@@ -361,7 +365,7 @@ const syncChatToBackend = async (thread: ChatThread, message: ChatMessage): Prom
     const token = localStorage.getItem('authToken');
     if (!token) return;
 
-    await authenticatedFetch('https://acchadam1-backend.onrender.com/api/chat/thread', {
+    await authenticatedFetch('${API_BASE_URL}/api/chat/thread', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -384,7 +388,7 @@ const syncMessageToBackend = async (message: ChatMessage): Promise<void> => {
     const token = localStorage.getItem('authToken');
     if (!token) return;
 
-    await authenticatedFetch('https://acchadam1-backend.onrender.com/api/chat/message', {
+    await authenticatedFetch('${API_BASE_URL}/api/chat/message', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

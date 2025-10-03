@@ -1,5 +1,9 @@
 // Advanced Caching Service for Fast Data Fetching
 // This service implements intelligent caching to make data fetch lightning fast
+import { apiConfig } from '../config/apiConfig';
+
+// Use centralized API configuration
+const API_BASE_URL = apiConfig.baseURL;
 
 interface CacheConfig {
   maxAge: number; // Cache expiry time in milliseconds
@@ -176,7 +180,7 @@ export const getMarketplaceData = async (): Promise<any> => {
 
   // Fetch from API
   console.log(`🌐 MARKETPLACE: Fetching from API`);
-  const data = await smartFetch('https://acchadam1-backend.onrender.com/api/crops/marketplace', {
+  const data = await smartFetch('${API_BASE_URL}/api/crops/marketplace', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -203,7 +207,7 @@ export const getFarmerData = async (farmerId: string): Promise<any> => {
 
   // Fetch from API
   console.log(`🌐 FARMER DATA: Fetching from API`);
-  const data = await smartFetch(`https://acchadam1-backend.onrender.com/api/crops/farmer/${farmerId}`, {
+  const data = await smartFetch(`${API_BASE_URL}/api/crops/farmer/${farmerId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

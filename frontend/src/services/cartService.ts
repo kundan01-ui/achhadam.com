@@ -1,5 +1,9 @@
 // Cart Management Service - Enhanced E-commerce Cart
 import { authenticatedFetch } from './tokenService';
+import { apiConfig } from '../config/apiConfig';
+
+// Use centralized API configuration
+const API_BASE_URL = apiConfig.baseURL;
 
 export interface CartItem {
   id: string;
@@ -267,7 +271,7 @@ const syncCartToBackend = async (cart: Cart): Promise<void> => {
     const token = localStorage.getItem('authToken');
     if (!token) return; // Skip sync if not logged in
 
-    await authenticatedFetch('https://acchadam1-backend.onrender.com/api/cart/sync', {
+    await authenticatedFetch('${API_BASE_URL}/api/cart/sync', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -289,7 +293,7 @@ export const loadCartFromBackend = async (): Promise<Cart> => {
       return loadCart(); // Fall back to local cart
     }
 
-    const response = await authenticatedFetch('https://acchadam1-backend.onrender.com/api/cart', {
+    const response = await authenticatedFetch('${API_BASE_URL}/api/cart', {
       method: 'GET'
     });
 

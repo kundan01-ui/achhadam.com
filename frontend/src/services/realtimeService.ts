@@ -1,5 +1,9 @@
 // Real-time Data Synchronization Service
 // This service keeps data in sync across all devices in real-time
+import { apiConfig } from '../config/apiConfig';
+
+// Use centralized API configuration
+const API_BASE_URL = apiConfig.baseURL;
 
 interface RealtimeConfig {
   enabled: boolean;
@@ -154,7 +158,7 @@ export const realtimeService = new RealtimeService({
 export const startMarketplaceSync = (callback: (data: any) => void): void => {
   realtimeService.addSyncTask(
     'marketplace_realtime',
-    'https://acchadam1-backend.onrender.com/api/crops/marketplace',
+    '${API_BASE_URL}/api/crops/marketplace',
     callback
   );
 };
@@ -163,7 +167,7 @@ export const startMarketplaceSync = (callback: (data: any) => void): void => {
 export const startFarmerSync = (farmerId: string, callback: (data: any) => void): void => {
   realtimeService.addSyncTask(
     `farmer_realtime_${farmerId}`,
-    `https://acchadam1-backend.onrender.com/api/crops/farmer/${farmerId}`,
+    `${API_BASE_URL}/api/crops/farmer/${farmerId}`,
     callback
   );
 };
@@ -172,7 +176,7 @@ export const startFarmerSync = (farmerId: string, callback: (data: any) => void)
 export const startBuyerSync = (buyerId: string, callback: (data: any) => void): void => {
   realtimeService.addSyncTask(
     `buyer_realtime_${buyerId}`,
-    `https://acchadam1-backend.onrender.com/api/orders/buyer/${buyerId}`,
+    `${API_BASE_URL}/api/orders/buyer/${buyerId}`,
     callback
   );
 };
