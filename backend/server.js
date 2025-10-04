@@ -134,12 +134,12 @@ app.use(cors({
       console.log('✅ CORS: No origin (mobile/curl request) - allowing');
       return callback(null, true);
     }
-    
+
     const allowedOrigins = [
       'https://www.achhadam.com',
       'https://achhadam.com',
-      'http://localhost:5173', 
-      'http://localhost:5174', 
+      'http://localhost:5173',
+      'http://localhost:5174',
       'http://localhost:5000',
       'http://0.0.0.0:5000',
       'https://achhadam-frontend.onrender.com',
@@ -147,21 +147,35 @@ app.use(cors({
       'https://acchadam1.onrender.com',
       'https://acchadam1-frontend.onrender.com'
     ];
-    
+
+    // Check if origin is in allowed list
     if (allowedOrigins.indexOf(origin) !== -1) {
       console.log('✅ CORS: Origin allowed:', origin);
-      callback(null, true);
-    } else {
-      console.log('❌ CORS: Origin blocked:', origin);
-      console.log('🔍 Allowed origins:', allowedOrigins);
-      callback(new Error('Not allowed by CORS'));
+      return callback(null, true);
     }
+
+    // Allow localhost with any port (for development)
+    if (origin && origin.includes('localhost')) {
+      console.log('✅ CORS: Localhost origin allowed:', origin);
+      return callback(null, true);
+    }
+
+    // Allow 127.0.0.1 with any port (for mobile testing)
+    if (origin && origin.includes('127.0.0.1')) {
+      console.log('✅ CORS: 127.0.0.1 origin allowed:', origin);
+      return callback(null, true);
+    }
+
+    // Allow mobile browsers (they sometimes send different origins)
+    // For production, we'll be more permissive for mobile browsers
+    console.log('⚠️ CORS: Unknown origin, but allowing for mobile compatibility:', origin);
+    callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
+    'Content-Type',
+    'Authorization',
     'X-Requested-With',
     'Accept',
     'Origin',

@@ -1107,50 +1107,115 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             // Normalize crop data - fix objects in quantity/unit fields
             crops = rawCrops.map(crop => {
               // Log each field type for debugging
-              console.log(`🔍 Normalizing crop: ${crop.name || crop.cropName}`, {
-                priceType: typeof crop.price,
-                priceValue: crop.price,
-                statusType: typeof crop.status,
-                statusValue: crop.status,
-                quantityType: typeof crop.quantity,
-                quantityValue: crop.quantity
+              console.log(`🔍 RAW Crop Structure:`, {
+                name: crop.name || crop.cropName || crop.cropDetails?.name,
+                cropDetails: crop.cropDetails,
+                quantity: crop.quantity,
+                pricing: crop.pricing,
+                status: crop.status,
+                harvest: crop.harvest
               });
 
-              return ({
-              ...crop,
-              // Ensure 'name' field exists (cropName → name)
-              name: crop.name || crop.cropName,
-              // Ensure 'farmerName' field exists
-              farmerName: crop.farmerName || userProfile.name,
-              // Ensure 'farmerId' field exists
-              farmerId: crop.farmerId || userProfile.id,
-              // Fix quantity if it's an object (from database)
-              quantity: typeof crop.quantity === 'object'
-                ? (crop.quantity?.available || crop.quantity?.value || 0)
-                : crop.quantity,
-              // Fix unit if it's an object
-              unit: typeof crop.unit === 'object'
+              // Extract values from nested structure
+              const name = crop.name || crop.cropName || crop.cropDetails?.name || 'Unknown';
+              const type = crop.type || crop.cropDetails?.type || crop.cropDetails?.cropType || 'Unknown';
+              const variety = crop.variety || crop.cropDetails?.variety || 'Unknown';
+
+              // Extract quantity from nested object
+              const quantity = typeof crop.quantity === 'object'
+                ? (crop.quantity?.available || crop.quantity?.value || crop.quantity?.amount || 0)
+                : (crop.quantity || 0);
+
+              // Extract unit from nested object or string
+              const unit = typeof crop.unit === 'object'
                 ? (crop.unit?.value || crop.unit?.toString() || 'kg')
-                : crop.unit,
-              // Fix status if it's an object
-              status: typeof crop.status === 'object'
-                ? (crop.status?.value || crop.status?.toString() || 'available')
-                : (crop.status || 'available'),
-              // Fix price if it's an object
-              price: typeof crop.price === 'object'
-                ? (crop.price?.amount || crop.price?.value || 0)
-                : crop.price,
-              // Fix harvestDate if it's invalid
-              harvestDate: crop.harvestDate && !isNaN(new Date(crop.harvestDate).getTime())
-                ? crop.harvestDate
-                : new Date().toISOString().split('T')[0],
-              // Fix images - normalize url/imageUrl field
-              images: crop.images?.map(img => ({
-                ...img,
-                imageUrl: img.imageUrl || img.url, // Support both fields
-                url: img.url || img.imageUrl // Support both fields
-              })) || []
-            });
+                : (crop.unit || crop.quantity?.unit || 'kg');
+
+              // Extract price from nested pricing object - try all possible locations
+              let price = 0;
+              if (crop.price) {
+                // If crop.price exists
+                if (typeof crop.price === 'object') {
+                  price = crop.price?.amount || crop.price?.value || crop.price?.perUnit || crop.price?.basePrice || 0;
+                } else if (typeof crop.price === 'number') {
+                  price = crop.price;
+                }
+              } else if (crop.pricing) {
+                // If crop.pricing exists (nested structure)
+                if (typeof crop.pricing === 'object') {
+                  price = crop.pricing?.perUnit || crop.pricing?.amount || crop.pricing?.value || crop.pricing?.basePrice || crop.pricing?.price || 0;
+                } else if (typeof crop.pricing === 'number') {
+                  price = crop.pricing;
+                }
+              }
+              // Fallback to other possible fields
+              if (!price || price === 0) {
+                price = crop.basePrice || crop.pricePerUnit || crop.rate || crop.amount || 0;
+              }
+
+              // Extract status from nested object
+              const status = typeof crop.status === 'object'
+                ? (crop.status?.value || crop.status?.current || crop.status?.toString() || 'available')
+                : (crop.status || 'available');
+
+              // Extract quality
+              const quality = crop.quality || crop.cropDetails?.quality || 'good';
+
+              // Extract harvest date
+              const harvestDate = crop.harvestDate || crop.harvest?.date || crop.harvest?.harvestDate;
+              const validHarvestDate = harvestDate && !isNaN(new Date(harvestDate).getTime())
+                ? harvestDate
+                : new Date().toISOString().split('T')[0];
+
+              // Extract location
+              const location = typeof crop.location === 'object'
+                ? (crop.location?.city || crop.location?.farmAddress || crop.location?.state || 'Unknown')
+                : (crop.location || 'Unknown');
+
+              console.log(`✅ Normalized values:`, {
+                name,
+                type,
+                quantity,
+                unit,
+                price,
+                priceSource: crop.price ? 'crop.price' : crop.pricing ? 'crop.pricing' : 'fallback',
+                rawPrice: crop.price,
+                rawPricing: crop.pricing,
+                status,
+                quality,
+                harvestDate: validHarvestDate
+              });
+
+              return {
+                ...crop,
+                // Basic details
+                name,
+                type,
+                variety,
+                quality,
+                // Quantities and pricing
+                quantity,
+                unit,
+                price,
+                // Status and dates
+                status,
+                harvestDate: validHarvestDate,
+                // Location
+                location,
+                // Farmer info
+                farmerName: crop.farmerName || userProfile.name,
+                farmerId: crop.farmerId || userProfile.id,
+                // Organic flag
+                organic: crop.organic || false,
+                // Description
+                description: crop.description || '',
+                // Fix images - normalize url/imageUrl field
+                images: crop.images?.map(img => ({
+                  ...img,
+                  imageUrl: img.imageUrl || img.url,
+                  url: img.url || img.imageUrl
+                })) || []
+              };
             });
 
             console.log(`✅ DATABASE LOAD SUCCESS: Found ${crops.length} crops with user ID: ${userId}`);
@@ -1504,42 +1569,95 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         const data = await response.json();
         const rawCrops = data.data || [];
 
-        // Normalize crop data - ensure consistent field names
-        const crops = rawCrops.map(crop => ({
-          ...crop,
-          // Ensure 'name' field exists (cropName → name)
-          name: crop.name || crop.cropName,
-          // Ensure 'farmerName' field exists
-          farmerName: crop.farmerName || userProfile.name,
-          // Ensure 'farmerId' field exists
-          farmerId: crop.farmerId || userProfile.id,
-          // Fix quantity if it's an object (from database)
-          quantity: typeof crop.quantity === 'object'
-            ? (crop.quantity?.available || crop.quantity?.value || 0)
-            : crop.quantity,
-          // Fix unit if it's an object
-          unit: typeof crop.unit === 'object'
+        // Normalize crop data - handle nested structure from database
+        const crops = rawCrops.map(crop => {
+          // Extract values from nested structure
+          const name = crop.name || crop.cropName || crop.cropDetails?.name || 'Unknown';
+          const type = crop.type || crop.cropDetails?.type || crop.cropDetails?.cropType || 'Unknown';
+          const variety = crop.variety || crop.cropDetails?.variety || 'Unknown';
+
+          // Extract quantity from nested object
+          const quantity = typeof crop.quantity === 'object'
+            ? (crop.quantity?.available || crop.quantity?.value || crop.quantity?.amount || 0)
+            : (crop.quantity || 0);
+
+          // Extract unit from nested object or string
+          const unit = typeof crop.unit === 'object'
             ? (crop.unit?.value || crop.unit?.toString() || 'kg')
-            : crop.unit,
-          // Fix status if it's an object
-          status: typeof crop.status === 'object'
-            ? (crop.status?.value || crop.status?.toString() || 'available')
-            : (crop.status || 'available'),
-          // Fix price if it's an object
-          price: typeof crop.price === 'object'
-            ? (crop.price?.amount || crop.price?.value || 0)
-            : crop.price,
-          // Fix harvestDate if it's invalid
-          harvestDate: crop.harvestDate && !isNaN(new Date(crop.harvestDate).getTime())
-            ? crop.harvestDate
-            : new Date().toISOString().split('T')[0],
-          // Fix images - normalize url/imageUrl field
-          images: crop.images?.map(img => ({
-            ...img,
-            imageUrl: img.imageUrl || img.url, // Support both fields
-            url: img.url || img.imageUrl // Support both fields
-          })) || []
-        }));
+            : (crop.unit || crop.quantity?.unit || 'kg');
+
+          // Extract price from nested pricing object - try all possible locations
+          let price = 0;
+          if (crop.price) {
+            // If crop.price exists
+            if (typeof crop.price === 'object') {
+              price = crop.price?.amount || crop.price?.value || crop.price?.perUnit || crop.price?.basePrice || 0;
+            } else if (typeof crop.price === 'number') {
+              price = crop.price;
+            }
+          } else if (crop.pricing) {
+            // If crop.pricing exists (nested structure)
+            if (typeof crop.pricing === 'object') {
+              price = crop.pricing?.perUnit || crop.pricing?.amount || crop.pricing?.value || crop.pricing?.basePrice || crop.pricing?.price || 0;
+            } else if (typeof crop.pricing === 'number') {
+              price = crop.pricing;
+            }
+          }
+          // Fallback to other possible fields
+          if (!price || price === 0) {
+            price = crop.basePrice || crop.pricePerUnit || crop.rate || crop.amount || 0;
+          }
+
+          // Extract status from nested object
+          const status = typeof crop.status === 'object'
+            ? (crop.status?.value || crop.status?.current || crop.status?.toString() || 'available')
+            : (crop.status || 'available');
+
+          // Extract quality
+          const quality = crop.quality || crop.cropDetails?.quality || 'good';
+
+          // Extract harvest date
+          const harvestDate = crop.harvestDate || crop.harvest?.date || crop.harvest?.harvestDate;
+          const validHarvestDate = harvestDate && !isNaN(new Date(harvestDate).getTime())
+            ? harvestDate
+            : new Date().toISOString().split('T')[0];
+
+          // Extract location
+          const location = typeof crop.location === 'object'
+            ? (crop.location?.city || crop.location?.farmAddress || crop.location?.state || 'Unknown')
+            : (crop.location || 'Unknown');
+
+          return {
+            ...crop,
+            // Basic details
+            name,
+            type,
+            variety,
+            quality,
+            // Quantities and pricing
+            quantity,
+            unit,
+            price,
+            // Status and dates
+            status,
+            harvestDate: validHarvestDate,
+            // Location
+            location,
+            // Farmer info
+            farmerName: crop.farmerName || userProfile.name,
+            farmerId: crop.farmerId || userProfile.id,
+            // Organic flag
+            organic: crop.organic || false,
+            // Description
+            description: crop.description || '',
+            // Fix images - normalize url/imageUrl field
+            images: crop.images?.map(img => ({
+              ...img,
+              imageUrl: img.imageUrl || img.url,
+              url: img.url || img.imageUrl
+            })) || []
+          };
+        });
 
         console.log(`✅ FORCE REFRESH: Loaded ${crops.length} fresh crops from database`);
         console.log(`🌐 CROSS-DEVICE SYNC: These crops are now available on this device`);

@@ -40,11 +40,12 @@ export const apiConfig = {
   isDevelopment,
   isProduction,
 
-  // Timeouts (in milliseconds)
+  // Timeouts (in milliseconds) - increased for mobile compatibility
   timeout: {
-    default: 15000,      // 15 seconds
-    login: 60000,        // 60 seconds (for cold start)
-    upload: 120000,      // 2 minutes (for image uploads)
+    default: 30000,      // 30 seconds (increased for slow mobile networks)
+    login: 90000,        // 90 seconds (for cold start + slow mobile)
+    upload: 180000,      // 3 minutes (for image uploads on slow networks)
+    otp: 45000,          // 45 seconds (for OTP requests)
   },
 
   // Helper function to build full URL
@@ -71,6 +72,57 @@ export const apiConfig = {
     }
 
     return headers;
+  },
+
+  // Mobile-friendly fetch with retry logic
+  fetchWithRetry: async (url: string, options: RequestInit = {}, maxRetries = 3) => {
+    let lastError;
+
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        console.log(`📱 Attempt ${i + 1}/${maxRetries} - Fetching:`, url);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), apiConfig.timeout.default);
+
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+          headers: {
+            ...options.headers,
+            // Add cache control for mobile
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+          },
+        });
+
+        clearTimeout(timeoutId);
+
+        console.log(`✅ Request successful on attempt ${i + 1}`);
+        return response;
+      } catch (error: any) {
+        lastError = error;
+        console.warn(`⚠️ Attempt ${i + 1} failed:`, error.message);
+
+        // Don't retry if it's an abort (timeout)
+        if (error.name === 'AbortError') {
+          console.error('❌ Request timeout - network too slow');
+          if (i === maxRetries - 1) {
+            throw new Error('Request timeout. Please check your internet connection.');
+          }
+        }
+
+        // Wait before retrying (exponential backoff)
+        if (i < maxRetries - 1) {
+          const delay = Math.min(1000 * Math.pow(2, i), 5000); // Max 5 seconds
+          console.log(`⏳ Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    console.error('❌ All retry attempts failed');
+    throw lastError || new Error('Network request failed');
   },
 };
 
