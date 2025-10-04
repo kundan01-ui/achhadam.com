@@ -1107,19 +1107,36 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             // Normalize crop data - fix objects in quantity/unit fields
             crops = rawCrops.map(crop => {
               // Log each field type for debugging
-              console.log(`🔍 RAW Crop Structure:`, {
-                name: crop.name || crop.cropName || crop.cropDetails?.name,
-                cropDetails: crop.cropDetails,
-                quantity: crop.quantity,
-                pricing: crop.pricing,
-                status: crop.status,
-                harvest: crop.harvest
+              console.log(`🔍 FULL RAW Crop Object for ${crop.name || crop.cropName}:`, crop);
+              console.log(`🔍 Specific Fields:`, {
+                'crop.name': crop.name,
+                'crop.cropName': crop.cropName,
+                'crop.type': crop.type,
+                'crop.cropType': crop.cropType,
+                'crop.cropDetails': crop.cropDetails,
+                'crop.price': crop.price,
+                'crop.pricing': crop.pricing,
+                'crop.quantity': crop.quantity,
+                'crop.unit': crop.unit,
+                'crop.status': crop.status
               });
 
-              // Extract values from nested structure
-              const name = crop.name || crop.cropName || crop.cropDetails?.name || 'Unknown';
-              const type = crop.type || crop.cropDetails?.type || crop.cropDetails?.cropType || 'Unknown';
-              const variety = crop.variety || crop.cropDetails?.variety || 'Unknown';
+              // Extract values from nested structure - try all possible locations
+              const name = crop.name || crop.cropName || crop.cropDetails?.name || crop.cropDetails?.cropName || 'Unknown';
+
+              // Try to get type from multiple sources
+              const type = crop.type ||
+                          crop.cropType ||
+                          crop.cropDetails?.type ||
+                          crop.cropDetails?.cropType ||
+                          crop.category ||
+                          crop.cropDetails?.category ||
+                          'Unknown';
+
+              const variety = crop.variety ||
+                             crop.cropDetails?.variety ||
+                             crop.cropDetails?.varietyName ||
+                             'Unknown';
 
               // Extract quantity from nested object
               const quantity = typeof crop.quantity === 'object'

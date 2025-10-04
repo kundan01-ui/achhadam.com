@@ -610,20 +610,20 @@ app.post('/api/auth/resend-otp', otpLimiter, async (req, res) => {
 // Authentication Routes
 app.post('/api/auth/signup', async (req, res) => {
   try {
-    const { firstName, lastName, phone, password, userType, ...otherFields } = req.body;
+    const { firstName, lastName, phone, password, userType, email, fcmToken, ...otherFields } = req.body;
 
     // Validation
     if (!firstName || !lastName || !phone || !password || !userType) {
-      return res.status(400).json({ 
-        error: 'Missing required fields' 
+      return res.status(400).json({
+        error: 'Missing required fields'
       });
     }
 
     // Check if user already exists
     const existingUser = await User.findOne({ phone });
     if (existingUser) {
-      return res.status(400).json({ 
-        error: 'User with this phone number already exists' 
+      return res.status(400).json({
+        error: 'User with this phone number already exists'
       });
     }
 
@@ -638,6 +638,8 @@ app.post('/api/auth/signup', async (req, res) => {
       phone,
       password: hashedPassword,
       userType,
+      email,
+      fcmToken,
       ...otherFields
     });
 
@@ -647,6 +649,24 @@ app.post('/api/auth/signup', async (req, res) => {
     const userResponse = user.toObject();
     delete userResponse.password;
 
+    // 🎉 SEND REGISTRATION CONFIRMATION (Email + SMS + Push Notification)
+    const notificationService = require('./services/firebaseNotificationService');
+    const userName = `${firstName} ${lastName}`;
+
+    notificationService.sendRegistrationConfirmation({
+      id: user._id.toString(),
+      name: userName,
+      email: email,
+      phone: phone,
+      userType: userType,
+      fcmToken: fcmToken
+    }).then(result => {
+      console.log('✅ Registration confirmation sent:', result);
+    }).catch(error => {
+      console.error('⚠️ Failed to send registration confirmation:', error.message);
+      // Don't fail signup if notification fails
+    });
+
     res.status(201).json({
       message: 'User created successfully',
       user: userResponse
@@ -654,8 +674,8 @@ app.post('/api/auth/signup', async (req, res) => {
 
   } catch (error) {
     console.error('Signup error:', error);
-    res.status(500).json({ 
-      error: 'Internal server error during signup' 
+    res.status(500).json({
+      error: 'Internal server error during signup'
     });
   }
 });
