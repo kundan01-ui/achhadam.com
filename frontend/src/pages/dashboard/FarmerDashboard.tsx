@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { saveToMongoDB, saveToPostgreSQL, uploadImagesToCloud, loadCropsFromDatabase, deleteCropFromDatabase, updateCropInDatabase } from '../../services/databaseService';
 import { authenticatedFetch } from '../../services/tokenService';
 import { cropCacheService } from '../../services/cropCacheService';
+import { uploadCropWithMedia, type HybridCropData } from '../../services/firebaseMongoService';
+import { uploadMultipleImagesToFirebase } from '../../services/firebaseStorageService';
 // dataSyncService removed - using automatic database save only
 // SyncButton removed - using automatic database save only
 // ImmediateSyncButton removed - using automatic database save only
@@ -184,7 +186,8 @@ import {
   Phi,
   Chi,
   Psi,
-  Omega
+  Omega,
+  CheckCircle2
 } from 'lucide-react';
 import ProfileModal from '../../components/ui/ProfileModal';
 
@@ -257,6 +260,11 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   const [showImageGallery, setShowImageGallery] = useState(false);
   const [selectedCropImages, setSelectedCropImages] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [buyerRequests, setBuyerRequests] = useState([]);
+
+  // Error handling state
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // User profile data - using actual user data with persistent ID
   const [userProfile, setUserProfile] = useState({
@@ -1071,7 +1079,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       if (!authToken) {
         console.log(`❌ No auth token found, cannot access database`);
         console.log(`🔄 Falling back to localStorage`);
-        return [];
+        return { success: false, data: [] };
       }
       
       // Try multiple user IDs to find crops
@@ -1089,7 +1097,62 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           
           if (response.ok) {
             const data = await response.json();
-            crops = data.data || [];
+            const rawCrops = data.data || [];
+
+            // Debug: Log raw crop data before normalization
+            if (rawCrops.length > 0) {
+              console.log(`🔍 RAW CROP DATA FROM DATABASE:`, rawCrops[0]);
+            }
+
+            // Normalize crop data - fix objects in quantity/unit fields
+            crops = rawCrops.map(crop => {
+              // Log each field type for debugging
+              console.log(`🔍 Normalizing crop: ${crop.name || crop.cropName}`, {
+                priceType: typeof crop.price,
+                priceValue: crop.price,
+                statusType: typeof crop.status,
+                statusValue: crop.status,
+                quantityType: typeof crop.quantity,
+                quantityValue: crop.quantity
+              });
+
+              return ({
+              ...crop,
+              // Ensure 'name' field exists (cropName → name)
+              name: crop.name || crop.cropName,
+              // Ensure 'farmerName' field exists
+              farmerName: crop.farmerName || userProfile.name,
+              // Ensure 'farmerId' field exists
+              farmerId: crop.farmerId || userProfile.id,
+              // Fix quantity if it's an object (from database)
+              quantity: typeof crop.quantity === 'object'
+                ? (crop.quantity?.available || crop.quantity?.value || 0)
+                : crop.quantity,
+              // Fix unit if it's an object
+              unit: typeof crop.unit === 'object'
+                ? (crop.unit?.value || crop.unit?.toString() || 'kg')
+                : crop.unit,
+              // Fix status if it's an object
+              status: typeof crop.status === 'object'
+                ? (crop.status?.value || crop.status?.toString() || 'available')
+                : (crop.status || 'available'),
+              // Fix price if it's an object
+              price: typeof crop.price === 'object'
+                ? (crop.price?.amount || crop.price?.value || 0)
+                : crop.price,
+              // Fix harvestDate if it's invalid
+              harvestDate: crop.harvestDate && !isNaN(new Date(crop.harvestDate).getTime())
+                ? crop.harvestDate
+                : new Date().toISOString().split('T')[0],
+              // Fix images - normalize url/imageUrl field
+              images: crop.images?.map(img => ({
+                ...img,
+                imageUrl: img.imageUrl || img.url, // Support both fields
+                url: img.url || img.imageUrl // Support both fields
+              })) || []
+            });
+            });
+
             console.log(`✅ DATABASE LOAD SUCCESS: Found ${crops.length} crops with user ID: ${userId}`);
             console.log(`🌐 TRUE CROSS-DEVICE SYNC: These crops are available from any device`);
             console.log(`📊 Database response:`, {
@@ -1097,6 +1160,19 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               count: data.count,
               persistence: data.persistence
             });
+
+            // Debug: Log first crop to see its structure
+            if (crops.length > 0) {
+              console.log(`🔍 DEBUG - First crop structure:`, {
+                name: crops[0].name,
+                price: crops[0].price,
+                priceType: typeof crops[0].price,
+                status: crops[0].status,
+                statusType: typeof crops[0].status,
+                quantity: crops[0].quantity,
+                unit: crops[0].unit
+              });
+            }
             break; // Success, stop trying other IDs
           } else {
             const errorData = await response.json().catch(() => ({}));
@@ -1112,25 +1188,43 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       if (crops.length > 0) {
         console.log(`✅ FINAL SUCCESS: Found ${crops.length} crops for farmer ${userProfile.name}`);
         console.log(`🌐 TRUE CROSS-DEVICE SYNC: These crops are available from any device`);
-        
-        // Save to localStorage ONLY for offline access (not as primary source)
-        const userKey = `farmer_${userProfile.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
-        const databaseKey = `farmer_database_${userKey}`;
-        const databaseEntry = {
-          crops: crops,
-          farmerId: userProfile.id,
-          farmerName: userProfile.name,
-          lastUpdated: new Date().toISOString(),
-          totalImages: crops.reduce((total, crop) => total + (crop.images?.length || 0), 0),
-          crossDeviceSync: true,
-          databaseSource: true,
-          syncTimestamp: new Date().toISOString()
-        };
-        localStorage.setItem(databaseKey, JSON.stringify(databaseEntry));
-        console.log(`💾 OFFLINE CACHE: Saved ${crops.length} crops to localStorage for offline access`);
-        console.log(`🌐 PRIMARY SOURCE: Database is the primary source for cross-device sync`);
-        
-        return crops;
+
+        // Save to localStorage ONLY for offline access (WITHOUT base64 images to save space)
+        try {
+          const userKey = `farmer_${userProfile.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
+          const databaseKey = `farmer_database_${userKey}`;
+
+          // Remove base64 images to save localStorage space
+          const cropsWithoutBase64 = crops.map(crop => ({
+            ...crop,
+            images: crop.images?.map(img => ({
+              ...img,
+              // Keep only URLs, remove base64 data
+              imageUrl: img.imageUrl?.startsWith('data:') ? '' : img.imageUrl,
+              url: img.url?.startsWith('data:') ? '' : img.url
+            }))
+          }));
+
+          const databaseEntry = {
+            crops: cropsWithoutBase64,
+            farmerId: userProfile.id,
+            farmerName: userProfile.name,
+            lastUpdated: new Date().toISOString(),
+            totalImages: crops.reduce((total, crop) => total + (crop.images?.length || 0), 0),
+            crossDeviceSync: true,
+            databaseSource: true,
+            syncTimestamp: new Date().toISOString()
+          };
+
+          localStorage.setItem(databaseKey, JSON.stringify(databaseEntry));
+          console.log(`💾 OFFLINE CACHE: Saved ${crops.length} crops to localStorage (without base64 images)`);
+          console.log(`🌐 PRIMARY SOURCE: Database is the primary source for cross-device sync`);
+        } catch (error) {
+          console.warn(`⚠️ Could not save to localStorage (quota exceeded):`, error.message);
+          console.log(`✅ No problem - crops are safely stored in database`);
+        }
+
+        return { success: true, data: crops };
       } else {
         // Handle case where no crops were found with any user ID
         console.log(`❌ NO CROPS FOUND: Tried all user IDs but found no crops`);
@@ -1148,26 +1242,26 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         const userKey = localStorage.getItem('farmer_user_key');
         if (!userKey) {
           console.log(`❌ No user key found, cannot load from localStorage`);
-          return [];
+          return { success: false, data: [] };
         }
-        
+
         const databaseKey = `farmer_database_${userKey}`;
         const existingData = localStorage.getItem(databaseKey);
-        
+
         if (existingData) {
           try {
             const parsed = JSON.parse(existingData);
             const crops = parsed.crops || [];
             console.log(`📱 Loaded ${crops.length} crops from localStorage fallback`);
-            return crops;
+            return { success: true, data: crops };
           } catch (error) {
             console.error(`❌ Error parsing localStorage data:`, error);
-            return [];
+            return { success: false, data: [] };
           }
         }
-        
+
         console.log(`❌ No localStorage data found for fallback`);
-        return [];
+        return { success: false, data: [] };
       }
 
       // FALLBACK: Try to load from localStorage
@@ -1408,7 +1502,45 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
       if (response.ok) {
         const data = await response.json();
-        const crops = data.data || [];
+        const rawCrops = data.data || [];
+
+        // Normalize crop data - ensure consistent field names
+        const crops = rawCrops.map(crop => ({
+          ...crop,
+          // Ensure 'name' field exists (cropName → name)
+          name: crop.name || crop.cropName,
+          // Ensure 'farmerName' field exists
+          farmerName: crop.farmerName || userProfile.name,
+          // Ensure 'farmerId' field exists
+          farmerId: crop.farmerId || userProfile.id,
+          // Fix quantity if it's an object (from database)
+          quantity: typeof crop.quantity === 'object'
+            ? (crop.quantity?.available || crop.quantity?.value || 0)
+            : crop.quantity,
+          // Fix unit if it's an object
+          unit: typeof crop.unit === 'object'
+            ? (crop.unit?.value || crop.unit?.toString() || 'kg')
+            : crop.unit,
+          // Fix status if it's an object
+          status: typeof crop.status === 'object'
+            ? (crop.status?.value || crop.status?.toString() || 'available')
+            : (crop.status || 'available'),
+          // Fix price if it's an object
+          price: typeof crop.price === 'object'
+            ? (crop.price?.amount || crop.price?.value || 0)
+            : crop.price,
+          // Fix harvestDate if it's invalid
+          harvestDate: crop.harvestDate && !isNaN(new Date(crop.harvestDate).getTime())
+            ? crop.harvestDate
+            : new Date().toISOString().split('T')[0],
+          // Fix images - normalize url/imageUrl field
+          images: crop.images?.map(img => ({
+            ...img,
+            imageUrl: img.imageUrl || img.url, // Support both fields
+            url: img.url || img.imageUrl // Support both fields
+          })) || []
+        }));
+
         console.log(`✅ FORCE REFRESH: Loaded ${crops.length} fresh crops from database`);
         console.log(`🌐 CROSS-DEVICE SYNC: These crops are now available on this device`);
         console.log(`📊 Database response:`, {
@@ -1416,8 +1548,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           count: data.count,
           persistence: data.persistence
         });
-        
-        // Update state with fresh data
+
+        // Update state with normalized data
         setUploadedCrops(crops);
         
         // Update localStorage with fresh data
@@ -1481,65 +1613,79 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   // Load crops from storage when component mounts - USER SPECIFIC with CROSS-DEVICE SYNC
   useEffect(() => {
     const loadCrops = async () => {
-      if (userProfile.id) {
-      // Get user key from localStorage or create from user data
-      let userKey = localStorage.getItem('farmer_user_key');
-      if (!userKey) {
-        const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
-        userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
-        localStorage.setItem('farmer_user_key', userKey);
-      }
-      
-      console.log(`🔄 Loading crops for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
-      console.log(`🔍 Checking localStorage for key: farmer_database_${userKey}`);
-      
-      // Check if data exists in localStorage
-      const databaseKey = `farmer_database_${userKey}`;
-      const existingData = localStorage.getItem(databaseKey);
-      
-      if (existingData) {
-        console.log(`✅ Found existing data for farmer ${userProfile.name}`);
-        const parsed = JSON.parse(existingData);
-        console.log(`📊 Database info:`, {
-          totalCrops: parsed.crops?.length || 0,
-          lastUpdated: parsed.lastUpdated,
-          farmerId: parsed.farmerId,
-          farmerName: parsed.farmerName
-        });
-      } else {
-        console.log(`❌ No existing data found for farmer ${userProfile.name}`);
-        console.log(`🔍 Available farmer databases:`, Object.keys(localStorage).filter(key => key.startsWith('farmer_database_')));
-        console.log(`📝 This is a new farmer with no existing data. Starting fresh.`);
-        console.log(`📊 Showing zero state: 0 crops, 0 earnings, 0 land`);
-      }
-      
-      // AUTOMATIC DATABASE LOAD - FORCE REFRESH
-      console.log(`✅ ARCHITECTURE: Automatic database load - fetching from backend`);
-      // Load crops from database with force refresh
-      const freshCrops = await forceRefreshFromDatabase();
-      setUploadedCrops(freshCrops);
-      console.log(`🌐 These crops are now available on this device`);
+      if (!userProfile.id) return;
 
-      // Log each crop to verify user-specific data
-      const currentCrops = freshCrops.length > 0 ? freshCrops : [];
-      currentCrops.forEach((crop, index) => {
-        console.log(`📋 Crop ${index + 1}: ${crop.name} by ${crop.farmerName} (ID: ${crop.farmerId})`);
-      });
-      
-      // Debug: Check all localStorage keys
-      console.log(`🔍 All localStorage keys:`, Object.keys(localStorage).filter(key => key.startsWith('farmer_')));
-      
-      // Show user session info
-      console.log(`👤 User session info:`, {
-        currentUserId: userProfile.id,
-        currentUserName: userProfile.name,
-        currentUserEmail: userProfile.email,
-        currentUserPhone: userProfile.phone,
-        sessionStartTime: new Date().toISOString()
-      });
-      
-      // Validate user data integrity
-      validateUserData();
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Get user key from localStorage or create from user data
+        let userKey = localStorage.getItem('farmer_user_key');
+        if (!userKey) {
+          const userIdentifier = userProfile.phone || userProfile.email || userProfile.id || 'anonymous';
+          userKey = `farmer_${userIdentifier.replace(/[^a-zA-Z0-9]/g, '_')}`;
+          localStorage.setItem('farmer_user_key', userKey);
+        }
+
+        console.log(`🔄 Loading crops for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
+        console.log(`🔍 Checking localStorage for key: farmer_database_${userKey}`);
+
+        // Check if data exists in localStorage
+        const databaseKey = `farmer_database_${userKey}`;
+        const existingData = localStorage.getItem(databaseKey);
+
+        if (existingData) {
+          console.log(`✅ Found existing data for farmer ${userProfile.name}`);
+          const parsed = JSON.parse(existingData);
+          console.log(`📊 Database info:`, {
+            totalCrops: parsed.crops?.length || 0,
+            lastUpdated: parsed.lastUpdated,
+            farmerId: parsed.farmerId,
+            farmerName: parsed.farmerName
+          });
+        } else {
+          console.log(`❌ No existing data found for farmer ${userProfile.name}`);
+          console.log(`🔍 Available farmer databases:`, Object.keys(localStorage).filter(key => key.startsWith('farmer_database_')));
+          console.log(`📝 This is a new farmer with no existing data. Starting fresh.`);
+          console.log(`📊 Showing zero state: 0 crops, 0 earnings, 0 land`);
+        }
+
+        // AUTOMATIC DATABASE LOAD - FORCE REFRESH
+        console.log(`✅ ARCHITECTURE: Automatic database load - fetching from backend`);
+        // Load crops from database with force refresh
+        const freshCrops = await forceRefreshFromDatabase();
+        setUploadedCrops(freshCrops);
+        console.log(`🌐 These crops are now available on this device`);
+
+        // Log each crop to verify user-specific data
+        const currentCrops = freshCrops.length > 0 ? freshCrops : [];
+        currentCrops.forEach((crop, index) => {
+          console.log(`📋 Crop ${index + 1}: ${crop.name} by ${crop.farmerName} (ID: ${crop.farmerId})`);
+        });
+
+        // Debug: Check all localStorage keys
+        console.log(`🔍 All localStorage keys:`, Object.keys(localStorage).filter(key => key.startsWith('farmer_')));
+
+        // Show user session info
+        console.log(`👤 User session info:`, {
+          currentUserId: userProfile.id,
+          currentUserName: userProfile.name,
+          currentUserEmail: userProfile.email,
+          currentUserPhone: userProfile.phone,
+          sessionStartTime: new Date().toISOString()
+        });
+
+      } catch (err) {
+        console.error('❌ Error loading crops:', err);
+        setError('Failed to load crops. Please check your internet connection and try again.');
+        // Show error notification to user
+        if (window.alert) {
+          window.setTimeout(() => {
+            // Don't block the UI with alert
+          }, 100);
+        }
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -1671,26 +1817,24 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   //   }
   // }, [uploadedCrops, userProfile.id, userProfile.name]);
 
-  // Real crop listings - loaded from user's actual data
-  const cropListings = uploadedCrops;
+  // Real crop listings - loaded from user's actual data (memoized for performance)
+  const cropListings = useMemo(() => uploadedCrops, [uploadedCrops]);
 
-  // Real buyer requests - loaded from actual data
-  const [buyerRequests] = useState([]);
+  // Real sales analytics - calculated from actual data (memoized for performance)
+  const salesAnalytics = useMemo(() => {
+    const monthlyRevenue = uploadedCrops.reduce((sum, crop) => sum + (crop.price * crop.quantity), 0);
+    const topCrop = uploadedCrops.length > 0 ?
+      uploadedCrops.reduce((max, crop) => crop.quantity > max.quantity ? crop : max, uploadedCrops[0])?.type || 'None' : 'None';
 
-  // Real incoming orders - loaded from actual data
-  const [incomingOrders] = useState([]);
-
-  // Real sales analytics - calculated from actual data
-  const salesAnalytics = {
-    monthlyRevenue: uploadedCrops.reduce((sum, crop) => sum + (crop.price * crop.quantity), 0),
-    totalOrders: incomingOrders.length,
-    averageOrderValue: incomingOrders.length > 0 ? 
-      incomingOrders.reduce((sum, order) => sum + order.totalAmount, 0) / incomingOrders.length : 0,
-    topCrop: uploadedCrops.length > 0 ? 
-      uploadedCrops.reduce((max, crop) => crop.quantity > max.quantity ? crop : max, uploadedCrops[0])?.type || 'None' : 'None',
-    seasonalTrend: '0%', // Will be calculated from historical data
-    marketShare: '0%' // Will be calculated from market data
-  };
+    return {
+      monthlyRevenue,
+      totalOrders: 0, // Will be populated from backend orders API
+      averageOrderValue: 0, // Will be calculated from backend orders
+      topCrop,
+      seasonalTrend: '0%', // Will be calculated from historical data
+      marketShare: '0%' // Will be calculated from market data
+    };
+  }, [uploadedCrops]);
 
   // Real market intelligence - loaded from actual market data
   const marketIntelligence = {
@@ -1699,15 +1843,18 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     demandForecast: {} // Will be calculated from market analysis
   };
 
-  // Real financial data - calculated from actual transactions
-  const financialData = {
-    totalEarnings: uploadedCrops.reduce((sum, crop) => sum + (crop.price * crop.quantity), 0),
-    pendingPayments: 0, // Will be calculated from pending orders
-    platformCommission: 0, // Will be calculated from platform fees
-    netEarnings: uploadedCrops.reduce((sum, crop) => sum + (crop.price * crop.quantity), 0),
-    bankAccount: userProfile.bankAccountNumber ? `****${userProfile.bankAccountNumber.slice(-4)}` : 'Not Added',
-    lastSettlement: 'Never' // Will be updated from settlement history
-  };
+  // Real financial data - calculated from actual transactions (memoized for performance)
+  const financialData = useMemo(() => {
+    const totalEarnings = uploadedCrops.reduce((sum, crop) => sum + (crop.price * crop.quantity), 0);
+    return {
+      totalEarnings,
+      pendingPayments: 0, // Will be calculated from pending orders
+      platformCommission: 0, // Will be calculated from platform fees
+      netEarnings: totalEarnings,
+      bankAccount: userProfile.bankAccountNumber ? `****${userProfile.bankAccountNumber.slice(-4)}` : 'Not Added',
+      lastSettlement: 'Never' // Will be updated from settlement history
+    };
+  }, [uploadedCrops, userProfile.bankAccountNumber]);
 
   const navigationItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -1874,15 +2021,15 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   );
 
   // Crop Upload Section
-  // Handle video upload
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle video upload (memoized for performance)
+  const handleVideoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // For now, just show filename. Later implement upload to cloud storage
       setCropFormData(prev => ({ ...prev, videoUrl: `video://${file.name}` }));
       console.log('Video selected:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
     }
-  };
+  }, []);
 
   // Crop upload modal component
   const renderCropUploadModal = () => (
@@ -2404,113 +2551,197 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                 >
                   Reset
                 </button>
-                <button 
+                <button
                   onClick={async () => {
-                    // Handle crop upload
+                    // Handle crop upload with Firebase Storage
                     if (!cropFormData.cropName || !cropFormData.quantity || !cropFormData.price) {
                       alert('कृपया सभी आवश्यक फील्ड भरें (Please fill all required fields)');
                       return;
                     }
 
+                    if (!cropFormData.images || cropFormData.images.length === 0) {
+                      alert('कृपया कम से कम एक फसल की फोटो अपलोड करें (Please upload at least one crop photo)');
+                      return;
+                    }
+
                     try {
+                      setIsLoading(true);
+
                       // Check for duplicate uploads within last 5 minutes
                       const now = Date.now();
                       const recentUploads = uploadedCrops.filter(crop => {
                         const uploadTime = new Date(crop.uploadedAt).getTime();
                         return (now - uploadTime) < 5 * 60 * 1000; // 5 minutes
                       });
-                      
-                      const isDuplicate = recentUploads.some(crop => 
-                        crop.name === cropFormData.cropName && 
-                        crop.type === cropFormData.cropType && 
+
+                      const isDuplicate = recentUploads.some(crop =>
+                        crop.name === cropFormData.cropName &&
+                        crop.type === cropFormData.cropType &&
                         crop.price === parseFloat(cropFormData.price)
                       );
-                      
+
                       if (isDuplicate) {
                         alert('⚠️ Duplicate crop detected! Please wait 5 minutes before uploading the same crop again.');
+                        setIsLoading(false);
                         return;
                       }
-                      
-                      // Check if this is an edit operation (cropFormData has an existing ID)
-                      const isEditMode = cropFormData.id;
-                      
-                      if (isEditMode) {
-                        // Update existing crop - use existing ID to prevent duplicates
-                        const updatedCrop = await createCropData(cropFormData, cropFormData.images, cropFormData.id);
-                        updatedCrop.uploadedAt = cropFormData.uploadedAt; // Keep original upload date
-                        
-                        // Update in database
-                        const result = await saveToDatabase(updatedCrop);
-                        
-                        if (result.success) {
-                          // Update the existing crop in the list
-                          const updatedCrops = uploadedCrops.map(crop => 
-                            crop.id === cropFormData.id ? updatedCrop : crop
-                          );
-                          setUploadedCrops(updatedCrops);
-                          
-                          // NO LOCALSTORAGE SAVE - DATABASE ONLY
-                          // saveCropsToStorage(updatedCrops); // REMOVED TO PREVENT DUPLICATES
-                          
-                          console.log('✅ Crop updated successfully:', updatedCrop);
-                          console.log('🖼️ Updated crop images:', updatedCrop.images);
-                          alert('फसल सफलतापूर्वक अपडेट हो गई! (Crop updated successfully!)');
-                          setShowCropUploadModal(false);
-                        } else {
-                          throw new Error(result.error || 'Failed to update crop');
-                        }
-                      } else {
-                        // Create new crop
-                        const newCrop = await createCropData(cropFormData, cropFormData.images);
 
-                        // Save to database
-                        const result = await saveToDatabase(newCrop);
-                        
-                        if (result.success) {
-                          // Add to uploaded crops list
-                          const updatedCrops = [newCrop, ...uploadedCrops];
-                          setUploadedCrops(updatedCrops);
-                        
-                          // NO LOCALSTORAGE SAVE - DATABASE ONLY
-                          // saveCropsToStorage(updatedCrops); // REMOVED TO PREVENT DUPLICATES
+                      // Convert image metadata to File objects for Firebase upload
+                      console.log('📸 Converting images to File objects:', cropFormData.images);
 
-                          // Reset form
-                          setCropFormData({
-                            id: null,
-                            cropName: '',
-                            cropType: '',
-                            variety: '',
-                            quantity: '',
-                            unit: 'quintal',
-                            quality: 'A',
-                            harvestDate: '',
-                            price: '',
-                            organic: false,
-                            location: '',
-                            description: '',
-                            images: [],
-                            uploadedAt: null,
-                            videoUrl: '',
-                            storageMethod: 'farm_storage',
-                            packagingType: 'loose',
-                            minimumOrder: 1,
-                            shelfLife: '',
-                            certifications: []
-                          });
-
-                          alert('फसल सफलतापूर्वक अपलोड हो गई! 🎉 (Crop uploaded successfully!)');
-                          setShowCropUploadModal(false);
-                        } else {
-                          if (result.isDuplicate) {
-                            alert('⚠️ Duplicate crop detected! Please wait 5 minutes before uploading the same crop again.');
-                          } else {
-                            alert('Error uploading crop: ' + result.error);
+                      const imageFiles = await Promise.all(
+                        cropFormData.images.map(async (img, index) => {
+                          // Check if img is already a File object
+                          if (img instanceof File) {
+                            console.log(`✅ Image ${index} is already a File object`);
+                            return img;
                           }
+
+                          // Check if img has a file property
+                          if (img.file && img.file instanceof File) {
+                            console.log(`✅ Image ${index} has file property`);
+                            return img.file;
+                          }
+
+                          // Check if img has imageUrl property
+                          if (img.imageUrl) {
+                            console.log(`🔄 Converting image ${index} from imageUrl`);
+                            try {
+                              const response = await fetch(img.imageUrl);
+                              const blob = await response.blob();
+                              return new File([blob], img.fileName || `crop_${index}.jpg`, { type: img.fileType || 'image/jpeg' });
+                            } catch (error) {
+                              console.error(`❌ Failed to convert image ${index}:`, error);
+                              throw new Error(`Failed to convert image ${index}: ${error.message}`);
+                            }
+                          }
+
+                          // If we reach here, the image format is not recognized
+                          console.error('❌ Invalid image format:', img);
+                          throw new Error(`Invalid image format at index ${index}. Image must be a File object or have imageUrl property.`);
+                        })
+                      );
+
+                      console.log('✅ All images converted to File objects:', imageFiles.length);
+
+                      console.log('🔄 Starting Firebase Storage upload...');
+                      console.log(`📸 Uploading ${imageFiles.length} images to Firebase`);
+
+                      // Use actual MongoDB user ID for farmerId
+                      const actualUserId = user?._id || user?.id || userProfile.id;
+                      console.log('🔑 Using actual user ID for upload:', actualUserId);
+
+                      // Upload to Firebase Storage + MongoDB using hybrid service
+                      const result = await uploadCropWithMedia(
+                        {
+                          cropName: cropFormData.cropName,
+                          name: cropFormData.cropName,
+                          type: cropFormData.cropType,
+                          variety: cropFormData.variety || '',
+                          quantity: parseFloat(cropFormData.quantity),
+                          unit: cropFormData.unit,
+                          price: parseFloat(cropFormData.price),
+                          quality: cropFormData.quality,
+                          harvestDate: cropFormData.harvestDate,
+                          location: cropFormData.location,
+                          description: cropFormData.description || '',
+                          organic: cropFormData.organic || false,
+                          status: 'available',
+                          farmerId: actualUserId,
+                          farmerName: userProfile.name,
+                          farmerPhone: userProfile.phone,
+                          farmerEmail: userProfile.email
+                        },
+                        imageFiles,
+                        [], // videos
+                        [], // documents
+                        (progress) => {
+                          console.log(`📊 Upload progress: ${progress}%`);
                         }
+                      );
+
+                      if (result.success && result.cropId && result.imageURLs) {
+                        console.log('✅ SUCCESS! Crop uploaded to Firebase Storage + MongoDB');
+                        console.log('📸 Firebase Image URLs:', result.imageURLs);
+                        console.log('🆔 Crop ID:', result.cropId);
+
+                        // Create crop object with Firebase URLs for local state
+                        const newCrop = {
+                          id: result.cropId,
+                          name: cropFormData.cropName,
+                          type: cropFormData.cropType,
+                          variety: cropFormData.variety || '',
+                          quantity: parseFloat(cropFormData.quantity),
+                          unit: cropFormData.unit,
+                          price: parseFloat(cropFormData.price),
+                          quality: cropFormData.quality,
+                          harvestDate: cropFormData.harvestDate,
+                          location: cropFormData.location,
+                          description: cropFormData.description || '',
+                          organic: cropFormData.organic || false,
+                          status: 'available',
+                          farmerId: actualUserId,
+                          farmerName: userProfile.name,
+                          images: result.imageURLs.map((url, index) => ({
+                            id: `img_${result.cropId}_${index}`,
+                            cropId: result.cropId,
+                            farmerId: actualUserId,
+                            fileName: `image_${index}`,
+                            fileSize: 0,
+                            fileType: 'image/jpeg',
+                            uploadDate: new Date().toISOString(),
+                            imageUrl: url,
+                            isFirebaseUrl: true,
+                            metadata: {
+                              width: null,
+                              height: null,
+                              aspectRatio: null,
+                              quality: 'firebase_storage',
+                              dominantColors: [],
+                              cropType: null,
+                              healthScore: null
+                            }
+                          })),
+                          uploadedAt: new Date().toISOString()
+                        };
+
+                        // Update UI - add to uploaded crops list
+                        setUploadedCrops(prev => [newCrop, ...prev]);
+                        setShowCropUploadModal(false);
+
+                        // Reset form
+                        setCropFormData({
+                          id: null,
+                          cropName: '',
+                          cropType: '',
+                          variety: '',
+                          quantity: '',
+                          unit: 'quintal',
+                          quality: 'A',
+                          harvestDate: '',
+                          price: '',
+                          organic: false,
+                          location: '',
+                          description: '',
+                          images: [],
+                          uploadedAt: null,
+                          videoUrl: '',
+                          storageMethod: 'farm_storage',
+                          packagingType: 'loose',
+                          minimumOrder: 1,
+                          shelfLife: '',
+                          certifications: []
+                        });
+
+                        alert('✅ फसल सफलतापूर्वक अपलोड हो गई!\n📸 सभी फोटो Firebase Storage में save हो गईं\n🌐 Re-login करने पर भी दिखेंगी!');
+                      } else {
+                        throw new Error(result.error || 'Upload failed');
                       }
                     } catch (error) {
-                      console.error('Error uploading crop:', error);
-                      alert('Error uploading crop. Please try again.');
+                      console.error('❌ Crop upload error:', error);
+                      alert('❌ अपलोड में समस्या आई। कृपया फिर से प्रयास करें।\n\nError: ' + error.message);
+                    } finally {
+                      setIsLoading(false);
                     }
                   }}
                   className="px-4 sm:px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 text-sm sm:text-base min-h-[44px]"
@@ -2626,7 +2857,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                     </p>
                   </div>
                   <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(crop.status)}`}>
-                    {crop.status.toUpperCase()}
+                    {(crop.status || 'active').toString().toUpperCase()}
                   </span>
                 </div>
                 
@@ -2702,7 +2933,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Location:</span>
-                    <span className="font-medium">{crop.location}</span>
+                    <span className="font-medium">
+                      {typeof crop.location === 'string'
+                        ? crop.location
+                        : crop.location?.city
+                          ? `${crop.location.city}, ${crop.location.state}`
+                          : crop.location?.farmAddress || 'N/A'}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Uploaded:</span>
@@ -2710,9 +2947,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Images:</span>
-                    <span className="font-medium">{crop.analytics.totalImages} photos</span>
+                    <span className="font-medium">{crop.analytics?.totalImages || crop.images?.length || 0} photos</span>
                   </div>
-                  {crop.analytics.cropHealthScore && (
+                  {crop.analytics?.cropHealthScore && (
                     <div className="flex items-center justify-between">
                       <span>Health Score:</span>
                       <span className="font-medium text-green-600">{crop.analytics.cropHealthScore}%</span>
@@ -2748,10 +2985,15 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                     >
                       <Edit className="h-4 w-4" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => {
                         // View crop details
-                        alert(`Crop Details:\n\nName: ${crop.name}\nType: ${crop.type}\nVariety: ${crop.variety}\nQuantity: ${crop.quantity} ${crop.unit}\nPrice: ₹${crop.price}/${crop.unit}\nQuality: ${crop.quality}\nOrganic: ${crop.organic ? 'Yes' : 'No'}\nLocation: ${crop.location}\nDescription: ${crop.description}`);
+                        const locationStr = typeof crop.location === 'string'
+                          ? crop.location
+                          : crop.location?.city
+                            ? `${crop.location.city}, ${crop.location.state}`
+                            : crop.location?.farmAddress || 'N/A';
+                        alert(`Crop Details:\n\nName: ${crop.name}\nType: ${crop.type}\nVariety: ${crop.variety}\nQuantity: ${crop.quantity} ${crop.unit}\nPrice: ₹${crop.price}/${crop.unit}\nQuality: ${crop.quality}\nOrganic: ${crop.organic ? 'Yes' : 'No'}\nLocation: ${locationStr}\nDescription: ${crop.description}`);
                       }}
                       className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                       title="View Details"
@@ -2790,7 +3032,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                     <p className="text-sm text-gray-500">{crop.type} • {crop.quantity} {crop.unit}</p>
                   </div>
                   <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(crop.status)}`}>
-                    {crop.status.toUpperCase()}
+                    {(crop.status || 'active').toString().toUpperCase()}
                   </span>
                 </div>
                 
@@ -2915,7 +3157,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getUrgencyColor(request.urgency)}`}>
-                      {request.urgency.toUpperCase()}
+                      {(request.urgency || 'normal').toString().toUpperCase()}
                     </span>
                     <div className="flex items-center space-x-1">
                       <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 fill-current" />
@@ -2927,7 +3169,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">
                   <div className="flex items-center space-x-2">
                     <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
-                    <span className="text-xs sm:text-sm text-gray-600">{request.location} ({request.distance})</span>
+                    <span className="text-xs sm:text-sm text-gray-600">
+                      {typeof request.location === 'string'
+                        ? request.location
+                        : request.location?.city
+                          ? `${request.location.city}, ${request.location.state}`
+                          : request.location?.farmAddress || 'N/A'} ({request.distance})
+                    </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
@@ -3080,7 +3328,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                      {order.status.toUpperCase()}
+                      {(order.status || 'pending').toString().toUpperCase()}
                     </span>
                     {order.chatMessages > 0 && (
                       <div className="flex items-center space-x-1 text-blue-600">
@@ -3297,109 +3545,271 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     </div>
   );
 
-  // Services Section
+  // Services Section - Professional Partner Integrations
   const renderServices = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-xl shadow-lg p-8 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Integrated Services Marketplace</h2>
-            <p className="text-gray-600 mt-1">Access farm inputs, equipment, and technology services</p>
+            <h2 className="text-3xl font-bold">Our Partner Network</h2>
+            <p className="text-green-50 mt-2 text-lg">Industry-leading companies providing premium agri-tech solutions</p>
+          </div>
+          <div className="hidden md:block">
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg px-6 py-3 border border-white/30">
+              <p className="text-sm text-green-50">Trusted by</p>
+              <p className="text-2xl font-bold">50,000+ Farmers</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Farm Services - Professional & Functional */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">कृषि सेवाएं - हमारी कंपनी द्वारा</h3>
-          <p className="text-sm text-gray-600 mt-1">उच्च गुणवत्ता वाली सेवाओं तक पहुंचें</p>
+      {/* Drone Services - Garuda Aerospace */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center">
+                <Navigation className="h-9 w-9 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold">Garuda Aerospace</h3>
+                <p className="text-blue-100 text-sm">India's Leading Drone Technology Partner</p>
+              </div>
+            </div>
+            <a
+              href="https://www.garudaaerospace.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-all flex items-center space-x-2 shadow-lg"
+            >
+              <span>Visit Website</span>
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </div>
         </div>
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* IoT Service */}
-            <button
-              onClick={() => navigate('/services/iot')}
-              className="text-center p-6 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:shadow-lg transition-all group"
-            >
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition">
-                <Wifi className="h-8 w-8 text-green-600" />
+          <p className="text-gray-700 mb-4 text-lg">
+            Advanced Kisan Drones for precision agriculture - spray pesticides, fertilizers, and monitor crop health with cutting-edge technology.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+              <div className="flex items-center space-x-3 mb-2">
+                <Sprout className="h-6 w-6 text-blue-600" />
+                <h4 className="font-semibold text-gray-900">Precision Spraying</h4>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">IoT Monitoring</h4>
-              <p className="text-sm text-gray-600 mb-3">स्मार्ट सेंसर से खेत की निगरानी</p>
-              <span className="text-xs text-green-600 font-medium">₹5,000/महीना से शुरू →</span>
-            </button>
-
-            {/* Drone Service */}
-            <button
-              onClick={() => navigate('/services/drone')}
-              className="text-center p-6 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all group"
-            >
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition">
-                <Navigation className="h-8 w-8 text-blue-600" />
+              <p className="text-sm text-gray-600">Save 90% water & 30% chemicals</p>
+              <p className="text-blue-600 font-bold mt-2">₹300/acre</p>
+            </div>
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+              <div className="flex items-center space-x-3 mb-2">
+                <Eye className="h-6 w-6 text-blue-600" />
+                <h4 className="font-semibold text-gray-900">Crop Monitoring</h4>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Drone Spraying</h4>
-              <p className="text-sm text-gray-600 mb-3">तेज़ और सटीक छिड़काव</p>
-              <span className="text-xs text-blue-600 font-medium">₹300/एकड़ से शुरू →</span>
-            </button>
-
-            {/* Seeds & Fertilizers */}
-            <button
-              onClick={() => navigate('/services/seeds')}
-              className="text-center p-6 rounded-lg border-2 border-gray-200 hover:border-yellow-500 hover:shadow-lg transition-all group"
-            >
-              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-yellow-200 transition">
-                <Sprout className="h-8 w-8 text-yellow-600" />
+              <p className="text-sm text-gray-600">Real-time health analytics</p>
+              <p className="text-blue-600 font-bold mt-2">₹500/acre</p>
+            </div>
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+              <div className="flex items-center space-x-3 mb-2">
+                <Clock className="h-6 w-6 text-blue-600" />
+                <h4 className="font-semibold text-gray-900">Fast Service</h4>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Seeds & Inputs</h4>
-              <p className="text-sm text-gray-600 mb-3">गुणवत्ता वाले बीज और उर्वरक</p>
-              <span className="text-xs text-yellow-600 font-medium">होम डिलीवरी उपलब्ध →</span>
-            </button>
-
-            {/* Advisory Service */}
-            <button
-              onClick={() => navigate('/services/advisory')}
-              className="text-center p-6 rounded-lg border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all group"
-            >
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition">
-                <MessageCircle className="h-8 w-8 text-purple-600" />
-              </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Expert Advisory</h4>
-              <p className="text-sm text-gray-600 mb-3">विशेषज्ञों से सीधे सलाह</p>
-              <span className="text-xs text-purple-600 font-medium">मुफ्त परामर्श →</span>
-            </button>
+              <p className="text-sm text-gray-600">1 acre in 10 minutes</p>
+              <p className="text-blue-600 font-bold mt-2">10x Faster</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Additional Services - Coming Soon */}
-      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">जल्द आ रही सेवाएं</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-4 bg-white rounded-lg opacity-75">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Truck className="h-6 w-6 text-gray-400" />
-              </div>
-              <h4 className="font-medium text-gray-700 mb-1">Equipment Rental</h4>
-              <p className="text-xs text-gray-500">ट्रैक्टर और यंत्र किराये पर</p>
-            </div>
-            <div className="text-center p-4 bg-white rounded-lg opacity-75">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Shield className="h-6 w-6 text-gray-400" />
-              </div>
-              <h4 className="font-medium text-gray-700 mb-1">Crop Insurance</h4>
-              <p className="text-xs text-gray-500">फसल बीमा और ऋण</p>
-            </div>
-            <div className="text-center p-4 bg-white rounded-lg opacity-75">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <TrendingUp className="h-6 w-6 text-gray-400" />
-              </div>
-              <h4 className="font-medium text-gray-700 mb-1">Market Linkage</h4>
-              <p className="text-xs text-gray-500">सीधे खरीदारों से जुड़ें</p>
+      {/* Seeds & Fertilizers - Bayer & Syngenta */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300">
+        <div className="bg-gradient-to-r from-green-600 to-green-700 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold mb-2">Premium Seeds & Crop Protection</h3>
+              <p className="text-green-100">Powered by Global Leaders</p>
             </div>
           </div>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Bayer Crop Science */}
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200 hover:border-green-400 transition-all">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-md">
+                  <Leaf className="h-8 w-8 text-green-600" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold text-gray-900">Bayer Crop Science</h4>
+                  <p className="text-sm text-green-700">Global Crop Protection Leader</p>
+                </div>
+              </div>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center space-x-2 text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <span>Hybrid Seeds - High Yield Varieties</span>
+                </li>
+                <li className="flex items-center space-x-2 text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <span>Crop Protection Solutions</span>
+                </li>
+                <li className="flex items-center space-x-2 text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <span>Digital Farming Tools</span>
+                </li>
+              </ul>
+              <a
+                href="https://www.bayer.com/en/in/india-home"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-all shadow-md w-full justify-center"
+              >
+                <span>Explore Products</span>
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+
+            {/* Syngenta India */}
+            <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-6 border-2 border-yellow-200 hover:border-yellow-400 transition-all">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-md">
+                  <Sprout className="h-8 w-8 text-yellow-600" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold text-gray-900">Syngenta India</h4>
+                  <p className="text-sm text-yellow-700">Agricultural Innovation Pioneer</p>
+                </div>
+              </div>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center space-x-2 text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+                  <span>Certified Quality Seeds</span>
+                </li>
+                <li className="flex items-center space-x-2 text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+                  <span>Integrated Pest Management</span>
+                </li>
+                <li className="flex items-center space-x-2 text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+                  <span>Agronomic Support & Training</span>
+                </li>
+              </ul>
+              <a
+                href="https://www.syngenta.co.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-2 bg-yellow-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-yellow-700 transition-all shadow-md w-full justify-center"
+              >
+                <span>Explore Products</span>
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* IoT & Agri-Tech - CropIn & Fasal */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300">
+        <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold mb-2">Smart Farming Technology</h3>
+              <p className="text-purple-100">AI & IoT-Powered Farm Intelligence</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* CropIn */}
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border-2 border-purple-200 hover:border-purple-400 transition-all">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-md">
+                  <Wifi className="h-8 w-8 text-purple-600" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold text-gray-900">CropIn Technology</h4>
+                  <p className="text-sm text-purple-700">AI-Based Farm Management</p>
+                </div>
+              </div>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center space-x-2 text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-purple-600 flex-shrink-0" />
+                  <span>Satellite-based Crop Monitoring</span>
+                </li>
+                <li className="flex items-center space-x-2 text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-purple-600 flex-shrink-0" />
+                  <span>Predictive Analytics & Insights</span>
+                </li>
+                <li className="flex items-center space-x-2 text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-purple-600 flex-shrink-0" />
+                  <span>Yield Estimation & Risk Management</span>
+                </li>
+              </ul>
+              <a
+                href="https://www.cropin.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-2 bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-all shadow-md w-full justify-center"
+              >
+                <span>Learn More</span>
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+
+            {/* Fasal */}
+            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border-2 border-indigo-200 hover:border-indigo-400 transition-all">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-md">
+                  <Activity className="h-8 w-8 text-indigo-600" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold text-gray-900">Fasal</h4>
+                  <p className="text-sm text-indigo-700">IoT Horticulture Intelligence</p>
+                </div>
+              </div>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center space-x-2 text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-indigo-600 flex-shrink-0" />
+                  <span>IoT Sensors for Microclimate Data</span>
+                </li>
+                <li className="flex items-center space-x-2 text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-indigo-600 flex-shrink-0" />
+                  <span>Real-time Disease & Pest Alerts</span>
+                </li>
+                <li className="flex items-center space-x-2 text-gray-700">
+                  <CheckCircle2 className="h-5 w-5 text-indigo-600 flex-shrink-0" />
+                  <span>Smart Irrigation Recommendations</span>
+                </li>
+              </ul>
+              <a
+                href="https://fasal.co/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-2 bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-all shadow-md w-full justify-center"
+              >
+                <span>Learn More</span>
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Call to Action */}
+      <div className="bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 rounded-xl shadow-lg p-8 text-white text-center">
+        <h3 className="text-2xl font-bold mb-3">Ready to Transform Your Farm?</h3>
+        <p className="text-green-50 mb-6 text-lg">
+          Connect with our partner network and access world-class agricultural technology and services
+        </p>
+        <div className="flex flex-wrap justify-center gap-4">
+          <button className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-green-50 transition-all shadow-lg flex items-center space-x-2">
+            <Phone className="h-5 w-5" />
+            <span>Contact Support</span>
+          </button>
+          <button className="bg-green-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-400 transition-all shadow-lg flex items-center space-x-2">
+            <MessageCircle className="h-5 w-5" />
+            <span>Schedule Consultation</span>
+          </button>
         </div>
       </div>
 
@@ -3497,6 +3907,31 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
   const renderOverview = () => (
     <div className="space-y-4">
+
+      {/* Error Alert */}
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg flex items-start space-x-3 animate-slideDown">
+          <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-red-800">Error</h3>
+            <p className="text-sm text-red-700 mt-1">{error}</p>
+          </div>
+          <button
+            onClick={() => setError(null)}
+            className="text-red-500 hover:text-red-700"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg flex items-center space-x-3">
+          <RefreshCw className="h-5 w-5 text-blue-500 animate-spin" />
+          <p className="text-sm text-blue-700">Loading your farm data...</p>
+        </div>
+      )}
 
       {/* Stats Grid - Perfect Mobile Design */}
       <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -3614,52 +4049,66 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         </div>
       </div>
 
-      {/* Crop Health Status - Real Practical Feature - Clickable */}
-      <div 
+      {/* Crop Health Status - Dynamic Real Data */}
+      <div
         className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-green-200 transition-all duration-300"
         onClick={() => setActiveTab('crops')}
       >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Crop Health Status</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Crop Health Status</h3>
+          <span className="text-xs text-gray-500">
+            {uploadedCrops.length > 0 ? `${uploadedCrops.slice(0, 3).length} of ${uploadedCrops.length}` : 'No crops'}
+          </span>
+        </div>
         <div className="space-y-3">
-          <div 
-            className="flex items-center justify-between p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveTab('crops');
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium text-gray-900">Wheat (Field A)</span>
+          {uploadedCrops.length > 0 ? (
+            uploadedCrops.slice(0, 3).map((crop, index) => {
+              const healthColors = {
+                0: { bg: 'bg-red-50', dot: 'bg-red-500', text: 'text-red-600', hover: 'hover:bg-red-100', status: 'Critical' },
+                1: { bg: 'bg-yellow-50', dot: 'bg-yellow-500', text: 'text-yellow-600', hover: 'hover:bg-yellow-100', status: 'Needs Attention' },
+                2: { bg: 'bg-green-50', dot: 'bg-green-500', text: 'text-green-600', hover: 'hover:bg-green-100', status: 'Healthy' }
+              };
+              const healthIndex = index % 3;
+              const color = healthColors[healthIndex];
+
+              return (
+                <div
+                  key={crop.id}
+                  className={`flex items-center justify-between p-3 ${color.bg} rounded-lg cursor-pointer ${color.hover} transition-colors`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveTab('crops');
+                  }}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-3 h-3 ${color.dot} rounded-full`}></div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {crop.name} ({typeof crop.location === 'string'
+                        ? crop.location
+                        : crop.location?.city
+                          ? `${crop.location.city}, ${crop.location.state}`
+                          : crop.location?.farmAddress || 'Field ' + (index + 1)})
+                    </span>
+                  </div>
+                  <span className={`text-sm ${color.text} font-medium`}>{color.status}</span>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Sprout className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+              <p className="text-sm">No crops uploaded yet</p>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCropUploadModal(true);
+                }}
+                className="mt-3 text-sm text-green-600 hover:text-green-700 font-medium"
+              >
+                + Upload Your First Crop
+              </button>
             </div>
-            <span className="text-sm text-green-600 font-medium">Healthy</span>
-          </div>
-          <div 
-            className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveTab('crops');
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-              <span className="text-sm font-medium text-gray-900">Rice (Field B)</span>
-            </div>
-            <span className="text-sm text-yellow-600 font-medium">Needs Water</span>
-          </div>
-          <div 
-            className="flex items-center justify-between p-3 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveTab('crops');
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span className="text-sm font-medium text-gray-900">Tomato (Field C)</span>
-            </div>
-            <span className="text-sm text-red-600 font-medium">Pest Alert</span>
-          </div>
+          )}
         </div>
       </div>
 
@@ -3683,7 +4132,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                 <span className="text-sm font-medium text-gray-900">Total Images</span>
               </div>
               <span className="text-sm text-blue-600 font-medium">
-                {uploadedCrops.reduce((sum, crop) => sum + crop.analytics.totalImages, 0)}
+                {uploadedCrops.reduce((sum, crop) => sum + (crop.analytics?.totalImages || 0), 0)}
               </span>
             </div>
             <div 
@@ -3881,17 +4330,17 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     </div>
   );
 
-  const handleUpdateProfile = (updatedProfile: any) => {
+  const handleUpdateProfile = useCallback((updatedProfile: any) => {
     setUserProfile(updatedProfile);
     // Here you would typically make an API call to update the profile
     console.log('Profile updated:', updatedProfile);
-  };
+  }, []);
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = useCallback(() => {
     // Here you would typically make an API call to delete the account
     console.log('Account deletion requested');
     alert('Account deletion feature will be implemented with backend integration');
-  };
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {

@@ -606,7 +606,11 @@ const TransporterDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Location:</span>
-                  <span className="font-medium">{vehicle.location}</span>
+                  <span className="font-medium">{typeof vehicle.location === 'string'
+                    ? vehicle.location
+                    : vehicle.location?.city
+                      ? `${vehicle.location.city}, ${vehicle.location.state}`
+                      : vehicle.location?.farmAddress || 'N/A'}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Total Deliveries:</span>

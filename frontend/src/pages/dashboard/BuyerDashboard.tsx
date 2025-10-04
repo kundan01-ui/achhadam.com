@@ -965,7 +965,11 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <div className="flex items-center space-x-1">
                         <MapPin className="h-4 w-4" />
-                        <span>{supplier.location}</span>
+                        <span>{typeof supplier.location === 'string'
+                          ? supplier.location
+                          : supplier.location?.city
+                            ? `${supplier.location.city}, ${supplier.location.state}`
+                            : supplier.location?.farmAddress || 'N/A'}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Star className="h-4 w-4 text-yellow-400 fill-current" />
@@ -1259,7 +1263,11 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                     <div className="text-sm sm:text-sm font-medium text-gray-900 truncate">{crop.farmer.name}</div>
                     <div className="text-sm text-gray-500 flex items-center truncate">
                       <MapPin className="h-2 w-2 sm:h-3 sm:w-3 mr-1 flex-shrink-0" />
-                      <span className="truncate">{crop.farmer.location}</span>
+                      <span className="truncate">{typeof crop.farmer.location === 'string'
+                        ? crop.farmer.location
+                        : crop.farmer.location?.city
+                          ? `${crop.farmer.location.city}, ${crop.farmer.location.state}`
+                          : crop.farmer.location?.farmAddress || 'N/A'}</span>
                     </div>
                   </div>
                 </div>

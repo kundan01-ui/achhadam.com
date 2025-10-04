@@ -247,7 +247,11 @@ const FavoritesPage: React.FC = () => {
               <div className="flex items-center space-x-4 text-sm text-gray-500">
                 <div className="flex items-center space-x-1">
                   <MapPin className="h-4 w-4" />
-                  <span>{item.location}</span>
+                  <span>{typeof item.location === 'string'
+                    ? item.location
+                    : item.location?.city
+                      ? `${item.location.city}, ${item.location.state}`
+                      : item.location?.farmAddress || 'N/A'}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Package className="h-4 w-4" />

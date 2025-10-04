@@ -1,10 +1,13 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDIr9HygDcTillF47oYfi1xIEozr9l8mBA",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "digital-farming-platform.firebaseapp.com",
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || "https://digital-farming-platform-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "digital-farming-platform",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "digital-farming-platform.firebasestorage.app",
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1024746152320",
@@ -26,10 +29,30 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase Authentication
 export const auth = getAuth(app);
 
+// Initialize Firestore Database
+export const db = getFirestore(app);
+
+// Initialize Firebase Storage
+export const storage = getStorage(app);
+
 // Initialize Google Auth Provider
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope('email');
 googleProvider.addScope('profile');
+
+// Enable offline persistence for Firestore
+try {
+  enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.warn('⚠️ Multiple tabs open, persistence enabled only in one tab');
+    } else if (err.code === 'unimplemented') {
+      console.warn('⚠️ Browser doesn\'t support persistence');
+    }
+  });
+  console.log('✅ Firestore offline persistence enabled');
+} catch (err) {
+  console.warn('⚠️ Could not enable Firestore persistence:', err);
+}
 
 // Set Firebase config in window object for service detection
 (window as any).firebaseConfig = firebaseConfig;

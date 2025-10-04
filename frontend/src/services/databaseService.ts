@@ -81,10 +81,10 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
     const farmerId = localStorage.getItem('farmer_user_id') || localStorage.getItem('farmer_user_key') || 'unknown';
 
     // Try to get farmer name from multiple sources
-    let farmerName = localStorage.getItem('farmer_name');
-    let farmerPhone = localStorage.getItem('farmer_phone');
+    let farmerName = cropData.farmerName; // First check if already provided
+    let farmerPhone = cropData.farmerPhone;
 
-    // If not found, try userData
+    // If not provided, try userData from localStorage
     if (!farmerName || farmerName === 'Unknown Farmer') {
       try {
         const userDataStr = localStorage.getItem('userData');
@@ -95,15 +95,17 @@ export const saveToMongoDB = async (cropData: CropData): Promise<{ success: bool
             : (userData.user?.name || 'Unknown Farmer');
           farmerPhone = userData.user?.phone || 'unknown';
 
-          // Save to localStorage for next time
-          localStorage.setItem('farmer_name', farmerName);
-          if (farmerPhone) localStorage.setItem('farmer_phone', farmerPhone);
-
           console.log('✅ Extracted farmer details from userData:', { farmerName, farmerPhone });
         }
       } catch (error) {
         console.error('Error parsing userData:', error);
       }
+    }
+
+    // If still not found, try localStorage fallback
+    if (!farmerName || farmerName === 'Unknown Farmer') {
+      farmerName = localStorage.getItem('farmer_name') || 'Unknown Farmer';
+      farmerPhone = localStorage.getItem('farmer_phone') || 'unknown';
     }
 
     // Final fallback
@@ -330,32 +332,36 @@ export const saveToPostgreSQL = async (cropData: CropData): Promise<{ success: b
 };
 
 // Cloud Storage Integration for Images
+// ⚠️ DEPRECATED: Use Firebase Storage instead (firebaseStorageService.ts)
+// Cloudinary code commented out - using Firebase Storage for image uploads
 export const uploadImagesToCloud = async (images: ImageData[]): Promise<{ success: boolean; data?: any; error?: string }> => {
   try {
+    console.log('⚠️ uploadImagesToCloud is deprecated. Use Firebase Storage instead.');
     console.log('Uploading images to cloud:', images);
-    
+
+    // ⚠️ CLOUDINARY CODE COMMENTED OUT - USE FIREBASE STORAGE INSTEAD
     // TODO: Implement cloud storage (AWS S3, Cloudinary, etc.)
     // Example cloud upload operation
     // const uploadPromises = images.map(async (image) => {
     //   const formData = new FormData();
     //   formData.append('image', image.blobData);
     //   formData.append('metadata', JSON.stringify(image.metadata));
-    //   
+    //
     //   const response = await fetch('/api/cloud/upload', {
     //     method: 'POST',
     //     body: formData
     //   });
-    //   
+    //
     //   if (!response.ok) {
     //     throw new Error('Failed to upload image');
     //   }
-    //   
+    //
     //   return await response.json();
     // });
-    
+
     // const results = await Promise.all(uploadPromises);
     // return { success: true, data: results };
-    
+
     // For now, return success (will be implemented later)
     return { success: true, data: images };
   } catch (error) {
