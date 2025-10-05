@@ -1096,9 +1096,9 @@ app.use('/api/services', servicesRoutes);
 const adminRoutes = require('./src/routes/admin');
 app.use('/api/admin', adminRoutes);
 
-// KYC routes - Farmer verification
-const kycRoutes = require('./src/routes/kycRoutes');
-app.use('/api/kyc', kycRoutes);
+// KYC routes - Farmer verification (Temporarily disabled until Render syncs)
+// const kycRoutes = require('./src/routes/kycRoutes');
+// app.use('/api/kyc', kycRoutes);
 
 // Razorpay Routes - Temporarily commented out
 // app.use('/api/razorpay', require('./src/routes/razorpay.js'));
