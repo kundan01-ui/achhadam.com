@@ -788,57 +788,57 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       </div>
 
       {/* Quick Actions - Perfect Mobile Design */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <button 
-            className="flex flex-col items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors min-h-[100px] hover:scale-105"
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
+          <button
+            className="flex flex-col items-center p-3 sm:p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors min-h-[90px] sm:min-h-[100px] hover:scale-105"
             onClick={() => setActiveTab('products')}
           >
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-              <Plus className="h-5 w-5 text-blue-600" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
             </div>
-            <span className="text-sm font-medium text-blue-700 text-center">New Order</span>
+            <span className="text-xs sm:text-sm font-medium text-blue-700 text-center">New Order</span>
           </button>
-          <button 
-            className="flex flex-col items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors min-h-[100px] hover:scale-105"
+          <button
+            className="flex flex-col items-center p-3 sm:p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors min-h-[90px] sm:min-h-[100px] hover:scale-105"
             onClick={() => setActiveTab('products')}
           >
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-3">
-              <Eye className="h-5 w-5 text-green-600" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
+              <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
             </div>
-            <span className="text-sm font-medium text-green-700 text-center">Browse Products</span>
+            <span className="text-xs sm:text-sm font-medium text-green-700 text-center">Browse Products</span>
           </button>
-          <button 
-            className="flex flex-col items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors min-h-[100px] hover:scale-105"
+          <button
+            className="flex flex-col items-center p-3 sm:p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors min-h-[90px] sm:min-h-[100px] hover:scale-105"
             onClick={() => setActiveTab('suppliers')}
           >
-            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mb-3">
-              <Users className="h-5 w-5 text-purple-600" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
             </div>
-            <span className="text-sm font-medium text-purple-700 text-center">Find Suppliers</span>
+            <span className="text-xs sm:text-sm font-medium text-purple-700 text-center">Find Suppliers</span>
           </button>
-          <button 
-            className="flex flex-col items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors min-h-[100px] hover:scale-105"
+          <button
+            className="flex flex-col items-center p-3 sm:p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors min-h-[90px] sm:min-h-[100px] hover:scale-105"
             onClick={() => setActiveTab('analytics')}
           >
-            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mb-3">
-              <BarChart3 className="h-5 w-5 text-orange-600" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
             </div>
-            <span className="text-sm font-medium text-orange-700 text-center">Analytics</span>
+            <span className="text-xs sm:text-sm font-medium text-orange-700 text-center">Analytics</span>
           </button>
         </div>
       </div>
 
-      {/* Recent Orders */}
+      {/* Recent Orders - Mobile Responsive */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-4 sm:p-6 border-b border-gray-100">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Recent Orders</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Recent Orders</h3>
             <div className="flex items-center space-x-2">
               {/* ImmediateSyncButton removed - using automatic database save only */}
-              <button 
-                className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+              <button
+                className="text-blue-600 hover:text-blue-700 font-medium text-xs sm:text-sm"
                 onClick={() => setActiveTab('orders')}
               >
                 View All
@@ -847,7 +847,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
           </div>
         </div>
         {/* Mobile-Friendly Order Cards */}
-        <div className="space-y-3 p-4">
+        <div className="space-y-3 p-3 sm:p-4">
           {recentOrders.map((order) => (
             <div 
               key={order.id} 
@@ -917,16 +917,16 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
         </div>
       </div>
 
-      {/* Top Suppliers */}
-      <div 
+      {/* Top Suppliers - Mobile Responsive */}
+      <div
         className="bg-white rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-orange-200 transition-all duration-300"
         onClick={() => setActiveTab('suppliers')}
       >
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-4 sm:p-6 border-b border-gray-100">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Top Suppliers</h3>
-            <button 
-              className="text-orange-600 hover:text-orange-700 font-medium text-sm"
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Top Suppliers</h3>
+            <button
+              className="text-orange-600 hover:text-orange-700 font-medium text-xs sm:text-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveTab('suppliers');
@@ -936,50 +936,50 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
             </button>
           </div>
         </div>
-        <div className="p-6">
-          <div className="space-y-4">
+        <div className="p-3 sm:p-6">
+          <div className="space-y-3 sm:space-y-4">
             {suppliers.map((supplier) => (
-              <div 
-                key={supplier.id} 
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer hover:border-orange-200 hover:shadow-md"
+              <div
+                key={supplier.id}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer hover:border-orange-200 hover:shadow-md space-y-3 sm:space-y-0"
                 onClick={(e) => {
                   e.stopPropagation();
                   setActiveTab('suppliers');
                 }}
               >
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold text-lg">
+                <div className="flex items-center space-x-3 sm:space-x-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-semibold text-base sm:text-lg">
                       {supplier.name.charAt(0)}
                     </span>
                   </div>
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <h4 className="font-semibold text-gray-900">{supplier.name}</h4>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <h4 className="font-semibold text-sm sm:text-base text-gray-900 truncate">{supplier.name}</h4>
                       {supplier.isVerified && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Verified
+                        <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 flex-shrink-0">
+                          ✓
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs sm:text-sm text-gray-500 space-y-1 sm:space-y-0">
                       <div className="flex items-center space-x-1">
-                        <MapPin className="h-4 w-4" />
-                        <span>{typeof supplier.location === 'string'
+                        <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <span className="truncate">{typeof supplier.location === 'string'
                           ? supplier.location
                           : supplier.location?.city
                             ? `${supplier.location.city}, ${supplier.location.state}`
                             : supplier.location?.farmAddress || 'N/A'}</span>
                       </div>
                       <div className="flex items-center space-x-1">
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                        <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 fill-current flex-shrink-0" />
                         <span>{supplier.rating}</span>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <button className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-2">
+                  <button className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                     View Profile
                   </button>
                   <button className="p-2 text-gray-400 hover:text-gray-600">
@@ -1858,82 +1858,88 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   return (
     <>
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
-        <div className="px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 sm:space-x-4">
+      {/* Mobile Header - Fully Responsive */}
+      <header className="bg-gradient-to-r from-sky-100 via-blue-100 to-cyan-100 shadow-sm border-b border-sky-200 sticky top-0 z-40">
+        <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
+          <div className="flex items-center justify-between gap-2">
+            {/* Left Section - Menu + Title */}
+            <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="lg:hidden p-1.5 sm:p-2 rounded-lg hover:bg-white/50 transition-colors flex-shrink-0"
               >
-                <Menu className="h-5 w-5 text-gray-600" />
+                <Menu className="h-5 w-5 text-gray-700" />
               </button>
-              
+
               {/* Desktop Sidebar Toggle */}
               <button
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="hidden lg:block p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="hidden lg:block p-2 rounded-lg hover:bg-white/50 transition-colors flex-shrink-0"
               >
-                <Menu className="h-5 w-5 text-gray-600" />
+                <Menu className="h-5 w-5 text-gray-700" />
               </button>
-              
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Buyer Dashboard</h1>
+
+              <h1 className="text-sm sm:text-lg lg:text-xl font-semibold text-gray-900 truncate">
+                Buyer Dashboard
+              </h1>
             </div>
-            
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Search - Responsive */}
-              <div className="hidden sm:block relative">
+
+            {/* Right Section - Actions + Profile */}
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              {/* Search - Desktop only */}
+              <div className="hidden md:block relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 lg:w-64 text-sm"
                 />
               </div>
-              
+
               {/* Mobile Search Button */}
-              <button className="sm:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <Search className="h-5 w-5 text-gray-600" />
+              <button className="md:hidden p-1.5 rounded-lg hover:bg-white/50 transition-colors flex-shrink-0">
+                <Search className="h-5 w-5 text-gray-700" />
               </button>
-              
+
               {/* Notifications */}
-              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
-                <Bell className="h-5 w-5 text-gray-600" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
+              <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/50 transition-colors relative flex-shrink-0">
+                <Bell className="h-5 w-5 text-gray-700" />
+                <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border border-white"></span>
               </button>
-              
-              {/* User Profile - Mobile Optimized */}
-              <div className="flex items-center space-x-2 sm:space-x-3">
+
+              {/* User Profile - Compact Mobile */}
+              <div className="flex items-center">
                 {/* User Info - Hidden on mobile */}
-                <div className="hidden sm:block text-right">
+                <div className="hidden lg:block text-right mr-2">
                   <p className="text-sm font-medium text-gray-900 truncate max-w-32">{userProfile.name}</p>
                   <p className="text-xs text-gray-500 truncate max-w-32">{userProfile.email}</p>
                   <p className="text-xs text-blue-600 font-medium">BUYER</p>
                 </div>
-                
+
                 {/* User Avatar & Menu */}
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="flex items-center gap-1 p-1 hover:bg-white/50 rounded-lg transition-colors"
                   >
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold text-sm sm:text-base">B</span>
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white font-semibold text-sm">B</span>
                     </div>
-                    <ChevronDown className="h-4 w-4 text-gray-600 hidden sm:block" />
+                    <ChevronDown className="h-4 w-4 text-gray-700 hidden lg:block" />
                   </button>
                   
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-56 sm:w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-60 sm:w-52 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50">
                       {/* Mobile User Info */}
-                      <div className="px-4 py-3 border-b border-gray-100 sm:hidden">
-                        <p className="text-sm font-medium text-gray-900">{userProfile.name}</p>
-                        <p className="text-xs text-gray-500">{userProfile.email}</p>
-                        <p className="text-xs text-blue-600 font-medium">BUYER</p>
+                      <div className="px-3 py-2.5 border-b border-gray-100 lg:hidden">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{userProfile.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{userProfile.email}</p>
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                          BUYER
+                        </span>
                       </div>
-                      
+
                       {/* Menu Items */}
                       <div className="py-1">
                         <button
@@ -1941,9 +1947,9 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                             setShowProfileModal(true);
                             setShowUserMenu(false);
                           }}
-                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3"
+                          className="w-full px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 transition-colors"
                         >
-                          <User className="h-4 w-4" />
+                          <User className="h-4 w-4 flex-shrink-0" />
                           <span>View Profile</span>
                         </button>
                         <button
@@ -1951,23 +1957,23 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                             setShowProfileModal(true);
                             setShowUserMenu(false);
                           }}
-                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3"
+                          className="w-full px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 transition-colors"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-4 w-4 flex-shrink-0" />
                           <span>Edit Profile</span>
                         </button>
-                        <button className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3">
-                          <Settings className="h-4 w-4" />
+                        <button className="w-full px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 transition-colors">
+                          <Settings className="h-4 w-4 flex-shrink-0" />
                           <span>Settings</span>
                         </button>
-                        <hr className="my-2" />
+                        <hr className="my-1" />
                         {onLogout && (
                           <button
                             onClick={() => {
                               onLogout();
                               setShowUserMenu(false);
                             }}
-                            className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-3"
+                            className="w-full px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors font-medium"
                           >
                             <span>Logout</span>
                           </button>
@@ -1984,76 +1990,214 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
 
       <div className="flex">
         {/* Desktop Sidebar */}
-        <aside className={`hidden lg:block ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-sm border-r border-gray-200 transition-all duration-300`}>
-          <nav className="p-4">
-            <ul className="space-y-2">
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <li key={item.id}>
-                    <button
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
-                        activeTab === item.id
-                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      }`}
-                    >
-                      <Icon className={`h-5 w-5 ${sidebarCollapsed ? 'mx-auto' : ''}`} />
-                      {!sidebarCollapsed && <span className="font-medium">{item.label}</span>}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+        {/* Desktop Sidebar - Attractive Sky Blue Gradient Design */}
+        <aside className={`hidden lg:flex lg:flex-col ${sidebarCollapsed ? 'w-20' : 'w-64'} bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50 shadow-2xl border-r-2 border-sky-200/60 transition-all duration-300`}>
+          {/* Scrollable Navigation Area */}
+          <div className="flex-1 overflow-y-auto">
+            <nav className="p-4 mt-2">
+              <ul className="space-y-2">
+                {navigationItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <li key={item.id}>
+                      <button
+                        onClick={() => setActiveTab(item.id)}
+                        className={`group relative w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 overflow-hidden ${
+                          isActive
+                            ? 'bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-400 text-white shadow-xl shadow-sky-300/60 scale-105'
+                            : 'text-gray-700 hover:bg-gradient-to-r hover:from-sky-100 hover:via-blue-100 hover:to-cyan-100 hover:shadow-lg hover:shadow-sky-200/60 hover:scale-102'
+                        } ${sidebarCollapsed ? 'justify-center' : ''}`}
+                      >
+                        {/* Animated Gradient Background on Hover - More Sky Blue */}
+                        {!isActive && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-sky-300/0 via-blue-300/0 to-cyan-300/0 group-hover:from-sky-300/70 group-hover:via-blue-300/70 group-hover:to-cyan-300/70 transition-all duration-500"></div>
+                        )}
+
+                        {/* Icon with Attractive Styling */}
+                        <div className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
+                          isActive
+                            ? 'bg-white/20 shadow-lg scale-110'
+                            : 'bg-gradient-to-br from-sky-100 to-blue-100 group-hover:from-sky-300 group-hover:to-cyan-300 group-hover:scale-110 group-hover:rotate-6'
+                        }`}>
+                          <Icon className={`h-5 w-5 transition-all duration-300 ${
+                            isActive
+                              ? 'text-white drop-shadow-lg'
+                              : 'text-sky-600 group-hover:text-blue-700'
+                          }`} strokeWidth={2.5} />
+                        </div>
+
+                        {/* Text Label with Better Typography */}
+                        {!sidebarCollapsed && (
+                          <span className={`relative z-10 font-semibold text-sm transition-all duration-300 ${
+                            isActive
+                              ? 'text-white'
+                              : 'text-gray-700 group-hover:text-blue-700'
+                          }`}>
+                            {item.label}
+                          </span>
+                        )}
+
+                        {/* Active Indicator */}
+                        {isActive && !sidebarCollapsed && (
+                          <div className="ml-auto relative z-10">
+                            <div className="w-2 h-2 rounded-full bg-white shadow-lg animate-pulse"></div>
+                          </div>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          </div>
+
+          {/* Fixed Footer - No Scroll Conflict */}
+          {!sidebarCollapsed && (
+            <div className="flex-shrink-0 p-4 border-t border-sky-200/40 bg-gradient-to-t from-sky-50 to-transparent">
+              <div className="bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-400 rounded-2xl p-3 shadow-xl">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-white/30 backdrop-blur-sm rounded-lg flex-shrink-0">
+                    <ShoppingCart className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-white truncate">Pro Buyer</p>
+                    <p className="text-[10px] text-white/80 truncate">Premium ⭐</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </aside>
 
-        {/* Mobile Sidebar Overlay */}
+        {/* Mobile Sidebar - Professional Animated Design */}
         {mobileMenuOpen && (
-          <div className="lg:hidden fixed inset-0 z-50 flex">
-            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setMobileMenuOpen(false)}></div>
-            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+          <div className="lg:hidden fixed inset-0 z-[60] flex animate-fade-in">
+            {/* Backdrop with blur */}
+            <div
+              className="fixed inset-0 bg-gradient-to-br from-black/60 via-black/50 to-black/60 backdrop-blur-sm"
+              onClick={() => setMobileMenuOpen(false)}
+            ></div>
+
+            {/* Sidebar Panel */}
+            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-gradient-to-b from-slate-50 via-gray-50 to-white shadow-2xl animate-slide-in-left">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200/50 bg-gradient-to-r from-blue-50 to-purple-50">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                    <ShoppingCart className="h-5 w-5 text-white" />
+                  </div>
+                  <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    Buyer Menu
+                  </h2>
+                </div>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-lg hover:bg-white/80 transition-all duration-300 hover:scale-110 active:scale-95"
                 >
                   <X className="h-5 w-5 text-gray-600" />
                 </button>
               </div>
-              <nav className="flex-1 p-4">
-                <ul className="space-y-2">
-                  {navigationItems.map((item) => {
+
+              {/* Navigation */}
+              <nav className="flex-1 p-3 overflow-y-auto">
+                <ul className="space-y-1.5">
+                  {navigationItems.map((item, index) => {
                     const Icon = item.icon;
+                    const isActive = activeTab === item.id;
                     return (
-                      <li key={item.id}>
+                      <li
+                        key={item.id}
+                        className="animate-fade-in"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
                         <button
                           onClick={() => {
                             setActiveTab(item.id);
                             setMobileMenuOpen(false);
                           }}
-                          className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors ${
-                            activeTab === item.id
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          className={`group relative w-full flex items-center gap-1 px-4 py-3.5 rounded-xl transition-all duration-300 transform ${
+                            isActive
+                              ? 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/40 scale-[1.02]'
+                              : 'text-gray-500 hover:bg-white hover:shadow-lg hover:shadow-gray-200/50 hover:scale-[1.02] active:scale-[0.98]'
                           }`}
                         >
-                          <Icon className="h-5 w-5" />
-                          <span className="font-medium">{item.label}</span>
+                          {/* Animated Background Glow */}
+                          <div className={`absolute inset-0 rounded-xl transition-all duration-500 ${
+                            isActive
+                              ? 'bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-pink-400/20 blur-xl'
+                              : 'bg-gradient-to-r from-blue-400/0 via-purple-400/0 to-pink-400/0 group-hover:from-blue-400/10 group-hover:via-purple-400/10 group-hover:to-pink-400/10 blur-lg'
+                          }`}></div>
+
+                          {/* Icon Container with Animation */}
+                          <div className={`relative flex items-center justify-center transition-all duration-500 ${
+                            isActive ? '' : 'group-hover:rotate-[8deg] group-hover:scale-110'
+                          }`}>
+                            {/* Icon Glow Effect */}
+                            <div className={`absolute inset-0 rounded-lg transition-all duration-500 ${
+                              isActive
+                                ? 'bg-white/30 blur-md scale-150'
+                                : 'bg-transparent group-hover:bg-gradient-to-br group-hover:from-blue-300/40 group-hover:to-purple-300/40 group-hover:blur-lg group-hover:scale-125'
+                            }`}></div>
+
+                            {/* Icon - Black & White when inactive, Colorful on hover/active */}
+                            <Icon className={`relative h-6 w-6 transition-all duration-500 ${
+                              isActive
+                                ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
+                                : 'text-gray-400 group-hover:text-transparent group-hover:bg-gradient-to-br group-hover:from-blue-500 group-hover:via-purple-500 group-hover:to-pink-500 group-hover:bg-clip-text filter group-hover:drop-shadow-[0_0_6px_rgba(59,130,246,0.5)]'
+                            }`} strokeWidth={isActive ? 2.5 : 2} />
+                          </div>
+
+                          {/* Text Label - Professional Typography */}
+                          <span className={`relative z-10 font-semibold text-sm transition-all duration-300 ${
+                            isActive
+                              ? 'text-white'
+                              : 'text-gray-700 group-hover:text-blue-700'
+                          }`}>
+                            {item.label}
+                          </span>
+
+                          {/* Active Indicator */}
+                          {isActive && (
+                            <div className="ml-auto flex items-center gap-1">
+                              <div className="relative flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-white animate-ping opacity-75"></div>
+                                <div className="w-2 h-2 rounded-full bg-white absolute shadow-lg shadow-white/50"></div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Hover Shine Effect */}
+                          <div className={`absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/10 to-transparent transition-all duration-700 ${
+                            isActive ? 'opacity-0' : 'opacity-0 group-hover:opacity-100 group-hover:translate-x-full'
+                          }`} style={{ transform: 'translateX(-100%)' }}></div>
                         </button>
                       </li>
                     );
                   })}
                 </ul>
               </nav>
+
+              {/* Footer Badge */}
+              <div className="p-4 border-t border-gray-200/50 bg-gradient-to-r from-blue-50/50 to-purple-50/50">
+                <div className="relative group cursor-pointer bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-xl p-3.5 border border-blue-200/50 hover:border-blue-300 transition-all duration-300 hover:shadow-lg hover:shadow-blue-200/50">
+                  <div className="relative flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                      <ShoppingCart className="h-5 w-5 text-white animate-pulse-slow" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">Pro Buyer</p>
+                      <p className="text-xs text-gray-600 font-medium">Premium Access ✨</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-6">
+        {/* Main Content - Mobile Responsive Padding */}
+        <main className="flex-1 p-3 sm:p-4 lg:p-6">
           {renderContent()}
         </main>
       </div>

@@ -683,7 +683,7 @@ const HomePage: React.FC = () => {
                      </Button>
 
                      {/* Mobile Hamburger Menu */}
-                     <div className="md:hidden">
+                     <div className="md:hidden -mr-2">
                        <button
                          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                          className={`transition-colors duration-300 p-2 ${

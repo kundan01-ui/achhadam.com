@@ -5,6 +5,7 @@ import { authenticatedFetch } from '../../services/tokenService';
 import { cropCacheService } from '../../services/cropCacheService';
 import { uploadCropWithMedia, type HybridCropData } from '../../services/firebaseMongoService';
 import { uploadMultipleImagesToFirebase } from '../../services/firebaseStorageService';
+import { getCurrentWeather, getWeatherForecast, getWeatherAlerts, getUserLocation } from '../../services/weatherService';
 // dataSyncService removed - using automatic database save only
 // SyncButton removed - using automatic database save only
 // ImmediateSyncButton removed - using automatic database save only
@@ -25,6 +26,8 @@ import {
   Droplets,
   Sun,
   Cloud,
+  CloudRain,
+  CloudSun,
   Wind,
   Zap,
   Sprout,
@@ -213,7 +216,8 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     bankAccountNumber: '',
     ifscCode: '',
     bankName: '',
-    branchName: ''
+    branchName: '',
+    upiId: ''
   });
   
   const [kycFiles, setKycFiles] = useState({
@@ -228,6 +232,100 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     const random = Math.random().toString(36).substr(2, 9);
     return `FARMER_KYC_${timestamp}_${random}`;
   };
+
+  // KYC Handlers
+  const handleKYCSubmit = async () => {
+    // Validate KYC data
+    if (!kycData.panNumber || !kycData.aadharNumber || !kycData.bankAccountNumber) {
+      alert('⚠️ Please fill all required fields (PAN, Aadhaar, Bank Account)');
+      return;
+    }
+
+    try {
+      // Generate Farmer KYC ID if not exists
+      const farmerKYCId = kycData.farmerKYCId || generateFarmerKYCId();
+
+      // Convert files to base64
+      const panCardBase64 = kycFiles.panCardFile ? await fileToBase64(kycFiles.panCardFile) : '';
+      const aadharFrontBase64 = kycFiles.aadharFrontFile ? await fileToBase64(kycFiles.aadharFrontFile) : '';
+      const aadharBackBase64 = kycFiles.aadharBackFile ? await fileToBase64(kycFiles.aadharBackFile) : '';
+
+      // Get actual user ID
+      const actualUserId = user?._id || user?.id || userProfile.id;
+
+      // Prepare KYC data for API
+      const kycPayload = {
+        farmerId: actualUserId,
+        farmerKYCId,
+        panNumber: kycData.panNumber,
+        aadharNumber: kycData.aadharNumber,
+        accountHolderName: kycData.accountHolderName,
+        bankAccountNumber: kycData.bankAccountNumber,
+        ifscCode: kycData.ifscCode,
+        bankName: kycData.bankName,
+        branchName: kycData.branchName,
+        upiId: kycData.upiId,
+        panCardImage: panCardBase64,
+        aadharFrontImage: aadharFrontBase64,
+        aadharBackImage: aadharBackBase64,
+        verificationStatus: 'pending',
+        submittedAt: new Date().toISOString()
+      };
+
+      console.log('📤 Submitting KYC data to database...');
+
+      // Send to backend API
+      const response = await authenticatedFetch('https://acchadam1-backend.onrender.com/api/kyc/farmer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(kycPayload)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ KYC data saved to database:', result);
+
+        // Also save to localStorage as backup
+        localStorage.setItem(`farmer_kyc_${actualUserId}`, JSON.stringify({ ...kycData, farmerKYCId }));
+
+        if (panCardBase64) localStorage.setItem(`farmer_pan_${actualUserId}`, panCardBase64);
+        if (aadharFrontBase64) localStorage.setItem(`farmer_aadhar_front_${actualUserId}`, aadharFrontBase64);
+        if (aadharBackBase64) localStorage.setItem(`farmer_aadhar_back_${actualUserId}`, aadharBackBase64);
+
+        setKycCompleted(true);
+        setShowKYCModal(false);
+        setShowCropUploadModal(true);
+        alert('✅ KYC verification submitted successfully!\n📋 Your documents are under review.');
+      } else {
+        const error = await response.json();
+        console.error('❌ KYC submission failed:', error);
+        alert('❌ Failed to submit KYC data. Please try again.');
+      }
+    } catch (error) {
+      console.error('❌ Error submitting KYC:', error);
+      alert('❌ Error submitting KYC data. Please check your connection and try again.');
+    }
+  };
+
+  // Helper function to convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleKYCSkip = () => {
+    sessionStorage.setItem('kyc_dismissed_this_session', 'true');
+    setKycDismissedThisSession(true);
+    setShowKYCModal(false);
+    setShowCropUploadModal(true);
+  };
+
   const [showCropUpload, setShowCropUpload] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -291,6 +389,12 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     createdAt: user?.createdAt || new Date().toISOString(),
     lastLogin: new Date().toISOString()
   });
+
+  // Weather data states
+  const [weatherData, setWeatherData] = useState<any>(null);
+  const [weatherForecast, setWeatherForecast] = useState<any[]>([]);
+  const [weatherAlerts, setWeatherAlerts] = useState<any[]>([]);
+  const [weatherLoading, setWeatherLoading] = useState(true);
 
   // Predefined crop categories for easy selection (farmer-friendly)
   const cropCategories = {
@@ -1534,6 +1638,42 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     }
   }, [user]);
 
+  // Fetch weather data on component mount
+  useEffect(() => {
+    const fetchWeatherData = async () => {
+      try {
+        setWeatherLoading(true);
+        console.log('🌤️ Fetching weather data...');
+
+        // Get user location
+        const location = await getUserLocation();
+        console.log('📍 Location:', location);
+
+        // Fetch current weather
+        const current = await getCurrentWeather(location.lat, location.lon);
+        setWeatherData(current);
+        console.log('✅ Current weather:', current);
+
+        // Fetch 7-day forecast
+        const forecast = await getWeatherForecast(location.lat, location.lon);
+        setWeatherForecast(forecast);
+        console.log('✅ 7-day forecast:', forecast);
+
+        // Fetch weather alerts
+        const alerts = await getWeatherAlerts(location.lat, location.lon);
+        setWeatherAlerts(alerts);
+        console.log('✅ Weather alerts:', alerts);
+
+        setWeatherLoading(false);
+      } catch (error) {
+        console.error('❌ Error fetching weather data:', error);
+        setWeatherLoading(false);
+      }
+    };
+
+    fetchWeatherData();
+  }, []);
+
   // Check KYC status on component mount
   useEffect(() => {
     // Check for any farmer KYC data in localStorage
@@ -2107,7 +2247,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               <div className="flex space-x-2 overflow-x-auto">
                 {selectedCropImages.map((image, index) => (
                   <button
-                    key={index}
+                    key={`gallery-thumb-${index}-${image?.substring(0, 20)}`}
                     onClick={() => setCurrentImageIndex(index)}
                     className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
                       index === currentImageIndex 
@@ -2440,7 +2580,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       <p className="text-sm text-gray-600 mb-2">Selected Images:</p>
                       <div className="flex flex-wrap gap-2">
                         {cropFormData.images.map((image, index) => (
-                          <div key={index} className="relative">
+                          <div key={`crop-form-img-${index}-${Date.now()}`} className="relative">
                             <img 
                               src={image instanceof File ? URL.createObjectURL(image) : image} 
                               alt={`Crop ${index + 1}`}
@@ -3682,18 +3822,18 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
   // Services Section - Professional Partner Integrations
   const renderServices = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-xl shadow-lg p-8 text-white">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-xl shadow-lg p-4 sm:p-6 md:p-8 text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <div>
-            <h2 className="text-3xl font-bold">Our Partner Network</h2>
-            <p className="text-green-50 mt-2 text-lg">Industry-leading companies providing premium agri-tech solutions</p>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">Our Partner Network</h2>
+            <p className="text-green-50 mt-1 sm:mt-2 text-sm sm:text-base md:text-lg">Industry-leading companies providing premium agri-tech solutions</p>
           </div>
-          <div className="hidden md:block">
-            <div className="bg-white/20 backdrop-blur-sm rounded-lg px-6 py-3 border border-white/30">
-              <p className="text-sm text-green-50">Trusted by</p>
-              <p className="text-2xl font-bold">50,000+ Farmers</p>
+          <div className="hidden sm:block">
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 sm:px-6 py-2 sm:py-3 border border-white/30">
+              <p className="text-xs sm:text-sm text-green-50">Trusted by</p>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold">50,000+ Farmers</p>
             </div>
           </div>
         </div>
@@ -3701,56 +3841,56 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
       {/* Drone Services - Garuda Aerospace */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center">
-                <Navigation className="h-9 w-9 text-blue-600" />
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 sm:p-6 text-white">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+            <div className="flex items-center gap-3 sm:space-x-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+                <Navigation className="h-6 w-6 sm:h-7 sm:w-7 md:h-9 md:w-9 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold">Garuda Aerospace</h3>
-                <p className="text-blue-100 text-sm">India's Leading Drone Technology Partner</p>
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold">Garuda Aerospace</h3>
+                <p className="text-blue-100 text-xs sm:text-sm">India's Leading Drone Technology Partner</p>
               </div>
             </div>
             <a
               href="https://www.garudaaerospace.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-all flex items-center space-x-2 shadow-lg"
+              className="bg-white text-blue-600 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:bg-blue-50 transition-all flex items-center justify-center gap-2 shadow-lg text-sm sm:text-base"
             >
               <span>Visit Website</span>
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
             </a>
           </div>
         </div>
-        <div className="p-6">
-          <p className="text-gray-700 mb-4 text-lg">
+        <div className="p-4 sm:p-6">
+          <p className="text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base md:text-lg">
             Advanced Kisan Drones for precision agriculture - spray pesticides, fertilizers, and monitor crop health with cutting-edge technology.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-              <div className="flex items-center space-x-3 mb-2">
-                <Sprout className="h-6 w-6 text-blue-600" />
-                <h4 className="font-semibold text-gray-900">Precision Spraying</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            <div className="bg-blue-50 rounded-lg p-3 sm:p-4 border border-blue-100">
+              <div className="flex items-center gap-2 sm:space-x-3 mb-2">
+                <Sprout className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 flex-shrink-0" />
+                <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Precision Spraying</h4>
               </div>
-              <p className="text-sm text-gray-600">Save 90% water & 30% chemicals</p>
-              <p className="text-blue-600 font-bold mt-2">₹300/acre</p>
+              <p className="text-xs sm:text-sm text-gray-600">Save 90% water & 30% chemicals</p>
+              <p className="text-blue-600 font-bold mt-1 sm:mt-2 text-sm sm:text-base">₹300/acre</p>
             </div>
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-              <div className="flex items-center space-x-3 mb-2">
-                <Eye className="h-6 w-6 text-blue-600" />
-                <h4 className="font-semibold text-gray-900">Crop Monitoring</h4>
+            <div className="bg-blue-50 rounded-lg p-3 sm:p-4 border border-blue-100">
+              <div className="flex items-center gap-2 sm:space-x-3 mb-2">
+                <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 flex-shrink-0" />
+                <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Crop Monitoring</h4>
               </div>
-              <p className="text-sm text-gray-600">Real-time health analytics</p>
-              <p className="text-blue-600 font-bold mt-2">₹500/acre</p>
+              <p className="text-xs sm:text-sm text-gray-600">Real-time health analytics</p>
+              <p className="text-blue-600 font-bold mt-1 sm:mt-2 text-sm sm:text-base">₹500/acre</p>
             </div>
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-              <div className="flex items-center space-x-3 mb-2">
-                <Clock className="h-6 w-6 text-blue-600" />
-                <h4 className="font-semibold text-gray-900">Fast Service</h4>
+            <div className="bg-blue-50 rounded-lg p-3 sm:p-4 border border-blue-100">
+              <div className="flex items-center gap-2 sm:space-x-3 mb-2">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 flex-shrink-0" />
+                <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Fast Service</h4>
               </div>
-              <p className="text-sm text-gray-600">1 acre in 10 minutes</p>
-              <p className="text-blue-600 font-bold mt-2">10x Faster</p>
+              <p className="text-xs sm:text-sm text-gray-600">1 acre in 10 minutes</p>
+              <p className="text-blue-600 font-bold mt-1 sm:mt-2 text-sm sm:text-base">10x Faster</p>
             </div>
           </div>
         </div>
@@ -3758,38 +3898,38 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
       {/* Seeds & Fertilizers - Bayer & Syngenta */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300">
-        <div className="bg-gradient-to-r from-green-600 to-green-700 p-6 text-white">
+        <div className="bg-gradient-to-r from-green-600 to-green-700 p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold mb-2">Premium Seeds & Crop Protection</h3>
-              <p className="text-green-100">Powered by Global Leaders</p>
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2">Premium Seeds & Crop Protection</h3>
+              <p className="text-green-100 text-xs sm:text-sm md:text-base">Powered by Global Leaders</p>
             </div>
           </div>
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Bayer Crop Science */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200 hover:border-green-400 transition-all">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-md">
-                  <Leaf className="h-8 w-8 text-green-600" />
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 sm:p-6 border-2 border-green-200 hover:border-green-400 transition-all">
+              <div className="flex items-center gap-2 sm:space-x-3 mb-3 sm:mb-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                  <Leaf className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-gray-900">Bayer Crop Science</h4>
-                  <p className="text-sm text-green-700">Global Crop Protection Leader</p>
+                  <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Bayer Crop Science</h4>
+                  <p className="text-xs sm:text-sm text-green-700">Global Crop Protection Leader</p>
                 </div>
               </div>
-              <ul className="space-y-2 mb-4">
-                <li className="flex items-center space-x-2 text-gray-700">
-                  <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+              <ul className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
+                <li className="flex items-center gap-2 sm:space-x-2 text-gray-700 text-sm sm:text-base">
+                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
                   <span>Hybrid Seeds - High Yield Varieties</span>
                 </li>
-                <li className="flex items-center space-x-2 text-gray-700">
-                  <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                <li className="flex items-center gap-2 sm:space-x-2 text-gray-700 text-sm sm:text-base">
+                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
                   <span>Crop Protection Solutions</span>
                 </li>
-                <li className="flex items-center space-x-2 text-gray-700">
-                  <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                <li className="flex items-center gap-2 sm:space-x-2 text-gray-700 text-sm sm:text-base">
+                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
                   <span>Digital Farming Tools</span>
                 </li>
               </ul>
@@ -3797,35 +3937,35 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                 href="https://www.bayer.com/en/in/india-home"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-all shadow-md w-full justify-center"
+                className="inline-flex items-center gap-2 bg-green-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-green-700 transition-all shadow-md w-full justify-center text-sm sm:text-base"
               >
                 <span>Explore Products</span>
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
               </a>
             </div>
 
             {/* Syngenta India */}
-            <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-6 border-2 border-yellow-200 hover:border-yellow-400 transition-all">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shadow-md">
-                  <Sprout className="h-8 w-8 text-yellow-600" />
+            <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-4 sm:p-6 border-2 border-yellow-200 hover:border-yellow-400 transition-all">
+              <div className="flex items-center gap-2 sm:space-x-3 mb-3 sm:mb-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                  <Sprout className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600" />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-gray-900">Syngenta India</h4>
-                  <p className="text-sm text-yellow-700">Agricultural Innovation Pioneer</p>
+                  <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Syngenta India</h4>
+                  <p className="text-xs sm:text-sm text-yellow-700">Agricultural Innovation Pioneer</p>
                 </div>
               </div>
-              <ul className="space-y-2 mb-4">
-                <li className="flex items-center space-x-2 text-gray-700">
-                  <CheckCircle2 className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+              <ul className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
+                <li className="flex items-center gap-2 sm:space-x-2 text-gray-700 text-sm sm:text-base">
+                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 flex-shrink-0" />
                   <span>Certified Quality Seeds</span>
                 </li>
-                <li className="flex items-center space-x-2 text-gray-700">
-                  <CheckCircle2 className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+                <li className="flex items-center gap-2 sm:space-x-2 text-gray-700 text-sm sm:text-base">
+                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 flex-shrink-0" />
                   <span>Integrated Pest Management</span>
                 </li>
-                <li className="flex items-center space-x-2 text-gray-700">
-                  <CheckCircle2 className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+                <li className="flex items-center gap-2 sm:space-x-2 text-gray-700 text-sm sm:text-base">
+                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 flex-shrink-0" />
                   <span>Agronomic Support & Training</span>
                 </li>
               </ul>
@@ -3833,10 +3973,10 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                 href="https://www.syngenta.co.in/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center space-x-2 bg-yellow-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-yellow-700 transition-all shadow-md w-full justify-center"
+                className="inline-flex items-center gap-2 bg-yellow-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-yellow-700 transition-all shadow-md w-full justify-center text-sm sm:text-base"
               >
                 <span>Explore Products</span>
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
               </a>
             </div>
           </div>
@@ -3845,16 +3985,16 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
 
       {/* IoT & Agri-Tech - CropIn & Fasal */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300">
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-6 text-white">
+        <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold mb-2">Smart Farming Technology</h3>
-              <p className="text-purple-100">AI & IoT-Powered Farm Intelligence</p>
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2">Smart Farming Technology</h3>
+              <p className="text-purple-100 text-xs sm:text-sm md:text-base">AI & IoT-Powered Farm Intelligence</p>
             </div>
           </div>
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* CropIn */}
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border-2 border-purple-200 hover:border-purple-400 transition-all">
               <div className="flex items-center space-x-3 mb-4">
@@ -3931,18 +4071,18 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       </div>
 
       {/* Call to Action */}
-      <div className="bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 rounded-xl shadow-lg p-8 text-white text-center">
-        <h3 className="text-2xl font-bold mb-3">Ready to Transform Your Farm?</h3>
-        <p className="text-green-50 mb-6 text-lg">
+      <div className="bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 rounded-xl shadow-lg p-6 sm:p-8 text-white text-center">
+        <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">Ready to Transform Your Farm?</h3>
+        <p className="text-green-50 mb-4 sm:mb-6 text-sm sm:text-base md:text-lg">
           Connect with our partner network and access world-class agricultural technology and services
         </p>
-        <div className="flex flex-wrap justify-center gap-4">
-          <button className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-green-50 transition-all shadow-lg flex items-center space-x-2">
-            <Phone className="h-5 w-5" />
+        <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
+          <button className="bg-white text-green-600 px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-green-50 transition-all shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base">
+            <Phone className="h-4 w-4 sm:h-5 sm:w-5" />
             <span>Contact Support</span>
           </button>
-          <button className="bg-green-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-400 transition-all shadow-lg flex items-center space-x-2">
-            <MessageCircle className="h-5 w-5" />
+          <button className="bg-green-500 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-green-400 transition-all shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base">
+            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
             <span>Schedule Consultation</span>
           </button>
         </div>
@@ -4162,27 +4302,82 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         </div>
       </div>
 
-      {/* Weather Alert - Real Practical Feature - Clickable */}
-      <div 
-        className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-300 hover:scale-105"
-        onClick={() => setActiveTab('analytics')}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-              <Sun className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm">Weather Alert</h3>
-              <p className="text-xs opacity-90">Heavy rain expected in 2 hours</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-xs opacity-90">Temperature</p>
-            <p className="text-lg font-bold">28°C</p>
+      {/* Real-Time Weather Widget - Clickable */}
+      {weatherLoading ? (
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white">
+          <div className="flex items-center justify-center space-x-3">
+            <RefreshCw className="h-5 w-5 animate-spin" />
+            <p className="text-sm">Loading weather data...</p>
           </div>
         </div>
-      </div>
+      ) : weatherData ? (
+        <div
+          className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-300 hover:scale-[1.02]"
+          onClick={() => setActiveTab('weather')}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                {weatherData.condition.toLowerCase().includes('rain') ? (
+                  <CloudRain className="h-5 w-5" />
+                ) : weatherData.condition.toLowerCase().includes('cloud') ? (
+                  <CloudSun className="h-5 w-5" />
+                ) : (
+                  <Sun className="h-5 w-5" />
+                )}
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Weather Update</h3>
+                <p className="text-xs opacity-90">{weatherData.condition} • {weatherData.location}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold">{weatherData.temperature}°C</p>
+              <p className="text-xs opacity-90">Humidity: {weatherData.humidity}%</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* 7-Day Weather Forecast - Clickable */}
+      {!weatherLoading && weatherForecast && weatherForecast.length > 0 && (
+        <div
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-blue-200 transition-all duration-300"
+          onClick={() => setActiveTab('weather')}
+        >
+          <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center justify-between">
+            <span className="flex items-center">
+              <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+              7-Day Forecast
+            </span>
+            <span className="text-xs text-blue-600">View Details →</span>
+          </h3>
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+            {weatherForecast.slice(0, 7).map((day, index) => (
+              <div
+                key={`weather-${day.day}-${index}`}
+                className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-lg p-2 text-center"
+              >
+                <p className="text-xs font-medium text-gray-600 mb-1 truncate">{day.day}</p>
+                <div className="w-8 h-8 mx-auto mb-1 flex items-center justify-center">
+                  {day.condition.toLowerCase().includes('rain') ? (
+                    <CloudRain className="h-6 w-6 text-blue-600" />
+                  ) : day.condition.toLowerCase().includes('cloud') ? (
+                    <CloudSun className="h-6 w-6 text-gray-600" />
+                  ) : (
+                    <Sun className="h-6 w-6 text-yellow-500" />
+                  )}
+                </div>
+                <p className="text-sm font-bold text-gray-900 mb-1">{day.temperature}°</p>
+                <div className="flex items-center justify-center space-x-1">
+                  <Droplets className="h-3 w-3 text-blue-500" />
+                  <p className="text-xs text-blue-600">{Math.round(day.rainChance)}%</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Crop Health Status - Dynamic Real Data */}
       <div
@@ -4504,149 +4699,6 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                   Refresh
                 </button>
                 <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
-                  Settings
-                </button>
-              </div>
-            </div>
-
-            {/* Orders Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">Pending</p>
-                    <p className="text-2xl font-bold text-orange-600">6</p>
-                  </div>
-                  <Clock className="h-8 w-8 text-orange-600" />
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">Confirmed</p>
-                    <p className="text-2xl font-bold text-blue-600">12</p>
-                  </div>
-                  <Package className="h-8 w-8 text-blue-600" />
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">Shipped</p>
-                    <p className="text-2xl font-bold text-purple-600">8</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-purple-600" />
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">Delivered</p>
-                    <p className="text-2xl font-bold text-green-600">24</p>
-                  </div>
-                  <Leaf className="h-8 w-8 text-green-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Orders List */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Recent Orders</h3>
-              </div>
-              <div className="divide-y divide-gray-200">
-                {/* Order 1 */}
-                <div className="p-4 hover:bg-gray-50">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                          <Wheat className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900">Wheat - 50 Quintals</h4>
-                          <p className="text-xs text-gray-500">Order #ORD-001 • Buyer: Agro Traders</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-2 sm:mt-0 flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">₹1,22,500</p>
-                        <p className="text-xs text-gray-500">₹2,450/quintal</p>
-                      </div>
-                      <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
-                        Pending
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Order 2 */}
-                <div className="p-4 hover:bg-gray-50">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Carrot className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900">Rice - 30 Quintals</h4>
-                          <p className="text-xs text-gray-500">Order #ORD-002 • Buyer: Food Corp</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-2 sm:mt-0 flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">₹96,000</p>
-                        <p className="text-xs text-gray-500">₹3,200/quintal</p>
-                      </div>
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                        Confirmed
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Order 3 */}
-                <div className="p-4 hover:bg-gray-50">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                          <Apple className="h-5 w-5 text-red-600" />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900">Tomato - 200 kg</h4>
-                          <p className="text-xs text-gray-500">Order #ORD-003 • Buyer: Local Market</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-2 sm:mt-0 flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">₹9,000</p>
-                        <p className="text-xs text-gray-500">₹45/kg</p>
-                      </div>
-                      <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                        Delivered
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      case 'weather':
-        return (
-          <div className="space-y-4">
-            {/* Weather Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Weather & Climate</h2>
-              <div className="mt-2 sm:mt-0 flex space-x-2">
-                <button className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
-                  Refresh
-                </button>
-                <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
                   Forecast
                 </button>
               </div>
@@ -4814,7 +4866,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
       
       <div className="min-h-screen bg-gray-50">
         {/* Mobile Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200">
+        <header className="bg-gradient-to-r from-sky-100 via-emerald-100 to-teal-100 shadow-sm border-b border-sky-200">
           <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
             <div className="flex justify-between items-center py-3 md:py-4">
               <div className="flex items-center space-x-2 md:space-x-4">
@@ -4927,100 +4979,229 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         {/* Mobile Sidebar */}
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-40 flex md:hidden">
-            {/* Overlay */}
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setMobileMenuOpen(false)}></div>
-            
-            {/* Sidebar */}
-            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-              <div className="absolute top-0 right-0 -mr-12 pt-2">
-                <button 
+            {/* Backdrop with blur */}
+            <div
+              className="fixed inset-0 bg-gradient-to-br from-black/60 via-black/50 to-black/60 backdrop-blur-sm"
+              onClick={() => setMobileMenuOpen(false)}
+            ></div>
+
+            {/* Sidebar Panel */}
+            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-gradient-to-b from-slate-50 via-gray-50 to-white shadow-2xl animate-slide-in-left">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200/50 bg-gradient-to-r from-green-50 to-emerald-50">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 flex items-center justify-center shadow-lg">
+                    <Leaf className="h-5 w-5 text-white" />
+                  </div>
+                  <h2 className="text-lg font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    Farmer Menu
+                  </h2>
+                </div>
+                <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                  className="p-2 rounded-lg hover:bg-white/80 transition-all duration-300 hover:scale-110 active:scale-95"
                 >
-                  <X className="h-6 w-6 text-white" />
+                  <X className="h-5 w-5 text-gray-600" />
                 </button>
               </div>
-              
-              <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-                <div className="flex-shrink-0 flex items-center px-4">
-                  <h2 className="text-xl font-bold text-green-600">Achhadam</h2>
-                </div>
-                <nav className="mt-5 px-2 space-y-1">
+
+              {/* Navigation */}
+              <nav className="flex-1 p-3 overflow-y-auto">
+                <ul className="space-y-1.5">
                   {[
-                    { id: 'overview', name: 'Overview', icon: LayoutDashboard },
-                    { id: 'crop-upload', name: 'Upload Crop', icon: Plus },
-                    { id: 'marketplace', name: 'Marketplace', icon: Package },
-                    { id: 'orders', name: 'Orders', icon: ShoppingCart },
-                    { id: 'analytics', name: 'Analytics', icon: TrendingUp },
-                    { id: 'services', name: 'Services', icon: Leaf },
-                    { id: 'financial', name: 'Financial', icon: DollarSign },
-                    { id: 'weather', name: 'Weather', icon: Sun },
-                    { id: 'settings', name: 'Settings', icon: Settings }
-                  ].map((item) => {
+                    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+                    { id: 'crop-upload', label: 'Upload Crop', icon: Plus },
+                    { id: 'marketplace', label: 'Marketplace', icon: Package },
+                    { id: 'orders', label: 'Orders', icon: ShoppingCart },
+                    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+                    { id: 'services', label: 'Services', icon: Leaf },
+                    { id: 'financial', label: 'Financial', icon: DollarSign },
+                    { id: 'weather', label: 'Weather', icon: Sun },
+                    { id: 'settings', label: 'Settings', icon: Settings }
+                  ].map((item, index) => {
                     const Icon = item.icon;
+                    const isActive = activeTab === item.id;
                     return (
-                      <button
+                      <li
                         key={item.id}
-                        onClick={() => {
-                          setActiveTab(item.id);
-                          setMobileMenuOpen(false);
-                        }}
-                        className={`w-full flex items-center px-3 py-3 text-base font-medium rounded-md ${
-                          activeTab === item.id
-                            ? 'bg-gray-100 text-gray-900'
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
+                        className="animate-fade-in"
+                        style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <Icon className="mr-3 h-5 w-5" />
-                        {item.name}
-                      </button>
+                        <button
+                          onClick={() => {
+                            setActiveTab(item.id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`group relative w-full flex items-center gap-1 px-4 py-3.5 rounded-xl transition-all duration-300 transform ${
+                            isActive
+                              ? 'bg-gradient-to-r from-green-500 via-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/40 scale-[1.02]'
+                              : 'text-gray-500 hover:bg-white hover:shadow-lg hover:shadow-gray-200/50 hover:scale-[1.02] active:scale-[0.98]'
+                          }`}
+                        >
+                          {/* Animated Background Glow */}
+                          <div className={`absolute inset-0 rounded-xl transition-all duration-500 ${
+                            isActive
+                              ? 'bg-gradient-to-r from-green-400/20 via-emerald-400/20 to-teal-400/20 blur-xl'
+                              : 'bg-gradient-to-r from-green-400/0 via-emerald-400/0 to-teal-400/0 group-hover:from-green-400/10 group-hover:via-emerald-400/10 group-hover:to-teal-400/10 blur-lg'
+                          }`}></div>
+
+                          {/* Icon Container with Animation */}
+                          <div className={`relative flex items-center justify-center transition-all duration-500 ${
+                            isActive ? '' : 'group-hover:rotate-[8deg] group-hover:scale-110'
+                          }`}>
+                            {/* Icon Glow Effect */}
+                            <div className={`absolute inset-0 rounded-lg transition-all duration-500 ${
+                              isActive
+                                ? 'bg-white/30 blur-md scale-150'
+                                : 'bg-transparent group-hover:bg-gradient-to-br group-hover:from-green-300/40 group-hover:to-emerald-300/40 group-hover:blur-lg group-hover:scale-125'
+                            }`}></div>
+
+                            {/* Icon - Black & White when inactive, Colorful on hover/active */}
+                            <Icon className={`relative h-6 w-6 transition-all duration-500 ${
+                              isActive
+                                ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
+                                : 'text-gray-400 group-hover:text-transparent group-hover:bg-gradient-to-br group-hover:from-green-500 group-hover:via-emerald-500 group-hover:to-teal-500 group-hover:bg-clip-text filter group-hover:drop-shadow-[0_0_6px_rgba(16,185,129,0.5)]'
+                            }`} strokeWidth={isActive ? 2.5 : 2} />
+                          </div>
+
+                          {/* Text Label - Professional Typography */}
+                          <span className={`relative z-10 font-semibold text-sm transition-all duration-300 ${
+                            isActive
+                              ? 'text-white'
+                              : 'text-gray-700 group-hover:text-green-700'
+                          }`}>
+                            {item.label}
+                          </span>
+
+                          {/* Active Indicator */}
+                          {isActive && (
+                            <div className="ml-auto flex items-center gap-1">
+                              <div className="relative flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-white animate-ping opacity-75"></div>
+                                <div className="w-2 h-2 rounded-full bg-white absolute shadow-lg shadow-white/50"></div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Hover Shine Effect */}
+                          <div className={`absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/10 to-transparent transition-all duration-700 ${
+                            isActive ? 'opacity-0' : 'opacity-0 group-hover:opacity-100 group-hover:translate-x-full'
+                          }`} style={{ transform: 'translateX(-100%)' }}></div>
+                        </button>
+                      </li>
                     );
                   })}
-                </nav>
+                </ul>
+              </nav>
+
+              {/* Footer Badge */}
+              <div className="p-4 border-t border-gray-200/50 bg-gradient-to-r from-green-50/50 to-emerald-50/50">
+                <div className="relative group cursor-pointer bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-xl p-3.5 border border-green-200/50 hover:border-green-300 transition-all duration-300 hover:shadow-lg hover:shadow-green-200/50">
+                  <div className="relative flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 flex items-center justify-center shadow-lg">
+                      <Leaf className="h-5 w-5 text-white animate-pulse-slow" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">Pro Farmer</p>
+                      <p className="text-xs text-gray-600 font-medium">Premium Access ✨</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex-shrink-0 w-14" aria-hidden="true">
-              {/* Dummy element to force sidebar to shrink to fit close icon */}
             </div>
           </div>
         )}
 
         <div className="flex">
-          {/* Desktop Sidebar */}
-          <div className={`hidden md:block ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-sm transition-all duration-300`}>
-            <nav className="mt-5 px-2">
-              <div className="space-y-1">
-                {[
-                  { id: 'overview', name: 'Overview', icon: LayoutDashboard },
-                  { id: 'crop-upload', name: 'Upload Crop', icon: Plus },
-                  { id: 'marketplace', name: 'Marketplace', icon: Package },
-                  { id: 'orders', name: 'Orders', icon: ShoppingCart },
-                  { id: 'analytics', name: 'Analytics', icon: TrendingUp },
-                  { id: 'services', name: 'Services', icon: Leaf },
-                  { id: 'financial', name: 'Financial', icon: DollarSign },
-                  { id: 'weather', name: 'Weather', icon: Sun },
-                  { id: 'settings', name: 'Settings', icon: Settings }
-                ].map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center px-3 py-3 text-base font-medium rounded-md ${
-                        activeTab === item.id
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      }`}
-                    >
-                      <Icon className="mr-3 h-5 w-5" />
-                      {!sidebarCollapsed && item.name}
-                    </button>
-                  );
-                })}
+          {/* Desktop Sidebar - Attractive Sky Blue + Light Green Gradient */}
+          <aside className={`hidden md:flex md:flex-col ${sidebarCollapsed ? 'w-20' : 'w-64'} bg-gradient-to-br from-sky-50 via-emerald-50 to-teal-50 shadow-2xl border-r-2 border-sky-200/60 transition-all duration-300`}>
+            {/* Scrollable Navigation Area */}
+            <div className="flex-1 overflow-y-auto">
+              <nav className="p-4 mt-2">
+                <ul className="space-y-2">
+                  {[
+                    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+                    { id: 'crop-upload', label: 'Upload Crop', icon: Plus },
+                    { id: 'marketplace', label: 'Marketplace', icon: Package },
+                    { id: 'orders', label: 'Orders', icon: ShoppingCart },
+                    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+                    { id: 'services', label: 'Services', icon: Leaf },
+                    { id: 'financial', label: 'Financial', icon: DollarSign },
+                    { id: 'weather', label: 'Weather', icon: Sun },
+                    { id: 'settings', label: 'Settings', icon: Settings }
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+                    return (
+                      <li key={item.id}>
+                        <button
+                          onClick={() => setActiveTab(item.id)}
+                          className={`group relative w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 overflow-hidden ${
+                            isActive
+                              ? 'bg-gradient-to-r from-sky-400 via-emerald-400 to-teal-400 text-white shadow-xl shadow-emerald-300/60 scale-105'
+                              : 'text-gray-700 hover:bg-gradient-to-r hover:from-sky-100 hover:via-emerald-100 hover:to-teal-100 hover:shadow-lg hover:shadow-emerald-200/60 hover:scale-102'
+                          } ${sidebarCollapsed ? 'justify-center' : ''}`}
+                        >
+                          {/* Animated Gradient Background on Hover - Sky Blue + Light Green */}
+                          {!isActive && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-sky-300/0 via-emerald-300/0 to-teal-300/0 group-hover:from-sky-300/70 group-hover:via-emerald-300/70 group-hover:to-teal-300/70 transition-all duration-500"></div>
+                          )}
+
+                          {/* Icon with Attractive Styling */}
+                          <div className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
+                            isActive
+                              ? 'bg-white/20 shadow-lg scale-110'
+                              : 'bg-gradient-to-br from-sky-100 to-emerald-100 group-hover:from-sky-300 group-hover:to-teal-300 group-hover:scale-110 group-hover:rotate-6'
+                          }`}>
+                            <Icon className={`h-5 w-5 transition-all duration-300 ${
+                              isActive
+                                ? 'text-white drop-shadow-lg'
+                                : 'text-sky-600 group-hover:text-emerald-700'
+                            }`} strokeWidth={2.5} />
+                          </div>
+
+                          {/* Text Label with Better Typography */}
+                          {!sidebarCollapsed && (
+                            <span className={`relative z-10 font-semibold text-sm transition-all duration-300 ${
+                              isActive
+                                ? 'text-white'
+                                : 'text-gray-700 group-hover:text-emerald-700'
+                            }`}>
+                              {item.label}
+                            </span>
+                          )}
+
+                          {/* Active Indicator */}
+                          {isActive && !sidebarCollapsed && (
+                            <div className="ml-auto relative z-10">
+                              <div className="w-2 h-2 rounded-full bg-white shadow-lg animate-pulse"></div>
+                            </div>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </nav>
+            </div>
+
+            {/* Fixed Footer - No Scroll Conflict */}
+            {!sidebarCollapsed && (
+              <div className="flex-shrink-0 p-4 border-t border-sky-200/40 bg-gradient-to-t from-sky-50 to-transparent">
+                <div className="bg-gradient-to-r from-sky-400 via-emerald-400 to-teal-400 rounded-2xl p-3 shadow-xl">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-white/30 backdrop-blur-sm rounded-lg flex-shrink-0">
+                      <Leaf className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-white truncate">Pro Farmer</p>
+                      <p className="text-[10px] text-white/80 truncate">Premium ⭐</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </nav>
-          </div>
+            )}
+          </aside>
 
           {/* Main Content */}
           <div className="flex-1 p-3 sm:p-4 md:p-6">
@@ -5031,6 +5212,166 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             </main>
           </div>
         </div>
+
+        {/* KYC Verification Modal */}
+        {showKYCModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="sticky top-0 bg-gradient-to-r from-green-500 to-emerald-600 p-6 rounded-t-2xl">
+                <h2 className="text-2xl font-bold text-white">🔐 KYC Verification Required</h2>
+                <p className="text-green-50 mt-2">Complete your verification to start selling crops</p>
+              </div>
+
+              {/* Form */}
+              <div className="p-6 space-y-6">
+                {/* PAN Card Section */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    📄 PAN Card Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ABCDE1234F"
+                    value={kycData.panNumber}
+                    onChange={(e) => setKycData({ ...kycData, panNumber: e.target.value.toUpperCase() })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    maxLength={10}
+                  />
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => setKycFiles({ ...kycFiles, panCardFile: e.target.files?.[0] || null })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  />
+                  {kycFiles.panCardFile && (
+                    <p className="text-sm text-green-600">✓ {kycFiles.panCardFile.name}</p>
+                  )}
+                </div>
+
+                {/* Aadhaar Card Section */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    🪪 Aadhaar Card Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="1234 5678 9012"
+                    value={kycData.aadharNumber}
+                    onChange={(e) => setKycData({ ...kycData, aadharNumber: e.target.value.replace(/\D/g, '') })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    maxLength={12}
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-2">Front Side</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setKycFiles({ ...kycFiles, aadharFrontFile: e.target.files?.[0] || null })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500"
+                      />
+                      {kycFiles.aadharFrontFile && (
+                        <p className="text-xs text-green-600 mt-1">✓ {kycFiles.aadharFrontFile.name}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-2">Back Side</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setKycFiles({ ...kycFiles, aadharBackFile: e.target.files?.[0] || null })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500"
+                      />
+                      {kycFiles.aadharBackFile && (
+                        <p className="text-xs text-green-600 mt-1">✓ {kycFiles.aadharBackFile.name}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bank Details Section */}
+                <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="font-semibold text-blue-900 flex items-center gap-2">
+                    🏦 Bank Account Details <span className="text-red-500">*</span>
+                  </h3>
+
+                  <input
+                    type="text"
+                    placeholder="Account Holder Name"
+                    value={kycData.accountHolderName}
+                    onChange={(e) => setKycData({ ...kycData, accountHolderName: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Bank Account Number"
+                    value={kycData.bankAccountNumber}
+                    onChange={(e) => setKycData({ ...kycData, bankAccountNumber: e.target.value.replace(/\D/g, '') })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="IFSC Code"
+                    value={kycData.ifscCode}
+                    onChange={(e) => setKycData({ ...kycData, ifscCode: e.target.value.toUpperCase() })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    maxLength={11}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      placeholder="Bank Name"
+                      value={kycData.bankName}
+                      onChange={(e) => setKycData({ ...kycData, bankName: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Branch Name"
+                      value={kycData.branchName}
+                      onChange={(e) => setKycData({ ...kycData, branchName: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* UPI ID Section */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    💳 UPI ID (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="yourname@paytm"
+                    value={kycData.upiId}
+                    onChange={(e) => setKycData({ ...kycData, upiId: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+              </div>
+
+              {/* Footer Buttons */}
+              <div className="sticky bottom-0 bg-gray-50 p-6 rounded-b-2xl border-t border-gray-200 flex gap-3">
+                <button
+                  onClick={handleKYCSkip}
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                >
+                  Complete Later
+                </button>
+                <button
+                  onClick={handleKYCSubmit}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg"
+                >
+                  Submit & Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Profile Modal */}
         <ProfileModal

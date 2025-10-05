@@ -782,7 +782,7 @@ const TransporterDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+      <header className="bg-gradient-to-r from-sky-100 via-cyan-100 to-teal-100 shadow-sm border-b border-sky-200 sticky top-0 z-40">
         <div className="px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 sm:space-x-4">
@@ -906,71 +906,184 @@ const TransporterDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({
       </header>
 
       <div className="flex">
-        {/* Desktop Sidebar */}
-        <aside className={`hidden lg:block ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-sm border-r border-gray-200 transition-all duration-300`}>
-          <nav className="p-4">
-            <ul className="space-y-2">
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <li key={item.id}>
-                    <button
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
-                        activeTab === item.id
-                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      }`}
-                    >
-                      <Icon className={`h-5 w-5 ${sidebarCollapsed ? 'mx-auto' : ''}`} />
-                      {!sidebarCollapsed && <span className="font-medium">{item.label}</span>}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+        {/* Desktop Sidebar - Attractive Gradient Design */}
+        <aside className={`hidden lg:flex lg:flex-col ${sidebarCollapsed ? 'w-20' : 'w-64'} bg-gradient-to-br from-sky-50 via-cyan-50 to-teal-50 shadow-2xl border-r-2 border-sky-200/60 transition-all duration-300`}>
+          {/* Scrollable Navigation Area */}
+          <div className="flex-1 overflow-y-auto">
+            <nav className="p-4 mt-2">
+              <ul className="space-y-2">
+                {navigationItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <li key={item.id}>
+                      <button
+                        onClick={() => setActiveTab(item.id)}
+                        className={`group relative w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 overflow-hidden ${
+                          isActive
+                            ? 'bg-gradient-to-r from-sky-400 via-cyan-400 to-teal-400 text-white shadow-xl shadow-cyan-300/60 scale-105'
+                            : 'text-gray-700 hover:bg-gradient-to-r hover:from-sky-100 hover:via-cyan-100 hover:to-teal-100 hover:shadow-lg hover:shadow-cyan-200/60 hover:scale-102'
+                        } ${sidebarCollapsed ? 'justify-center' : ''}`}
+                      >
+                        {/* Animated Gradient Background on Hover - Sky Blue + Light Green Mix */}
+                        {!isActive && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-sky-300/0 via-cyan-300/0 to-emerald-300/0 group-hover:from-sky-300/60 group-hover:via-cyan-300/60 group-hover:to-emerald-300/60 transition-all duration-500"></div>
+                        )}
+
+                        {/* Icon with Attractive Styling */}
+                        <div className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
+                          isActive
+                            ? 'bg-white/20 shadow-lg scale-110'
+                            : 'bg-gradient-to-br from-sky-100 to-teal-100 group-hover:from-sky-300 group-hover:to-emerald-300 group-hover:scale-110 group-hover:rotate-6'
+                        }`}>
+                          <Icon className={`h-5 w-5 transition-all duration-300 ${
+                            isActive
+                              ? 'text-white drop-shadow-lg'
+                              : 'text-sky-600 group-hover:text-teal-700'
+                          }`} strokeWidth={2.5} />
+                        </div>
+
+                        {/* Text Label with Better Typography */}
+                        {!sidebarCollapsed && (
+                          <span className={`relative z-10 font-semibold text-sm transition-all duration-300 ${
+                            isActive
+                              ? 'text-white'
+                              : 'text-gray-700 group-hover:text-teal-700'
+                          }`}>
+                            {item.label}
+                          </span>
+                        )}
+
+                        {/* Active Indicator */}
+                        {isActive && !sidebarCollapsed && (
+                          <div className="ml-auto relative z-10">
+                            <div className="w-2 h-2 rounded-full bg-white shadow-lg animate-pulse"></div>
+                          </div>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          </div>
+
+          {/* Fixed Footer - No Scroll Conflict */}
+          {!sidebarCollapsed && (
+            <div className="flex-shrink-0 p-4 border-t border-sky-200/40 bg-gradient-to-t from-sky-50 to-transparent">
+              <div className="bg-gradient-to-r from-sky-400 via-cyan-400 to-teal-400 rounded-2xl p-3 shadow-xl">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-white/30 backdrop-blur-sm rounded-lg flex-shrink-0">
+                    <Truck className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-white truncate">Pro Transporter</p>
+                    <p className="text-[10px] text-white/80 truncate">Premium ⭐</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </aside>
 
-        {/* Mobile Sidebar Overlay */}
+        {/* Mobile Sidebar Overlay - Professional Design */}
         {mobileMenuOpen && (
           <div className="lg:hidden fixed inset-0 z-50 flex">
-            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setMobileMenuOpen(false)}></div>
-            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}></div>
+            <div className="relative flex-1 flex flex-col max-w-sm w-full bg-gradient-to-b from-gray-50 to-white shadow-2xl animate-slide-in-left">
+              {/* Mobile Header */}
+              <div className="flex items-center justify-between p-5 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
+                    <Truck className="h-5 w-5 text-white" />
+                  </div>
+                  <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Navigation</h2>
+                </div>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 active:scale-95"
                 >
                   <X className="h-5 w-5 text-gray-600" />
                 </button>
               </div>
-              <nav className="flex-1 p-4">
-                <ul className="space-y-2">
-                  {navigationItems.map((item) => {
+
+              {/* Mobile Nav */}
+              <nav className="flex-1 p-4 overflow-y-auto">
+                <ul className="space-y-1.5">
+                  {navigationItems.map((item, index) => {
                     const Icon = item.icon;
+                    const isActive = activeTab === item.id;
                     return (
-                      <li key={item.id}>
+                      <li
+                        key={item.id}
+                        style={{ animationDelay: `${index * 50}ms` }}
+                        className="animate-fade-in"
+                      >
                         <button
                           onClick={() => {
                             setActiveTab(item.id);
                             setMobileMenuOpen(false);
                           }}
-                          className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors ${
-                            activeTab === item.id
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          className={`group relative w-full flex items-center gap-1 px-4 py-3 rounded-2xl transition-all duration-300 overflow-hidden ${
+                            isActive
+                              ? 'bg-gradient-to-r from-sky-400 via-cyan-400 to-teal-400 text-white shadow-xl shadow-cyan-300/60 scale-105'
+                              : 'text-gray-700 hover:bg-gradient-to-r hover:from-sky-100 hover:via-cyan-100 hover:to-teal-100 hover:shadow-lg hover:shadow-cyan-200/60 hover:scale-102'
                           }`}
                         >
-                          <Icon className="h-5 w-5" />
-                          <span className="font-medium">{item.label}</span>
+                          {/* Animated Gradient Background on Hover - Sky Blue + Light Green Mix */}
+                          {!isActive && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-sky-300/0 via-cyan-300/0 to-emerald-300/0 group-hover:from-sky-300/60 group-hover:via-cyan-300/60 group-hover:to-emerald-300/60 transition-all duration-500"></div>
+                          )}
+
+                          {/* Icon with Attractive Styling */}
+                          <div className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
+                            isActive
+                              ? 'bg-white/20 shadow-lg scale-110'
+                              : 'bg-gradient-to-br from-sky-100 to-teal-100 group-hover:from-sky-300 group-hover:to-emerald-300 group-hover:scale-110 group-hover:rotate-6'
+                          }`}>
+                            <Icon className={`h-5 w-5 transition-all duration-300 ${
+                              isActive
+                                ? 'text-white drop-shadow-lg'
+                                : 'text-sky-600 group-hover:text-teal-700'
+                            }`} strokeWidth={2.5} />
+                          </div>
+
+                          {/* Text Label with Better Typography */}
+                          <span className={`relative z-10 font-semibold text-sm transition-all duration-300 ${
+                            isActive
+                              ? 'text-white'
+                              : 'text-gray-700 group-hover:text-teal-700'
+                          }`}>
+                            {item.label}
+                          </span>
+
+                          {/* Active Indicator */}
+                          {isActive && (
+                            <div className="ml-auto relative z-10">
+                              <div className="w-2 h-2 rounded-full bg-white shadow-lg animate-pulse"></div>
+                            </div>
+                          )}
                         </button>
                       </li>
                     );
                   })}
                 </ul>
               </nav>
+
+              {/* Mobile Footer */}
+              <div className="p-4 border-t border-gray-200 bg-white/80 backdrop-blur-sm">
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-200/50">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
+                      <Truck className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-gray-900">Pro Transporter</p>
+                      <p className="text-xs text-gray-600">Premium Access</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
