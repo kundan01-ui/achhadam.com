@@ -56,6 +56,31 @@ const BuyerProductsPage: React.FC = () => {
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [selectedChatProduct, setSelectedChatProduct] = useState<Product | null>(null);
 
+  // Scroll state for hiding navbar
+  const [showNavbar, setShowNavbar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Handle scroll to hide/show navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down & past threshold
+        setShowNavbar(false);
+      } else {
+        // Scrolling up
+        setShowNavbar(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
   // Load crops from database
   const loadCrops = useCallback(async (isRefresh = false) => {
     try {
@@ -397,7 +422,9 @@ const BuyerProductsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Simple Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-40">
+      <header className={`bg-white shadow-sm sticky top-16 z-30 transition-transform duration-300 ${
+        showNavbar ? 'translate-y-0' : '-translate-y-full'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}

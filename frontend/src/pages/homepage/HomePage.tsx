@@ -31,14 +31,14 @@ import layerImage from '../../assets/layer.jpeg';
 import operatingImage from '../../assets/seed-production-industry7bb7-768x384.jpg';
 import workingProcessImage from '../../assets/working process.jpeg';
 
-import { 
-  Leaf, 
-  Users, 
-  Truck, 
-  TrendingUp, 
-  Shield, 
-  Globe, 
-  Phone, 
+import {
+  Leaf,
+  Users,
+  Truck,
+  TrendingUp,
+  Shield,
+  Globe,
+  Phone,
   Mail,
   ArrowRight,
   Star,
@@ -48,6 +48,8 @@ import {
   Zap,
   Heart,
   Activity,
+  Moon,
+  Sun,
   BarChart3,
   Menu,
   X,
@@ -324,6 +326,7 @@ const HomePage: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Get hero slides based on current language
   const heroSlides = getHeroSlides(t);
@@ -534,7 +537,9 @@ const HomePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDarkMode ? 'bg-gray-900' : 'bg-white'
+    }`}>
       {/* SEO Structured Data */}
       <script type="application/ld+json">
         {JSON.stringify({
@@ -560,7 +565,11 @@ const HomePage: React.FC = () => {
         })}
       </script>
                    {/* Professional Navbar Section */}
-             <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-white via-sky-50 to-green-50/80 backdrop-blur-md border-b border-sky-200/50 shadow-lg">
+             <header className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b shadow-lg transition-colors duration-300 ${
+               isDarkMode
+                 ? 'bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 border-gray-700/50'
+                 : 'bg-gradient-to-r from-white via-sky-50 to-green-50/80 border-sky-200/50'
+             }`}>
                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                  <div className="flex items-center justify-between h-14 sm:h-16">
                    {/* Logo */}
@@ -592,31 +601,41 @@ const HomePage: React.FC = () => {
                    <nav className="hidden md:flex items-center space-x-6">
                      <button
                        onClick={() => setCurrentPage('features')}
-                       className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
+                       className={`nav-link font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer ${
+                         isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
+                       }`}
                      >
                        {t('navbarFeatures')}
                      </button>
                      <button
                        onClick={() => setCurrentPage('investor')}
-                       className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
+                       className={`nav-link font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer ${
+                         isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
+                       }`}
                      >
                        {t('navbarInvestor')}
                      </button>
                      <button
                        onClick={() => setCurrentPage('blog')}
-                       className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
+                       className={`nav-link font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer ${
+                         isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
+                       }`}
                      >
                        {t('navbarBlog')}
                      </button>
                      <button
                        onClick={() => setCurrentPage('about')}
-                       className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
+                       className={`nav-link font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer ${
+                         isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
+                       }`}
                      >
                        {t('navbarAbout')}
                      </button>
                      <button
                        onClick={() => setCurrentPage('contact')}
-                       className="nav-link text-gray-600 hover:text-green-600 font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer"
+                       className={`nav-link font-medium text-base transition-all duration-300 hover:scale-105 cursor-pointer ${
+                         isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
+                       }`}
                      >
                        {t('navbarContact')}
                      </button>
@@ -624,19 +643,52 @@ const HomePage: React.FC = () => {
 
                    {/* Right Side */}
                    <div className="flex items-center space-x-2 sm:space-x-3 animate-fade-in-right">
+                     {/* Dark Mode Toggle - Hidden on mobile, shown on desktop */}
+                     <button
+                       onClick={() => setIsDarkMode(!isDarkMode)}
+                       className="hidden md:flex p-2 rounded-lg bg-gradient-to-br from-sky-100 to-blue-100 hover:from-sky-200 hover:to-blue-200 transition-all duration-300 hover:scale-110 shadow-md"
+                       title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                     >
+                       {isDarkMode ? (
+                         <Sun className="w-5 h-5 text-yellow-500" />
+                       ) : (
+                         <Moon className="w-5 h-5 text-indigo-600" />
+                       )}
+                     </button>
+
                      <LanguageSelector />
+
+                     {/* Small Dark Mode Toggle for Mobile - Before Login Button */}
+                     <button
+                       onClick={() => setIsDarkMode(!isDarkMode)}
+                       className={`md:hidden p-1 rounded-md transition-all duration-300 hover:scale-110 ${
+                         isDarkMode
+                           ? 'bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700'
+                           : 'bg-gradient-to-br from-sky-100 to-blue-100 hover:from-sky-200 hover:to-blue-200'
+                       }`}
+                       title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                     >
+                       {isDarkMode ? (
+                         <Sun className="w-3.5 h-3.5 text-yellow-400" />
+                       ) : (
+                         <Moon className="w-3.5 h-3.5 text-indigo-600" />
+                       )}
+                     </button>
+
                      <Button
                        onClick={() => setCurrentPage('login')}
                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium hover-lift animate-fade-in-right hover-glow btn-pulse shadow-md text-sm sm:text-base"
                      >
                        {t('navbarLogin')}
                      </Button>
-                     
+
                      {/* Mobile Hamburger Menu */}
                      <div className="md:hidden">
                        <button
                          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                         className="text-gray-600 hover:text-green-600 transition-colors duration-300 p-2"
+                         className={`transition-colors duration-300 p-2 ${
+                           isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
+                         }`}
                        >
                          {isMobileMenuOpen ? (
                            <X className="w-6 h-6" />
@@ -651,14 +703,18 @@ const HomePage: React.FC = () => {
 
                {/* Mobile Menu Dropdown */}
                {isMobileMenuOpen && (
-                 <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
+                 <div className={`md:hidden border-t shadow-lg transition-colors duration-300 ${
+                   isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                 }`}>
                    <div className="px-4 py-4 space-y-4">
                      <button
                        onClick={() => {
                          setCurrentPage('features');
                          setIsMobileMenuOpen(false);
                        }}
-                       className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
+                       className={`block w-full text-left font-medium text-base transition-colors duration-300 py-2 ${
+                         isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
+                       }`}
                      >
                        {t('navbarFeatures')}
                      </button>
@@ -667,7 +723,9 @@ const HomePage: React.FC = () => {
                          setCurrentPage('investor');
                          setIsMobileMenuOpen(false);
                        }}
-                       className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
+                       className={`block w-full text-left font-medium text-base transition-colors duration-300 py-2 ${
+                         isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
+                       }`}
                      >
                        {t('navbarInvestor')}
                      </button>
@@ -676,7 +734,9 @@ const HomePage: React.FC = () => {
                          setCurrentPage('blog');
                          setIsMobileMenuOpen(false);
                        }}
-                       className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
+                       className={`block w-full text-left font-medium text-base transition-colors duration-300 py-2 ${
+                         isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
+                       }`}
                      >
                        {t('navbarBlog')}
                      </button>
@@ -685,7 +745,9 @@ const HomePage: React.FC = () => {
                          setCurrentPage('about');
                          setIsMobileMenuOpen(false);
                        }}
-                       className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
+                       className={`block w-full text-left font-medium text-base transition-colors duration-300 py-2 ${
+                         isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
+                       }`}
                      >
                        {t('navbarAbout')}
                      </button>
@@ -694,11 +756,13 @@ const HomePage: React.FC = () => {
                          setCurrentPage('contact');
                          setIsMobileMenuOpen(false);
                        }}
-                       className="block w-full text-left text-gray-600 hover:text-green-600 font-medium text-base transition-colors duration-300 py-2"
+                       className={`block w-full text-left font-medium text-base transition-colors duration-300 py-2 ${
+                         isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
+                       }`}
                      >
                        {t('navbarContact')}
                      </button>
-                     <div className="pt-4 border-t border-gray-200">
+                     <div className={`pt-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                        <Button
                          onClick={() => {
                            setCurrentPage('login');
@@ -734,14 +798,18 @@ const HomePage: React.FC = () => {
                ))}
 
                {/* Hero Content - Simplified & Professional */}
-               <div className="relative z-20 text-center text-white px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+               <div className="relative z-20 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
                  <div className="animate-fade-in-up">
                    {/* Completely Transparent Content Container */}
                    <div className="p-6 sm:p-8">
-                     <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-4 leading-tight text-white drop-shadow-2xl">
+                     <h1 className={`text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-4 leading-tight drop-shadow-2xl ${
+                       isDarkMode ? 'text-gray-100' : 'text-white'
+                     }`}>
                        {heroSlides[currentSlide].title}
                      </h1>
-                     <p className="text-lg sm:text-xl lg:text-2xl font-semibold mb-6 text-green-100 drop-shadow-lg max-w-2xl mx-auto">
+                     <p className={`text-lg sm:text-xl lg:text-2xl font-semibold mb-6 drop-shadow-lg max-w-2xl mx-auto ${
+                       isDarkMode ? 'text-green-200' : 'text-green-100'
+                     }`}>
                        {heroSlides[currentSlide].subtitle}
                      </p>
                      
@@ -804,7 +872,11 @@ const HomePage: React.FC = () => {
       </section>
 
                    {/* Mobile Responsive Stats Section */}
-             <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 relative overflow-hidden">
+             <section className={`py-16 sm:py-20 lg:py-24 relative overflow-hidden transition-colors duration-300 ${
+               isDarkMode
+                 ? 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800'
+                 : 'bg-gradient-to-br from-green-50 via-blue-50 to-purple-50'
+             }`}>
                {/* Background Pattern */}
                <div className="absolute inset-0 opacity-5">
                  <div className="absolute top-10 left-10 w-20 h-20 bg-green-500 rounded-full"></div>
@@ -814,24 +886,34 @@ const HomePage: React.FC = () => {
                
                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                  <div className="text-center mb-12 sm:mb-16 animate-fade-in-up">
-                   <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-800 mb-4 sm:mb-6 gradient-text">
+                   <h2 className={`text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 gradient-text ${
+                     isDarkMode ? 'text-gray-100' : 'text-gray-800'
+                   }`}>
 {t('statisticsTitle')}
                    </h2>
-                   <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+                   <p className={`text-base sm:text-lg lg:text-xl max-w-3xl mx-auto px-4 ${
+                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                   }`}>
                      Real results from farmers, buyers, and transporters across India
                    </p>
                  </div>
                  
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
                    {stats.map((stat, index) => (
-                     <div key={index} className={`group text-center stat-card animate-fade-in-up stagger-${index + 1} ${stat.cardBg} rounded-xl sm:rounded-2xl p-6 sm:p-8 lg:p-10 shadow-lg border-2 ${stat.borderColor} hover:shadow-2xl transition-all duration-500 cursor-pointer`}>
+                     <div key={index} className={`group text-center stat-card animate-fade-in-up stagger-${index + 1} rounded-xl sm:rounded-2xl p-6 sm:p-8 lg:p-10 shadow-lg border-2 hover:shadow-2xl transition-all duration-500 cursor-pointer ${
+                       isDarkMode
+                         ? 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'
+                         : `${stat.cardBg} ${stat.borderColor}`
+                     }`}>
                        <div className={`w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 ${stat.bgColor} rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8 group-hover:scale-110 transition-all duration-300`}>
                          <stat.icon className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 ${stat.color} transition-colors duration-300`} />
                        </div>
                        <div className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${stat.color} mb-3 sm:mb-4 transition-colors duration-300`}>
                          {stat.value}
                        </div>
-                       <div className="text-base sm:text-lg lg:text-xl font-semibold text-gray-700 group-hover:text-gray-900 transition-colors duration-300">
+                       <div className={`text-base sm:text-lg lg:text-xl font-semibold transition-colors duration-300 ${
+                         isDarkMode ? 'text-gray-300 group-hover:text-gray-100' : 'text-gray-700 group-hover:text-gray-900'
+                       }`}>
                          {stat.label}
                        </div>
                      </div>
@@ -841,7 +923,11 @@ const HomePage: React.FC = () => {
              </section>
 
              {/* Farmers, Real Results Section */}
-             <section className="py-8 sm:py-12 md:py-16 lg:py-20 bg-gradient-to-br from-green-100 to-blue-100 relative group hover:from-green-200 hover:to-blue-200 transition-all duration-500 cursor-pointer">
+             <section className={`py-8 sm:py-12 md:py-16 lg:py-20 relative group transition-all duration-500 cursor-pointer ${
+               isDarkMode
+                 ? 'bg-gradient-to-br from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-900'
+                 : 'bg-gradient-to-br from-green-100 to-blue-100 hover:from-green-200 hover:to-blue-200'
+             }`}>
                {/* Background Hover Effects */}
                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                  <div className="absolute top-10 right-20 w-32 h-32 bg-green-300 rounded-full blur-3xl group-hover:animate-pulse"></div>
@@ -851,14 +937,22 @@ const HomePage: React.FC = () => {
                
                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                  <div className="text-center mb-8 sm:mb-12 group-hover:scale-105 transition-transform duration-500">
-                   <div className="inline-flex items-center px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4 group-hover:bg-green-200 group-hover:text-green-800 transition-all duration-300">
+                   <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4 transition-all duration-300 ${
+                     isDarkMode
+                       ? 'bg-gray-700 text-gray-300 group-hover:bg-green-700 group-hover:text-green-200'
+                       : 'bg-gray-200 text-gray-700 group-hover:bg-green-200 group-hover:text-green-800'
+                   }`}>
                      <div className="w-2 h-2 bg-gray-500 rounded-full mr-2 group-hover:bg-green-600 transition-colors duration-300"></div>
                      Success Stories
                    </div>
-                   <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 group-hover:text-green-800 transition-colors duration-500">
+                   <h2 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 group-hover:text-green-800 transition-colors duration-500 ${
+                     isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                   }`}>
 {t('farmersTitle')}
                    </h2>
-                   <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto px-4 sm:px-0 group-hover:text-gray-700 transition-colors duration-500">
+                   <p className={`text-base sm:text-lg max-w-3xl mx-auto px-4 sm:px-0 transition-colors duration-500 ${
+                     isDarkMode ? 'text-gray-300 group-hover:text-gray-200' : 'text-gray-600 group-hover:text-gray-700'
+                   }`}>
                      Join 10,000+ farmers who have transformed their lives through direct selling
                    </p>
                  </div>
@@ -954,29 +1048,51 @@ const HomePage: React.FC = () => {
              </section>
 
                    {/* Features Section */}
-             <section id="features" className="py-20 sm:py-24 bg-white relative">
+             <section id="features" className={`py-20 sm:py-24 relative transition-colors duration-300 ${
+               isDarkMode ? 'bg-gray-900' : 'bg-white'
+             }`}>
                {/* Background Elements */}
                <div className="absolute inset-0 bg-gradient-to-br from-green-50/30 via-transparent to-blue-50/30"></div>
                
                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                  <div className="text-center mb-20 animate-fade-in-up">
-                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-800 mb-6 gradient-text">
+                   <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 gradient-text transition-colors duration-300 ${
+                     isDarkMode ? 'text-green-400' : 'text-gray-800'
+                   }`}>
 {t('whyChooseTitle')}
                    </h2>
-                   <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                   <p className={`text-xl max-w-4xl mx-auto leading-relaxed transition-colors duration-300 ${
+                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                   }`}>
                      {t('whyChooseDesc')}
                    </p>
                  </div>
 
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                    {features.map((feature, index) => (
-                     <Card key={index} className={`group text-center card-hover animate-fade-in-up stagger-${index + 1} ${feature.cardBg} backdrop-blur-sm border-2 ${feature.borderColor} shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer `}>
-                       <CardContent className="p-8 sm:p-10">
+                     <Card key={index} className={`group text-center card-hover animate-fade-in-up stagger-${index + 1} backdrop-blur-sm border-2 shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer relative overflow-hidden ${
+                       isDarkMode
+                         ? 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'
+                         : `${feature.cardBg} ${feature.borderColor}`
+                     }`}>
+                       {/* Animated Lighting Effect on Hover in Dark Mode */}
+                       {isDarkMode && (
+                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/20 via-cyan-500/20 to-green-500/20 animate-pulse"></div>
+                           <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-green-400/30 to-transparent rounded-full blur-2xl animate-spin-slow"></div>
+                         </div>
+                       )}
+
+                       <CardContent className="p-8 sm:p-10 relative z-10">
                          <div className={`w-24 h-24 ${feature.iconBg} rounded-full flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg group-hover:shadow-xl`}>
                            <feature.icon className={`w-12 h-12 ${feature.color} transition-all duration-500 group-hover:scale-110`} />
                          </div>
-                         <h3 className="text-2xl font-bold text-gray-800 mb-6 group-hover:text-gray-900 transition-colors duration-300">{t(feature.titleKey)}</h3>
-                         <p className="text-gray-600 leading-relaxed text-lg group-hover:text-gray-700 transition-colors duration-300">{t(feature.descriptionKey)}</p>
+                         <h3 className={`text-2xl font-bold mb-6 transition-colors duration-300 ${
+                           isDarkMode ? 'text-gray-100 group-hover:text-green-400' : 'text-gray-800 group-hover:text-gray-900'
+                         }`}>{t(feature.titleKey)}</h3>
+                         <p className={`leading-relaxed text-lg transition-colors duration-300 ${
+                           isDarkMode ? 'text-gray-300 group-hover:text-gray-100' : 'text-gray-600 group-hover:text-gray-700'
+                         }`}>{t(feature.descriptionKey)}</p>
                          
                          {/* Hover Effect Elements */}
                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
@@ -992,25 +1108,47 @@ const HomePage: React.FC = () => {
              </section>
 
              {/* Working Process Section */}
-             <section className="py-8 sm:py-12 md:py-16 lg:py-20 bg-gradient-to-br from-purple-100 to-indigo-100 relative group hover:from-purple-200 hover:to-indigo-200 transition-all duration-500 cursor-pointer ">
+             <section className={`py-8 sm:py-12 md:py-16 lg:py-20 relative group transition-all duration-500 cursor-pointer ${
+               isDarkMode
+                 ? 'bg-gradient-to-br from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800'
+                 : 'bg-gradient-to-br from-purple-100 to-indigo-100 hover:from-purple-200 hover:to-indigo-200'
+             }`}>
                {/* Background Hover Effects */}
                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                 <div className="absolute top-20 right-20 w-40 h-40 bg-purple-300 rounded-full blur-3xl group-hover:animate-pulse"></div>
-                 <div className="absolute bottom-20 left-20 w-32 h-32 bg-indigo-300 rounded-full blur-3xl group-hover:animate-pulse"></div>
-                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-pink-200 rounded-full blur-3xl group-hover:animate-pulse"></div>
-                 <div className="absolute top-10 left-10 w-24 h-24 bg-blue-300 rounded-full blur-3xl group-hover:animate-pulse"></div>
+                 <div className={`absolute top-20 right-20 w-40 h-40 rounded-full blur-3xl group-hover:animate-pulse ${
+                   isDarkMode ? 'bg-cyan-500/30' : 'bg-purple-300'
+                 }`}></div>
+                 <div className={`absolute bottom-20 left-20 w-32 h-32 rounded-full blur-3xl group-hover:animate-pulse ${
+                   isDarkMode ? 'bg-blue-500/30' : 'bg-indigo-300'
+                 }`}></div>
+                 <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full blur-3xl group-hover:animate-pulse ${
+                   isDarkMode ? 'bg-green-500/30' : 'bg-pink-200'
+                 }`}></div>
+                 <div className={`absolute top-10 left-10 w-24 h-24 rounded-full blur-3xl group-hover:animate-pulse ${
+                   isDarkMode ? 'bg-purple-500/30' : 'bg-blue-300'
+                 }`}></div>
                </div>
-               
+
                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                  <div className="text-center mb-16 group-hover:scale-105 transition-transform duration-500">
-                   <div className="inline-flex items-center px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm font-medium mb-4 group-hover:bg-purple-200 group-hover:text-purple-800 transition-all duration-300">
-                     <div className="w-2 h-2 bg-gray-500 rounded-full mr-2 group-hover:bg-purple-600 transition-colors duration-300"></div>
+                   <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mb-4 transition-all duration-300 ${
+                     isDarkMode
+                       ? 'bg-gray-700 text-gray-300 group-hover:bg-purple-700 group-hover:text-purple-200'
+                       : 'bg-gray-200 text-gray-700 group-hover:bg-purple-200 group-hover:text-purple-800'
+                   }`}>
+                     <div className={`w-2 h-2 rounded-full mr-2 transition-colors duration-300 ${
+                       isDarkMode ? 'bg-gray-500 group-hover:bg-purple-400' : 'bg-gray-500 group-hover:bg-purple-600'
+                     }`}></div>
                      Our Process
                    </div>
-                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 group-hover:text-purple-800 transition-colors duration-500">
+                   <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 transition-colors duration-500 ${
+                     isDarkMode ? 'text-cyan-400 group-hover:text-cyan-300' : 'text-gray-900 group-hover:text-purple-800'
+                   }`}>
 {t('howItWorksTitle')}
                    </h2>
-                   <p className="text-lg text-gray-600 max-w-3xl mx-auto group-hover:text-gray-700 transition-colors duration-500">
+                   <p className={`text-lg max-w-3xl mx-auto transition-colors duration-500 ${
+                     isDarkMode ? 'text-gray-300 group-hover:text-gray-100' : 'text-gray-600 group-hover:text-gray-700'
+                   }`}>
                      A complete ecosystem connecting farmers, buyers, and transporters through technology
                    </p>
                  </div>
@@ -1120,17 +1258,36 @@ const HomePage: React.FC = () => {
              </section>
 
              {/* Direct Trade Revolution Section */}
-             <section className="py-16 sm:py-20 bg-gradient-to-br from-orange-100 to-red-100 relative">
-               <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+             <section className={`py-16 sm:py-20 relative transition-colors duration-300 group ${
+               isDarkMode
+                 ? 'bg-gradient-to-br from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800'
+                 : 'bg-gradient-to-br from-orange-100 to-red-100'
+             }`}>
+               {/* Animated Lighting Effect on Hover in Dark Mode */}
+               {isDarkMode && (
+                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                   <div className="absolute top-20 right-20 w-40 h-40 bg-orange-500/30 rounded-full blur-3xl group-hover:animate-pulse"></div>
+                   <div className="absolute bottom-20 left-20 w-32 h-32 bg-red-500/30 rounded-full blur-3xl group-hover:animate-pulse"></div>
+                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-yellow-500/20 rounded-full blur-3xl"></div>
+                 </div>
+               )}
+
+               <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                  <div className="text-center mb-12">
-                   <div className="inline-flex items-center px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm font-medium mb-4">
+                   <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mb-4 transition-all duration-300 ${
+                     isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
+                   }`}>
                      <div className="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
                      Direct Trade
                    </div>
-                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                   <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 transition-colors duration-300 ${
+                     isDarkMode ? 'text-orange-400' : 'text-gray-900'
+                   }`}>
 {t('eliminateMiddlemanTitle')}
                    </h2>
-                   <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                   <p className={`text-lg max-w-3xl mx-auto transition-colors duration-300 ${
+                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                   }`}>
                      Direct farmer-buyer connection ensuring maximum profit and fair prices
                    </p>
                  </div>
@@ -1213,17 +1370,36 @@ const HomePage: React.FC = () => {
              </section>
 
              {/* Smart Agriculture Technology Section */}
-             <section className="py-16 sm:py-20 bg-gradient-to-br from-blue-100 to-purple-100 relative">
-               <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+             <section className={`py-16 sm:py-20 relative transition-colors duration-300 group ${
+               isDarkMode
+                 ? 'bg-gradient-to-br from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-900'
+                 : 'bg-gradient-to-br from-blue-100 to-purple-100'
+             }`}>
+               {/* Animated Lighting Effect on Hover in Dark Mode */}
+               {isDarkMode && (
+                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                   <div className="absolute top-20 right-20 w-40 h-40 bg-blue-500/30 rounded-full blur-3xl group-hover:animate-pulse"></div>
+                   <div className="absolute bottom-20 left-20 w-32 h-32 bg-purple-500/30 rounded-full blur-3xl group-hover:animate-pulse"></div>
+                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl"></div>
+                 </div>
+               )}
+
+               <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                  <div className="text-center mb-12">
-                   <div className="inline-flex items-center px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm font-medium mb-4">
+                   <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mb-4 transition-all duration-300 ${
+                     isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
+                   }`}>
                      <div className="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
                      Advanced Technology
                    </div>
-                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                   <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 transition-colors duration-300 ${
+                     isDarkMode ? 'text-blue-400' : 'text-gray-900'
+                   }`}>
 {t('smartAgricultureTitle')}
                    </h2>
-                   <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                   <p className={`text-lg max-w-3xl mx-auto transition-colors duration-300 ${
+                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                   }`}>
                      IoT sensors, AI analytics, and real-time monitoring to maximize crop yield
                    </p>
                  </div>
@@ -1326,19 +1502,31 @@ const HomePage: React.FC = () => {
              </section>
 
                    {/* Benefits Section */}
-             <section className="py-20 sm:py-24 bg-gradient-to-br from-gray-50 to-green-50 relative overflow-hidden">
+             <section className={`py-20 sm:py-24 relative overflow-hidden transition-colors duration-300 group ${
+               isDarkMode
+                 ? 'bg-gradient-to-br from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800'
+                 : 'bg-gradient-to-br from-gray-50 to-green-50'
+             }`}>
                {/* Background Pattern */}
                <div className="absolute inset-0 opacity-10">
-                 <div className="absolute top-20 right-10 w-32 h-32 bg-green-200 rounded-full blur-3xl"></div>
-                 <div className="absolute bottom-20 left-10 w-24 h-24 bg-blue-200 rounded-full blur-3xl"></div>
+                 <div className={`absolute top-20 right-10 w-32 h-32 rounded-full blur-3xl ${
+                   isDarkMode ? 'bg-green-500/40 group-hover:animate-pulse' : 'bg-green-200'
+                 }`}></div>
+                 <div className={`absolute bottom-20 left-10 w-24 h-24 rounded-full blur-3xl ${
+                   isDarkMode ? 'bg-blue-500/40 group-hover:animate-pulse' : 'bg-blue-200'
+                 }`}></div>
                </div>
-               
+
                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                  <div className="text-center mb-20 animate-fade-in-up">
-                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-800 mb-6 gradient-text">
+                   <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 gradient-text transition-colors duration-300 ${
+                     isDarkMode ? 'text-green-400' : 'text-gray-800'
+                   }`}>
 {t('platformBenefitsTitle')}
                    </h2>
-                   <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                   <p className={`text-xl max-w-4xl mx-auto leading-relaxed transition-colors duration-300 ${
+                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                   }`}>
                      {t('platformBenefitsDesc')}
                    </p>
                  </div>
@@ -1365,16 +1553,30 @@ const HomePage: React.FC = () => {
              </section>
 
                    {/* Testimonials Section */}
-             <section className="py-20 sm:py-24 bg-white relative">
+             <section className={`py-20 sm:py-24 relative transition-colors duration-300 group ${
+               isDarkMode ? 'bg-gray-900 hover:bg-gray-800' : 'bg-white'
+             }`}>
                {/* Background Elements */}
                <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/20 via-transparent to-orange-50/20"></div>
-               
+
+               {/* Animated Lighting Effect on Hover in Dark Mode */}
+               {isDarkMode && (
+                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                   <div className="absolute top-20 right-20 w-40 h-40 bg-yellow-500/30 rounded-full blur-3xl group-hover:animate-pulse"></div>
+                   <div className="absolute bottom-20 left-20 w-32 h-32 bg-orange-500/30 rounded-full blur-3xl group-hover:animate-pulse"></div>
+                 </div>
+               )}
+
                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                  <div className="text-center mb-20 animate-fade-in-up">
-                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-800 mb-6 gradient-text">
+                   <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 gradient-text transition-colors duration-300 ${
+                     isDarkMode ? 'text-yellow-400' : 'text-gray-800'
+                   }`}>
                      {t('whatUsersSay')}
                    </h2>
-                   <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                   <p className={`text-xl max-w-4xl mx-auto leading-relaxed transition-colors duration-300 ${
+                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                   }`}>
                      {t('whatUsersSayDesc')}
                    </p>
                  </div>
@@ -1440,7 +1642,9 @@ const HomePage: React.FC = () => {
              </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8 sm:py-12 lg:py-16">
+      <footer className={`py-8 sm:py-12 lg:py-16 transition-colors duration-300 ${
+        isDarkMode ? 'bg-black text-gray-300' : 'bg-gray-900 text-white'
+      }`}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Mobile: 2-column layout, Desktop: 4-column layout */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
