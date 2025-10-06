@@ -78,11 +78,74 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
+// Get orders by farmer - PERMANENT DATA LOADING
+router.get('/farmer/:farmerId', auth, async (req, res) => {
+  try {
+    const { farmerId } = req.params;
+
+    // Verify farmer owns the orders
+    if (req.user.userId !== farmerId && req.user.userType !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+
+    console.log(`🌾 PERMANENT LOAD: Loading orders for farmer ${farmerId}`);
+    console.log(`📱 This will load orders from any device, any session - PERMANENT DATA`);
+
+    // Check MongoDB connection before query
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      console.error('❌ MongoDB disconnected, returning empty orders array');
+      return res.json({
+        success: true,
+        data: [],
+        count: 0,
+        message: 'Database temporarily unavailable. Please try again.',
+        warning: 'MongoDB connection lost'
+      });
+    }
+
+    // Load orders with permanent persistence markers
+    const orders = await Order.find({
+      farmerId,
+      isPermanent: true,
+      crossDeviceAccess: true,
+      sessionIndependent: true
+    })
+    .sort({ orderDate: -1 });
+
+    console.log(`✅ PERMANENT LOAD: Found ${orders.length} permanent orders for farmer ${farmerId}`);
+    console.log(`🌐 These orders are available across all devices and sessions`);
+
+    res.json({
+      success: true,
+      data: orders,
+      count: orders.length,
+      message: 'Permanent orders loaded successfully',
+      persistence: {
+        isPermanent: true,
+        crossDeviceAccess: true,
+        sessionIndependent: true
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching permanent farmer orders:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch permanent farmer orders',
+      error: error.message,
+      data: []
+    });
+  }
+});
+
 // Get orders by buyer - PERMANENT DATA LOADING
 router.get('/buyer/:buyerId', auth, async (req, res) => {
   try {
     const { buyerId } = req.params;
-    
+
     // Verify buyer owns the orders
     if (req.user.userId !== buyerId && req.user.userType !== 'admin') {
       return res.status(403).json({
@@ -94,8 +157,21 @@ router.get('/buyer/:buyerId', auth, async (req, res) => {
     console.log(`🛒 PERMANENT LOAD: Loading orders for buyer ${buyerId}`);
     console.log(`📱 This will load orders from any device, any session - PERMANENT DATA`);
 
+    // Check MongoDB connection before query
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      console.error('❌ MongoDB disconnected, returning empty orders array');
+      return res.json({
+        success: true,
+        data: [],
+        count: 0,
+        message: 'Database temporarily unavailable. Please try again.',
+        warning: 'MongoDB connection lost'
+      });
+    }
+
     // Load orders with permanent persistence markers
-    const orders = await Order.find({ 
+    const orders = await Order.find({
       buyerId,
       isPermanent: true,
       crossDeviceAccess: true,
@@ -122,7 +198,8 @@ router.get('/buyer/:buyerId', auth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch permanent buyer orders',
-      error: error.message
+      error: error.message,
+      data: []
     });
   }
 });
@@ -260,6 +337,8 @@ router.delete('/:orderId', auth, async (req, res) => {
 });
 
 module.exports = router;
+
+
 
 
 

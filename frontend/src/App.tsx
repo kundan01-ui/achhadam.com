@@ -21,6 +21,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import { LanguageProvider } from './contexts/LanguageContext';
 import CookieConsent from './components/CookieConsent';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import GeminiChatbot from './components/GeminiChatbot';
 import { initCookieConsent } from './services/cookieService';
 import { handleRouteFallback, checkRouteAccessibility } from './utils/routeFallback';
 
@@ -69,6 +70,7 @@ const App: React.FC = () => {
           </Routes>
           <CookieConsent companyName="Achhadam" position="bottom" />
           <PWAInstallPrompt />
+          <GeminiChatbot />
         </div>
       </Router>
     </LanguageProvider>

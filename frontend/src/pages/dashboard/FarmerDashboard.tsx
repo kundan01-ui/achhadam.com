@@ -10,6 +10,7 @@ import { getCurrentWeather, getWeatherForecast, getWeatherAlerts, getUserLocatio
 // SyncButton removed - using automatic database save only
 // ImmediateSyncButton removed - using automatic database save only
 import '../../../src/styles/animations.css';
+import AgroDashboard from '../../components/AgroDashboard';
 import { 
   LayoutDashboard, 
   Leaf, 
@@ -106,6 +107,7 @@ import {
   Bluetooth,
   Smartphone,
   Monitor,
+  Satellite,
   Tablet,
   Laptop,
   Headphones,
@@ -359,6 +361,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   const [selectedCropImages, setSelectedCropImages] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [buyerRequests, setBuyerRequests] = useState([]);
+  const [incomingOrders, setIncomingOrders] = useState([]);
 
   // Error handling state
   const [error, setError] = useState(null);
@@ -1967,6 +1970,33 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     loadCrops();
   }, [userProfile.id, userProfile.name]);
 
+  // Load farmer orders when component mounts
+  useEffect(() => {
+    const loadOrders = async () => {
+      if (!userProfile.id) return;
+
+      try {
+        console.log(`📦 Loading orders for farmer: ${userProfile.id}`);
+
+        const response = await authenticatedFetch(`/api/orders/farmer/${userProfile.id}`);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`✅ Loaded ${data.count} orders for farmer`);
+          setIncomingOrders(data.data || []);
+        } else {
+          console.error('❌ Failed to load orders:', response.statusText);
+          setIncomingOrders([]);
+        }
+      } catch (err) {
+        console.error('❌ Error loading orders:', err);
+        setIncomingOrders([]);
+      }
+    };
+
+    loadOrders();
+  }, [userProfile.id]);
+
   // Calculate real-time statistics from uploaded crops - FIXED INFINITE LOOP
   const [realTimeStats, setRealTimeStats] = useState({
     totalCrops: 0,
@@ -2136,6 +2166,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     { id: 'crop-upload', label: 'Crop Upload', icon: Upload },
     { id: 'marketplace', label: 'Buyer Marketplace', icon: ShoppingCart },
     { id: 'orders', label: 'Order Management', icon: Package },
+    { id: 'satellite', label: 'Satellite Monitoring', icon: Satellite },
     { id: 'analytics', label: 'Business Analytics', icon: BarChart3 },
     { id: 'services', label: 'Services', icon: Wrench },
     { id: 'financial', label: 'Financial Center', icon: DollarSign },
@@ -3540,7 +3571,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Pending Orders</p>
-              <p className="text-2xl font-bold text-yellow-600">3</p>
+              <p className="text-2xl font-bold text-yellow-600">{incomingOrders.filter(o => o.status === 'pending').length}</p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
               <Clock className="h-6 w-6 text-yellow-600" />
@@ -3551,7 +3582,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Confirmed Orders</p>
-              <p className="text-2xl font-bold text-green-600">12</p>
+              <p className="text-2xl font-bold text-green-600">{incomingOrders.filter(o => o.status === 'confirmed').length}</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
               <CheckCircle className="h-6 w-6 text-green-600" />
@@ -3562,7 +3593,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">In Progress</p>
-              <p className="text-2xl font-bold text-blue-600">5</p>
+              <p className="text-2xl font-bold text-blue-600">{incomingOrders.filter(o => o.status === 'processing').length}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
               <Package className="h-6 w-6 text-blue-600" />
@@ -3573,7 +3604,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Completed</p>
-              <p className="text-2xl font-bold text-gray-600">28</p>
+              <p className="text-2xl font-bold text-gray-600">{incomingOrders.filter(o => o.status === 'completed').length}</p>
             </div>
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
               <Award className="h-6 w-6 text-gray-600" />
@@ -3588,91 +3619,92 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
           <h3 className="text-lg font-semibold text-gray-900">Incoming Orders</h3>
         </div>
         <div className="p-6">
-          <div className="space-y-4">
-            {incomingOrders.map((order) => (
-              <div key={order.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Building className="h-6 w-6 text-blue-600" />
+          {incomingOrders.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
+              <p className="text-gray-500">Orders from buyers will appear here</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {incomingOrders.map((order) => (
+                <div key={order._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Building className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">{order.buyerAssociation?.buyerName || 'Unknown Buyer'}</h4>
+                        <p className="text-sm text-gray-500">{order.cropName} • {order.quantity} kg</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">{order.buyerName}</h4>
-                      <p className="text-sm text-gray-500">{order.cropName} • {order.quantity} {order.unit}</p>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                        {(order.status || 'pending').toString().toUpperCase()}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                      {(order.status || 'pending').toString().toUpperCase()}
-                    </span>
-                    {order.chatMessages > 0 && (
-                      <div className="flex items-center space-x-1 text-blue-600">
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">Price: ₹{order.price}/kg</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">Ordered: {new Date(order.orderDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CreditCard className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">Total: ₹{order.totalAmount}</span>
+                    </div>
+                  </div>
+
+                  {(order.deliveryAddress || order.notes) && (
+                    <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        {order.deliveryAddress && (
+                          <div>
+                            <span className="font-medium text-gray-700">Delivery Address:</span>
+                            <p className="text-gray-600">{order.deliveryAddress}</p>
+                          </div>
+                        )}
+                        {order.notes && (
+                          <div>
+                            <span className="font-medium text-gray-700">Notes:</span>
+                            <p className="text-gray-600">{order.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <button
+                        onClick={() => setShowChat(true)}
+                        className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
+                      >
                         <MessageCircle className="h-4 w-4" />
-                        <span className="text-sm font-medium">{order.chatMessages}</span>
+                        <span className="text-sm">Contact Buyer</span>
+                      </button>
+                    </div>
+                    {order.status === 'pending' && (
+                      <div className="flex items-center space-x-2">
+                        <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                          Accept
+                        </button>
+                        <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                          Decline
+                        </button>
                       </div>
                     )}
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Price: {formatCurrency(order.offeredPrice)}/{order.unit}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Delivery: {new Date(order.deliveryDate).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <CreditCard className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Total: {formatCurrency(order.totalAmount)}</span>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-700">Delivery Terms:</span>
-                      <p className="text-gray-600">{order.deliveryTerms}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Payment Terms:</span>
-                      <p className="text-gray-600">{order.paymentTerms}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <button 
-                      onClick={() => setShowChat(true)}
-                      className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      <span className="text-sm">Chat</span>
-                    </button>
-                    {order.contractGenerated && (
-                      <button className="flex items-center space-x-2 text-green-600 hover:text-green-700">
-                        <FileText className="h-4 w-4" />
-                        <span className="text-sm">Contract</span>
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                      Accept
-                    </button>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                      Negotiate
-                    </button>
-                    <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -4847,6 +4879,16 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             </div>
           </div>
         );
+      case 'satellite':
+        return (
+          <AgroDashboard
+            farmLocation={{
+              lat: farmLocation?.latitude || 25.5941,
+              lon: farmLocation?.longitude || 85.1376
+            }}
+            fieldName={userProfile.name ? `${userProfile.name}'s Farm` : 'My Farm'}
+          />
+        );
       case 'analytics':
         return renderAnalytics();
       case 'settings':
@@ -5013,6 +5055,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                     { id: 'crop-upload', label: 'Upload Crop', icon: Plus },
                     { id: 'marketplace', label: 'Marketplace', icon: Package },
                     { id: 'orders', label: 'Orders', icon: ShoppingCart },
+                    { id: 'satellite', label: 'Satellite Monitoring', icon: Satellite },
                     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
                     { id: 'services', label: 'Services', icon: Leaf },
                     { id: 'financial', label: 'Financial', icon: DollarSign },
