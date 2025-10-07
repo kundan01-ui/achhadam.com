@@ -10,7 +10,7 @@ import { getCurrentWeather, getWeatherForecast, getWeatherAlerts, getUserLocatio
 // SyncButton removed - using automatic database save only
 // ImmediateSyncButton removed - using automatic database save only
 import '../../../src/styles/animations.css';
-import AgroDashboard from '../../components/AgroDashboard.tsx';
+import AgroDashboard from '../../components/AgroDashboard';
 import { 
   LayoutDashboard, 
   Leaf, 
