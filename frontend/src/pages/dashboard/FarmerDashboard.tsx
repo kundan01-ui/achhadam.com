@@ -399,6 +399,9 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   const [weatherAlerts, setWeatherAlerts] = useState<any[]>([]);
   const [weatherLoading, setWeatherLoading] = useState(true);
 
+  // Farm location for satellite monitoring
+  const [farmLocation, setFarmLocation] = useState<{latitude: number, longitude: number} | null>(null);
+
   // Predefined crop categories for easy selection (farmer-friendly)
   const cropCategories = {
     'Grains': {
@@ -2056,6 +2059,26 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
     if (userProfile.id) {
       console.log(`🌾 SMART LOAD: Loading crops for farmer: ${userProfile.name} (ID: ${userProfile.id})`);
       console.log(`⚡ Using hybrid cache + database strategy for instant loading`);
+
+      // Initialize farm location from user profile or use default
+      const initFarmLocation = async () => {
+        try {
+          const location = await getUserLocation();
+          setFarmLocation({
+            latitude: location.latitude,
+            longitude: location.longitude
+          });
+          console.log('📍 Farm location initialized:', location);
+        } catch (error) {
+          console.error('⚠️ Could not get location, using default:', error);
+          setFarmLocation({
+            latitude: 25.5941,
+            longitude: 85.1376
+          });
+        }
+      };
+
+      initFarmLocation();
 
       const loadCrops = async () => {
         try {
@@ -5050,18 +5073,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
               {/* Navigation */}
               <nav className="flex-1 p-3 overflow-y-auto">
                 <ul className="space-y-1.5">
-                  {[
-                    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-                    { id: 'crop-upload', label: 'Upload Crop', icon: Plus },
-                    { id: 'marketplace', label: 'Marketplace', icon: Package },
-                    { id: 'orders', label: 'Orders', icon: ShoppingCart },
-                    { id: 'satellite', label: 'Satellite Monitoring', icon: Satellite },
-                    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-                    { id: 'services', label: 'Services', icon: Leaf },
-                    { id: 'financial', label: 'Financial', icon: DollarSign },
-                    { id: 'weather', label: 'Weather', icon: Sun },
-                    { id: 'settings', label: 'Settings', icon: Settings }
-                  ].map((item, index) => {
+                  {navigationItems.map((item, index) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
                     return (

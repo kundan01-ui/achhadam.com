@@ -28,7 +28,7 @@ interface WeatherAlert {
 
 // Free OpenWeatherMap API key (client can replace with their own)
 // Get free key at: https://openweathermap.org/api
-const WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY || 'demo_key';
+const WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY || 'fa888adea2953bf712f184797efb1e7e';
 const WEATHER_API_BASE = 'https://api.openweathermap.org/data/2.5';
 
 /**

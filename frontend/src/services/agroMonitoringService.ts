@@ -81,6 +81,7 @@ export const createPolygon = async (
 ): Promise<{ success: boolean; polygonId?: string; error?: string }> => {
   try {
     console.log('🌾 Creating polygon for field:', name);
+    console.log('📍 Coordinates:', JSON.stringify(coordinates));
 
     const polygon: FieldPolygon = {
       name,
@@ -94,7 +95,8 @@ export const createPolygon = async (
       }
     };
 
-    const response = await fetch(`${AGRO_API_BASE}/polygons?appid=${AGRO_API_KEY}`, {
+    // Try to create polygon with duplicate flag
+    const response = await fetch(`${AGRO_API_BASE}/polygons?appid=${AGRO_API_KEY}&duplicated=true`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -102,11 +104,13 @@ export const createPolygon = async (
       body: JSON.stringify(polygon)
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error(`Failed to create polygon: ${response.statusText}`);
+      console.error('❌ API Response:', data);
+      throw new Error(`Failed to create polygon: ${response.statusText} - ${JSON.stringify(data)}`);
     }
 
-    const data = await response.json();
     console.log('✅ Polygon created:', data.id);
 
     return {

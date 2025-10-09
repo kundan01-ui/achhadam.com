@@ -43,17 +43,19 @@ self.addEventListener('activate', (event) => {
 // Fetch event - FIXED VERSION
 self.addEventListener('fetch', (event) => {
   // Skip service worker for API calls, external resources, and Vite dev server
-  if (event.request.url.includes('/api/') || 
+  if (event.request.url.includes('/api/') ||
       event.request.url.includes('localhost:5000') ||
       event.request.url.includes('chrome-extension://') ||
       event.request.url.includes('devtools://') ||
       event.request.url.includes('acchadam1-backend.onrender.com') ||
       event.request.url.includes('www.achhadam.com/api/') ||
+      event.request.url.includes('agromonitoring.com') || // Skip Agro Monitoring API
+      event.request.url.includes('openweathermap.org') || // Skip Weather API
       event.request.url.includes('@vite/client') ||
       event.request.url.includes('@react-refresh') ||
       event.request.url.includes('src/') ||
       event.request.url.includes('vite')) {
-    console.log('⏭️ Service Worker: Skipping dev server request:', event.request.url);
+    // Silently skip without logging
     return; // Let the browser handle these requests normally
   }
   
@@ -74,9 +76,9 @@ self.addEventListener('fetch', (event) => {
         // Fetch from network with proper error handling
         return fetch(event.request)
           .then((networkResponse) => {
-            // Check if response is valid
+            // Check if response is valid for caching (only cache 'basic' type responses)
             if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-              console.log('⚠️ Service Worker: Invalid network response:', networkResponse);
+              // Don't cache CORS responses or non-200 responses, but return them
               return networkResponse;
             }
             

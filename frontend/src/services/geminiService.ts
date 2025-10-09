@@ -3,8 +3,13 @@
  * Advanced chatbot powered by Google Gemini API
  */
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCPnrCyWXYl_56gRmMgWzgIdRo1KGvYPSg';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+
+// Validate API key
+if (!GEMINI_API_KEY) {
+  console.error('❌ VITE_GEMINI_API_KEY is not configured in .env file');
+}
 
 export interface ChatMessage {
   role: 'user' | 'assistant';

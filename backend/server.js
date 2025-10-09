@@ -1096,7 +1096,11 @@ app.use('/api/services', servicesRoutes);
 const adminRoutes = require('./src/routes/admin');
 app.use('/api/admin', adminRoutes);
 
-// KYC routes - Farmer verification (Temporarily disabled until Render syncs)
+// Notification routes - FCM Push Notifications
+const notificationRoutes = require('./src/routes/notifications');
+app.use('/api/notifications', notificationRoutes);
+
+// KYC routes - Temporarily commented out
 // const kycRoutes = require('./src/routes/kycRoutes');
 // app.use('/api/kyc', kycRoutes);
 
