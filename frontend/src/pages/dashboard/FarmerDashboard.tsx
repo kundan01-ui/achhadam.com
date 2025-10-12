@@ -5174,17 +5174,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
             <div className="flex-1 overflow-y-auto">
               <nav className="p-4 mt-2">
                 <ul className="space-y-2">
-                  {[
-                    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-                    { id: 'crop-upload', label: 'Upload Crop', icon: Plus },
-                    { id: 'marketplace', label: 'Marketplace', icon: Package },
-                    { id: 'orders', label: 'Orders', icon: ShoppingCart },
-                    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-                    { id: 'services', label: 'Services', icon: Leaf },
-                    { id: 'financial', label: 'Financial', icon: DollarSign },
-                    { id: 'weather', label: 'Weather', icon: Sun },
-                    { id: 'settings', label: 'Settings', icon: Settings }
-                  ].map((item) => {
+                  {navigationItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
                     return (
