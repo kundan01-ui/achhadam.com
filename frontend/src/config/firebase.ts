@@ -155,7 +155,7 @@ export const sendOTP = async (phoneNumber: string): Promise<string> => {
     console.log('  - Auth Domain:', firebaseConfig.authDomain);
     
     // Check if we're in development mode
-    const isDevelopment = false; // Force production mode for real OTP
+    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'; // Auto-detect environment
     
     if (isDevelopment) {
       console.log('🔄 Development mode detected. Using fallback OTP...');
