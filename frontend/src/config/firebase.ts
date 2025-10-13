@@ -155,8 +155,14 @@ export const sendOTP = async (phoneNumber: string): Promise<string> => {
     console.log('  - Auth Domain:', firebaseConfig.authDomain);
     
     // Check if we're in development mode
-    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'; // Auto-detect environment
-    
+    // TEMPORARY: Force production mode to test real Firebase OTP and see actual errors
+    const isDevelopment = false; // Set to true for mock OTP, false for real Firebase testing
+
+    console.log('🔍 Environment Detection:');
+    console.log('  - Hostname:', window.location.hostname);
+    console.log('  - isDevelopment:', isDevelopment);
+    console.log('  - Will use:', isDevelopment ? 'Mock OTP (123456)' : 'Real Firebase OTP');
+
     if (isDevelopment) {
       console.log('🔄 Development mode detected. Using fallback OTP...');
       
@@ -209,7 +215,14 @@ export const sendOTP = async (phoneNumber: string): Promise<string> => {
     console.error('❌ Error sending OTP:', error);
     console.error('❌ Error code:', error.code);
     console.error('❌ Error message:', error.message);
-    
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Full error object:', JSON.stringify(error, null, 2));
+
+    // Log Firebase Auth error details
+    if (error.customData) {
+      console.error('❌ Custom data:', error.customData);
+    }
+
     // Check if it's a 503 Service Unavailable error or invalid app credential
     if (error.code === 'auth/error-code:-39' || 
         error.code === 'auth/invalid-app-credential' ||
