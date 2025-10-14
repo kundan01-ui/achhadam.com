@@ -183,9 +183,13 @@
     
     <!-- Performance Hints -->
     <!-- Remove preload hints that are not immediately used -->
+
+    <!-- Firebase Phone Authentication - reCAPTCHA Required -->
+    <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
   </head>
   <body>
     <div id="root"></div>
+    <div id="recaptcha-container"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   </body>
