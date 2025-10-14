@@ -195,6 +195,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import ProfileModal from '../../components/ui/ProfileModal';
+import MessagesInbox from '../../components/chat/MessagesInbox';
 
 const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user, onLogout }) => {
   const navigate = useNavigate();
@@ -203,6 +204,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
   
   // KYC Verification States
   const [showKYCModal, setShowKYCModal] = useState(false);
@@ -2187,15 +2189,49 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
   const navigationItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'crop-upload', label: 'Crop Upload', icon: Upload },
-    { id: 'marketplace', label: 'Buyer Marketplace', icon: ShoppingCart },
+    {
+      id: 'buyer',
+      label: 'Buyer',
+      icon: ShoppingCart,
+      isDropdown: true,
+      subItems: [
+        { id: 'marketplace', label: 'Buyer Marketplace', icon: ShoppingCart },
+        { id: 'messages', label: 'Buyer Messages', icon: MessageCircle }
+      ]
+    },
     { id: 'orders', label: 'Order Management', icon: Package },
-    { id: 'satellite', label: 'Satellite Monitoring', icon: Satellite },
-    { id: 'analytics', label: 'Business Analytics', icon: BarChart3 },
+    {
+      id: 'crop-monitoring',
+      label: 'Crop Monitoring',
+      icon: Satellite,
+      isDropdown: true,
+      subItems: [
+        { id: 'satellite', label: 'Satellite Monitoring', icon: Satellite },
+        { id: 'weather', label: 'Weather', icon: Sun }
+      ]
+    },
+    {
+      id: 'crop-finance',
+      label: 'Crop Finance',
+      icon: DollarSign,
+      isDropdown: true,
+      subItems: [
+        { id: 'analytics', label: 'Business Analytics', icon: BarChart3 },
+        { id: 'financial', label: 'Financial Center', icon: DollarSign }
+      ]
+    },
     { id: 'services', label: 'Services', icon: Wrench },
-    { id: 'financial', label: 'Financial Center', icon: DollarSign },
-    { id: 'weather', label: 'Weather', icon: Sun },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
+
+  // Dropdown toggle function
+  const toggleDropdown = (dropdownId: string) => {
+    setOpenDropdowns(prev =>
+      prev.includes(dropdownId)
+        ? prev.filter(id => id !== dropdownId)
+        : [...prev, dropdownId]
+    );
+  };
 
   // Helper functions
   const formatCurrency = (amount: number) => {
@@ -4737,6 +4773,13 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
         return renderMarketplace();
       case 'orders':
         return renderOrders();
+      case 'messages':
+        return (
+          <MessagesInbox
+            farmerId={user?.uid || user?.id || 'farmer-123'}
+            farmerName={userProfile.name || user?.name || 'Farmer'}
+          />
+        );
       case 'analytics':
         return renderAnalytics();
       case 'services':
@@ -5076,6 +5119,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                   {navigationItems.map((item, index) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
+                    const isDropdownOpen = openDropdowns.includes(item.id);
                     return (
                       <li
                         key={item.id}
@@ -5084,8 +5128,12 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                       >
                         <button
                           onClick={() => {
-                            setActiveTab(item.id);
-                            setMobileMenuOpen(false);
+                            if (item.isDropdown) {
+                              toggleDropdown(item.id);
+                            } else {
+                              setActiveTab(item.id);
+                              setMobileMenuOpen(false);
+                            }
                           }}
                           className={`group relative w-full flex items-center gap-1 px-4 py-3.5 rounded-xl transition-all duration-300 transform ${
                             isActive
@@ -5128,8 +5176,15 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                             {item.label}
                           </span>
 
+                          {/* Dropdown Arrow */}
+                          {item.isDropdown && (
+                            <ChevronDown className={`ml-auto h-4 w-4 transition-transform duration-300 ${
+                              isDropdownOpen ? 'rotate-180' : ''
+                            } ${isActive ? 'text-white' : 'text-gray-600'}`} />
+                          )}
+
                           {/* Active Indicator */}
-                          {isActive && (
+                          {isActive && !item.isDropdown && (
                             <div className="ml-auto flex items-center gap-1">
                               <div className="relative flex items-center justify-center">
                                 <div className="w-2 h-2 rounded-full bg-white animate-ping opacity-75"></div>
@@ -5143,6 +5198,34 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                             isActive ? 'opacity-0' : 'opacity-0 group-hover:opacity-100 group-hover:translate-x-full'
                           }`} style={{ transform: 'translateX(-100%)' }}></div>
                         </button>
+
+                        {/* Dropdown Items */}
+                        {item.isDropdown && isDropdownOpen && (
+                          <ul className="mt-1.5 ml-4 space-y-1">
+                            {item.subItems?.map((subItem) => {
+                              const SubIcon = subItem.icon;
+                              const isSubActive = activeTab === subItem.id;
+                              return (
+                                <li key={subItem.id}>
+                                  <button
+                                    onClick={() => {
+                                      setActiveTab(subItem.id);
+                                      setMobileMenuOpen(false);
+                                    }}
+                                    className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                                      isSubActive
+                                        ? 'bg-emerald-500 text-white shadow-md'
+                                        : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700'
+                                    }`}
+                                  >
+                                    <SubIcon className="h-4 w-4" />
+                                    <span className="text-xs font-medium">{subItem.label}</span>
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
                       </li>
                     );
                   })}
@@ -5177,22 +5260,30 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                   {navigationItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
+                    const isDropdownOpen = openDropdowns.includes(item.id);
+
                     return (
                       <li key={item.id}>
                         <button
-                          onClick={() => setActiveTab(item.id)}
+                          onClick={() => {
+                            if (item.isDropdown) {
+                              toggleDropdown(item.id);
+                            } else {
+                              setActiveTab(item.id);
+                            }
+                          }}
                           className={`group relative w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 overflow-hidden ${
                             isActive
                               ? 'bg-gradient-to-r from-sky-400 via-emerald-400 to-teal-400 text-white shadow-xl shadow-emerald-300/60 scale-105'
                               : 'text-gray-700 hover:bg-gradient-to-r hover:from-sky-100 hover:via-emerald-100 hover:to-teal-100 hover:shadow-lg hover:shadow-emerald-200/60 hover:scale-102'
                           } ${sidebarCollapsed ? 'justify-center' : ''}`}
                         >
-                          {/* Animated Gradient Background on Hover - Sky Blue + Light Green */}
+                          {/* Animated Gradient Background on Hover */}
                           {!isActive && (
                             <div className="absolute inset-0 bg-gradient-to-r from-sky-300/0 via-emerald-300/0 to-teal-300/0 group-hover:from-sky-300/70 group-hover:via-emerald-300/70 group-hover:to-teal-300/70 transition-all duration-500"></div>
                           )}
 
-                          {/* Icon with Attractive Styling */}
+                          {/* Icon */}
                           <div className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
                             isActive
                               ? 'bg-white/20 shadow-lg scale-110'
@@ -5205,7 +5296,7 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                             }`} strokeWidth={2.5} />
                           </div>
 
-                          {/* Text Label with Better Typography */}
+                          {/* Text Label */}
                           {!sidebarCollapsed && (
                             <span className={`relative z-10 font-semibold text-sm transition-all duration-300 ${
                               isActive
@@ -5216,13 +5307,45 @@ const FarmerDashboard: React.FC<{ user?: any; onLogout?: () => void }> = ({ user
                             </span>
                           )}
 
+                          {/* Dropdown Arrow */}
+                          {item.isDropdown && !sidebarCollapsed && (
+                            <ChevronDown className={`ml-auto h-4 w-4 transition-transform duration-300 ${
+                              isDropdownOpen ? 'rotate-180' : ''
+                            } ${isActive ? 'text-white' : 'text-gray-600'}`} />
+                          )}
+
                           {/* Active Indicator */}
-                          {isActive && !sidebarCollapsed && (
+                          {isActive && !sidebarCollapsed && !item.isDropdown && (
                             <div className="ml-auto relative z-10">
                               <div className="w-2 h-2 rounded-full bg-white shadow-lg animate-pulse"></div>
                             </div>
                           )}
                         </button>
+
+                        {/* Dropdown Items */}
+                        {item.isDropdown && isDropdownOpen && !sidebarCollapsed && (
+                          <ul className="mt-2 ml-4 space-y-1">
+                            {item.subItems?.map((subItem) => {
+                              const SubIcon = subItem.icon;
+                              const isSubActive = activeTab === subItem.id;
+                              return (
+                                <li key={subItem.id}>
+                                  <button
+                                    onClick={() => setActiveTab(subItem.id)}
+                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                                      isSubActive
+                                        ? 'bg-emerald-400 text-white shadow-md'
+                                        : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700'
+                                    }`}
+                                  >
+                                    <SubIcon className="h-4 w-4" />
+                                    <span className="text-xs font-medium">{subItem.label}</span>
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
                       </li>
                     );
                   })}

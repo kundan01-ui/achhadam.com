@@ -133,6 +133,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
   
   // User-specific data isolation for buyers - MOVED TO TOP
   const [userKey, setUserKey] = useState<string>('');
@@ -549,14 +550,41 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
 
   const navigationItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, color: 'text-blue-600' },
-    { id: 'orders', label: 'My Orders', icon: ShoppingCart, color: 'text-green-600' },
-    { id: 'products', label: 'Products', icon: Package, color: 'text-purple-600' },
-    { id: 'suppliers', label: 'Suppliers', icon: Users, color: 'text-orange-600' },
+    {
+      id: 'marketplace',
+      label: 'Marketplace',
+      icon: ShoppingCart,
+      color: 'text-green-600',
+      isDropdown: true,
+      subItems: [
+        { id: 'products', label: 'Products', icon: Package, color: 'text-purple-600' },
+        { id: 'suppliers', label: 'Suppliers', icon: Users, color: 'text-orange-600' },
+        { id: 'favorites', label: 'Favorites', icon: Heart, color: 'text-pink-600' }
+      ]
+    },
+    {
+      id: 'orders-management',
+      label: 'Orders & Contracts',
+      icon: Package,
+      color: 'text-blue-600',
+      isDropdown: true,
+      subItems: [
+        { id: 'orders', label: 'My Orders', icon: ShoppingCart, color: 'text-green-600' },
+        { id: 'contracts', label: 'Contracts', icon: BarChart3, color: 'text-red-600' }
+      ]
+    },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp, color: 'text-indigo-600' },
-    { id: 'contracts', label: 'Contracts', icon: BarChart3, color: 'text-red-600' },
-    { id: 'favorites', label: 'Favorites', icon: Heart, color: 'text-pink-600' },
     { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-600' }
   ];
+
+  // Toggle dropdown function
+  const toggleDropdown = (dropdownId: string) => {
+    setOpenDropdowns(prev =>
+      prev.includes(dropdownId)
+        ? prev.filter(id => id !== dropdownId)
+        : [...prev, dropdownId]
+    );
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -1999,10 +2027,17 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                 {navigationItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
+                  const isDropdownOpen = openDropdowns.includes(item.id);
                   return (
                     <li key={item.id}>
                       <button
-                        onClick={() => setActiveTab(item.id)}
+                        onClick={() => {
+                          if (item.isDropdown) {
+                            toggleDropdown(item.id);
+                          } else {
+                            setActiveTab(item.id);
+                          }
+                        }}
                         className={`group relative w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 overflow-hidden ${
                           isActive
                             ? 'bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-400 text-white shadow-xl shadow-sky-300/60 scale-105'
@@ -2038,13 +2073,45 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                           </span>
                         )}
 
+                        {/* Dropdown Arrow */}
+                        {item.isDropdown && !sidebarCollapsed && (
+                          <ChevronDown className={`ml-auto h-4 w-4 transition-transform duration-300 ${
+                            isDropdownOpen ? 'rotate-180' : ''
+                          } ${isActive ? 'text-white' : 'text-gray-600'}`} />
+                        )}
+
                         {/* Active Indicator */}
-                        {isActive && !sidebarCollapsed && (
+                        {isActive && !sidebarCollapsed && !item.isDropdown && (
                           <div className="ml-auto relative z-10">
                             <div className="w-2 h-2 rounded-full bg-white shadow-lg animate-pulse"></div>
                           </div>
                         )}
                       </button>
+
+                      {/* Dropdown Items */}
+                      {item.isDropdown && isDropdownOpen && !sidebarCollapsed && (
+                        <ul className="mt-2 ml-4 space-y-1">
+                          {item.subItems?.map((subItem) => {
+                            const SubIcon = subItem.icon;
+                            const isSubActive = activeTab === subItem.id;
+                            return (
+                              <li key={subItem.id}>
+                                <button
+                                  onClick={() => setActiveTab(subItem.id)}
+                                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                                    isSubActive
+                                      ? 'bg-blue-400 text-white shadow-md'
+                                      : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
+                                  }`}
+                                >
+                                  <SubIcon className="h-4 w-4" />
+                                  <span className="text-xs font-medium">{subItem.label}</span>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
                     </li>
                   );
                 })}
@@ -2105,6 +2172,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                   {navigationItems.map((item, index) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
+                    const isDropdownOpen = openDropdowns.includes(item.id);
                     return (
                       <li
                         key={item.id}
@@ -2113,8 +2181,12 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                       >
                         <button
                           onClick={() => {
-                            setActiveTab(item.id);
-                            setMobileMenuOpen(false);
+                            if (item.isDropdown) {
+                              toggleDropdown(item.id);
+                            } else {
+                              setActiveTab(item.id);
+                              setMobileMenuOpen(false);
+                            }
                           }}
                           className={`group relative w-full flex items-center gap-1 px-4 py-3.5 rounded-xl transition-all duration-300 transform ${
                             isActive
@@ -2157,8 +2229,15 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                             {item.label}
                           </span>
 
+                          {/* Dropdown Arrow */}
+                          {item.isDropdown && (
+                            <ChevronDown className={`ml-auto h-4 w-4 transition-transform duration-300 ${
+                              isDropdownOpen ? 'rotate-180' : ''
+                            } ${isActive ? 'text-white' : 'text-gray-600'}`} />
+                          )}
+
                           {/* Active Indicator */}
-                          {isActive && (
+                          {isActive && !item.isDropdown && (
                             <div className="ml-auto flex items-center gap-1">
                               <div className="relative flex items-center justify-center">
                                 <div className="w-2 h-2 rounded-full bg-white animate-ping opacity-75"></div>
@@ -2172,6 +2251,34 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
                             isActive ? 'opacity-0' : 'opacity-0 group-hover:opacity-100 group-hover:translate-x-full'
                           }`} style={{ transform: 'translateX(-100%)' }}></div>
                         </button>
+
+                        {/* Dropdown Items */}
+                        {item.isDropdown && isDropdownOpen && (
+                          <ul className="mt-1.5 ml-4 space-y-1">
+                            {item.subItems?.map((subItem) => {
+                              const SubIcon = subItem.icon;
+                              const isSubActive = activeTab === subItem.id;
+                              return (
+                                <li key={subItem.id}>
+                                  <button
+                                    onClick={() => {
+                                      setActiveTab(subItem.id);
+                                      setMobileMenuOpen(false);
+                                    }}
+                                    className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                                      isSubActive
+                                        ? 'bg-blue-500 text-white shadow-md'
+                                        : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
+                                    }`}
+                                  >
+                                    <SubIcon className="h-4 w-4" />
+                                    <span className="text-xs font-medium">{subItem.label}</span>
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
                       </li>
                     );
                   })}

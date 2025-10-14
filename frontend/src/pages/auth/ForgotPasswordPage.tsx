@@ -4,7 +4,8 @@ import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import LanguageSelector from '../../components/ui/LanguageSelector';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { ArrowLeft, Phone, Shield } from 'lucide-react';
+import { ArrowLeft, Mail, Shield, CheckCircle } from 'lucide-react';
+import { sendPasswordReset } from '../../services/firebaseEmailAuth';
 
 interface ForgotPasswordPageProps {
   onBackToLogin: () => void;
@@ -12,50 +13,51 @@ interface ForgotPasswordPageProps {
 
 const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onBackToLogin }) => {
   const { t } = useLanguage();
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState<'phone' | 'otp' | 'success'>('phone');
-  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<'email' | 'success'>('email');
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleSendOTP = async () => {
-    if (!phone || phone.length < 10) {
-      alert('Please enter a valid phone number');
+  const handleSendResetEmail = async () => {
+    if (!email) {
+      setError('Please enter your email address');
       return;
     }
-    
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setStep('otp');
-      alert(`OTP sent to ${phone}`);
-    } catch (error) {
-      alert('Failed to send OTP. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const handleVerifyOTP = async () => {
-    if (!otp || otp.length < 4) {
-      alert('Please enter a valid OTP');
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
       return;
     }
-    
+
     setIsLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('🔐 Sending password reset email to:', email);
+      const result = await sendPasswordReset(email);
+
+      if (!result.success) {
+        setError(result.error || 'Failed to send password reset email');
+        return;
+      }
+
+      console.log('✅ Password reset email sent successfully!');
+      setSuccessMessage(result.message || 'Password reset email sent!');
       setStep('success');
-    } catch (error) {
-      alert('Invalid OTP. Please try again.');
+
+    } catch (error: any) {
+      console.error('❌ Error sending password reset email:', error);
+      setError(error.message || 'Failed to send password reset email. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleResetPassword = () => {
-    alert('Password reset successful! Please login with your new password.');
+  const handleBackToLogin = () => {
     onBackToLogin();
   };
 
@@ -82,101 +84,80 @@ const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onBackToLogin }
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <Shield className="w-8 h-8 text-green-600" />
+            {step === 'email' ? (
+              <Shield className="w-8 h-8 text-green-600" />
+            ) : (
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            )}
           </div>
           <CardTitle className="text-2xl font-bold text-gray-800">
             {t('forgotPassword')}
           </CardTitle>
-          <p className="text-gray-600">
-            {step === 'phone' && 'Enter your phone number to reset password'}
-            {step === 'otp' && 'Enter the OTP sent to your phone'}
-            {step === 'success' && 'Password reset successful!'}
+          <p className="text-gray-600 text-sm">
+            {step === 'email' && 'Enter your email to receive password reset link'}
+            {step === 'success' && 'Check your email for reset link'}
           </p>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
-          {step === 'phone' && (
+          {step === 'email' && (
             <div className="space-y-4">
+              {/* Email Input */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  {t('phone')} *
+                  Email Address *
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <Input
-                    type="tel"
-                    placeholder={t('enterPhone')}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    maxLength={10}
+                    type="email"
+                    placeholder="Enter your registered email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setError(null);
+                    }}
                     required
                     className="pl-10"
                   />
                 </div>
                 <p className="text-xs text-gray-500">
-                  {t('phoneHelp')}
+                  We'll send a password reset link to this email
                 </p>
               </div>
-              
+
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm border border-red-200">
+                  {error}
+                </div>
+              )}
+
+              {/* Send Reset Email Button */}
               <Button
-                onClick={handleSendOTP}
-                disabled={isLoading || !phone || phone.length < 10}
+                onClick={handleSendResetEmail}
+                disabled={isLoading || !email}
                 className="w-full"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    {t('sending')}...
+                    Sending...
                   </div>
                 ) : (
-                  `Send OTP to ${phone}`
+                  'Send Reset Link'
                 )}
               </Button>
-            </div>
-          )}
 
-          {step === 'otp' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  OTP *
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Enter 6-digit OTP"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  maxLength={6}
-                  required
-                  className="text-center text-lg tracking-widest"
-                />
-                <p className="text-xs text-gray-500">
-                  OTP sent to {phone}
-                </p>
-              </div>
-              
-              <div className="flex space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep('phone')}
-                  className="flex-1"
+              {/* Back to Login Link */}
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={onBackToLogin}
+                  className="text-sm text-green-600 hover:text-green-800 underline"
                 >
-                  {t('back')}
-                </Button>
-                <Button
-                  onClick={handleVerifyOTP}
-                  disabled={isLoading || !otp || otp.length < 4}
-                  className="flex-1"
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Verifying...
-                    </div>
-                  ) : (
-                    'Verify OTP'
-                  )}
-                </Button>
+                  Remember your password? Login
+                </button>
               </div>
             </div>
           )}
@@ -184,21 +165,39 @@ const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onBackToLogin }
           {step === 'success' && (
             <div className="space-y-4 text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                <Shield className="w-8 h-8 text-green-600" />
+                <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <p className="text-green-600 font-medium">
-                Password reset successful!
+              <p className="text-green-600 font-medium text-lg">
+                Reset Link Sent!
               </p>
               <p className="text-gray-600 text-sm">
-                You can now login with your new password.
+                We've sent a password reset link to <strong>{email}</strong>
               </p>
-              
+              <p className="text-gray-500 text-xs">
+                Please check your email inbox (and spam folder) for the reset link. The link will expire in 1 hour.
+              </p>
+
+              {successMessage && (
+                <div className="bg-green-50 text-green-700 p-3 rounded-md text-sm border border-green-200">
+                  {successMessage}
+                </div>
+              )}
+
               <Button
-                onClick={handleResetPassword}
+                onClick={handleBackToLogin}
                 className="w-full"
               >
-                Continue to Login
+                Back to Login
               </Button>
+
+              {/* Resend Link */}
+              <button
+                type="button"
+                onClick={() => setStep('email')}
+                className="text-sm text-gray-600 hover:text-gray-800 underline"
+              >
+                Didn't receive email? Try again
+              </button>
             </div>
           )}
         </CardContent>

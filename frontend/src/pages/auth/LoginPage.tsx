@@ -8,6 +8,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { apiService, type LoginRequest } from '../../services/api';
 import { googleAuthService } from '../../services/googleAuth';
 import { serverWarmupService } from '../../services/serverWarmup';
+import { signInWithEmail } from '../../services/firebaseEmailAuth';
 import type { GoogleUserData } from '../../types/auth';
 
 interface LoginPageProps {
@@ -19,8 +20,10 @@ interface LoginPageProps {
 
 const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, onBackToHome, onForgotPassword }) => {
   const { t } = useLanguage();
+  const [loginMode, setLoginMode] = useState<'phone' | 'email'>('phone');
   const [formData, setFormData] = useState({
     phone: '',
+    email: '',
     password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -75,54 +78,96 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
     e.preventDefault();
     setIsLoading(true);
     setLoginError(null);
-    
+
     try {
-      // Validate required fields
-      if (!formData.phone || !formData.password) {
-        setLoginError('Please fill in all required fields');
-        setIsLoading(false);
-        return;
-      }
-      
-      // Prepare login data
-      const loginData: LoginRequest = {
-        phone: formData.phone,
-        password: formData.password,
-      };
-      
-      // Clear any existing timer
-      if (window.loginTimer) {
-        clearTimeout(window.loginTimer);
-      }
-      
-      console.time('Login Process');
-      
-      // Use cached token for repeat login attempts with same credentials
-      const cachedKey = `login_${formData.phone}_${formData.password}`;
-      const cachedResponse = sessionStorage.getItem(cachedKey);
-      
-      let response;
-      
-      if (cachedResponse && loginAttempt > 0) {
-        console.log('Using cached login response');
-        response = JSON.parse(cachedResponse);
+      // Email Login Mode
+      if (loginMode === 'email') {
+        // Validate email and password
+        if (!formData.email || !formData.password) {
+          setLoginError('Please enter email and password');
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('📧 Attempting email login...');
+        const result = await signInWithEmail(formData.email, formData.password);
+
+        if (!result.success) {
+          setLoginError(result.error || 'Email login failed');
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('✅ Email login successful!');
+
+        // Store Firebase user data
+        if (result.user) {
+          localStorage.setItem('firebaseUser', JSON.stringify({
+            uid: result.user.uid,
+            email: result.user.email,
+            emailVerified: result.user.emailVerified,
+            phoneNumber: result.user.phoneNumber
+          }));
+        }
+
+        // Show success message if email not verified
+        if (result.message) {
+          alert(result.message);
+        }
+
+        // For email login, we need to get user type from backend or ask user
+        // For now, redirect to farmer dashboard as default
+        onUserTypeSelect('farmer', result.user as any);
+
       } else {
-        // Call API service
-        response = await apiService.login(loginData);
-        // Cache the successful response
-        sessionStorage.setItem(cachedKey, JSON.stringify(response));
+        // Phone Login Mode (Original)
+        // Validate required fields
+        if (!formData.phone || !formData.password) {
+          setLoginError('Please fill in all required fields');
+          setIsLoading(false);
+          return;
+        }
+
+        // Prepare login data
+        const loginData: LoginRequest = {
+          phone: formData.phone,
+          password: formData.password,
+        };
+
+        // Clear any existing timer
+        if (window.loginTimer) {
+          clearTimeout(window.loginTimer);
+        }
+
+        console.time('Login Process');
+
+        // Use cached token for repeat login attempts with same credentials
+        const cachedKey = `login_${formData.phone}_${formData.password}`;
+        const cachedResponse = sessionStorage.getItem(cachedKey);
+
+        let response;
+
+        if (cachedResponse && loginAttempt > 0) {
+          console.log('Using cached login response');
+          response = JSON.parse(cachedResponse);
+        } else {
+          // Call API service
+          response = await apiService.login(loginData);
+          // Cache the successful response
+          sessionStorage.setItem(cachedKey, JSON.stringify(response));
+        }
+
+        console.timeEnd('Login Process');
+        console.log('Login successful:', response);
+
+        // Store token in localStorage
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('userData', JSON.stringify(response.user));
+
+        // Redirect based on user type and pass user data
+        onUserTypeSelect(response.user.userType, response.user);
       }
-      
-      console.timeEnd('Login Process');
-      console.log('Login successful:', response);
-      
-      // Store token in localStorage
-      localStorage.setItem('authToken', response.token);
-      localStorage.setItem('userData', JSON.stringify(response.user));
-      
-      // Redirect based on user type and pass user data
-      onUserTypeSelect(response.user.userType, response.user);
-      
+
     } catch (error: any) {
       console.error('Login failed:', error);
       setLoginError(error instanceof Error ? error.message : 'Invalid credentials');
@@ -166,24 +211,72 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSignupClick, onUserTypeSelect, 
         
         <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-            {/* Phone Number */}
-            <div className="space-y-1 sm:space-y-2">
-              <label className="text-xs sm:text-sm font-medium text-gray-700">
-                {t('phone')} *
-              </label>
-              <Input
-                type="tel"
-                placeholder={t('enterPhone')}
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                maxLength={10}
-                required
-                className="text-center text-base sm:text-lg"
-              />
-              <p className="text-xs text-gray-500">
-                {t('phoneHelp')}
-              </p>
+            {/* Login Mode Toggle */}
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setLoginMode('phone')}
+                className={`flex-1 py-2 px-3 rounded-md text-xs sm:text-sm font-medium transition-colors ${
+                  loginMode === 'phone'
+                    ? 'bg-white text-green-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                📱 Phone
+              </button>
+              <button
+                type="button"
+                onClick={() => setLoginMode('email')}
+                className={`flex-1 py-2 px-3 rounded-md text-xs sm:text-sm font-medium transition-colors ${
+                  loginMode === 'email'
+                    ? 'bg-white text-green-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                📧 Email
+              </button>
             </div>
+
+            {/* Phone Number (Phone Mode) */}
+            {loginMode === 'phone' && (
+              <div className="space-y-1 sm:space-y-2">
+                <label className="text-xs sm:text-sm font-medium text-gray-700">
+                  {t('phone')} *
+                </label>
+                <Input
+                  type="tel"
+                  placeholder={t('enterPhone')}
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  maxLength={10}
+                  required
+                  className="text-center text-base sm:text-lg"
+                />
+                <p className="text-xs text-gray-500">
+                  {t('phoneHelp')}
+                </p>
+              </div>
+            )}
+
+            {/* Email (Email Mode) */}
+            {loginMode === 'email' && (
+              <div className="space-y-1 sm:space-y-2">
+                <label className="text-xs sm:text-sm font-medium text-gray-700">
+                  Email *
+                </label>
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  required
+                  className="text-base sm:text-lg"
+                />
+                <p className="text-xs text-gray-500">
+                  Enter your registered email address
+                </p>
+              </div>
+            )}
 
             {/* Password */}
             <div className="space-y-1 sm:space-y-2">
