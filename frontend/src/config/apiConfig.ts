@@ -17,9 +17,29 @@ const isProduction = import.meta.env.PROD && window.location.hostname !== 'local
 const DEVELOPMENT_URL = 'http://localhost:5000';
 const PRODUCTION_URL = 'https://acchadam1-backend.onrender.com';
 
-// Auto-detect environment or use manual override
-const API_BASE_URL = import.meta.env.VITE_API_URL ||
-                     (isDevelopment ? DEVELOPMENT_URL : PRODUCTION_URL);
+// Smart network detection for different devices
+const getBackendURL = () => {
+  // 1. Check if VITE_API_URL environment variable is set (highest priority)
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // 2. Check if we're accessing via localhost/127.0.0.1 from SAME machine
+  const hostname = window.location.hostname;
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+
+  // 3. Check if backend is accessible (for local development)
+  if (isLocalhost && isDevelopment) {
+    // Try to detect if backend is running locally
+    return DEVELOPMENT_URL;
+  }
+
+  // 4. For all other cases (mobile, different laptop, production), use production URL
+  console.log('🌐 Using production backend for better accessibility');
+  return PRODUCTION_URL;
+};
+
+const API_BASE_URL = getBackendURL();
 
 // ========================================
 // LOGGING
