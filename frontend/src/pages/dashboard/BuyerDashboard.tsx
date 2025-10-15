@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import SuppliersPage from './SuppliersPage';
-import AnalyticsPage from './AnalyticsPage';
+import BuyerAnalyticsPage from './BuyerAnalyticsPage';
+import BuyerOrdersPage from './BuyerOrdersPage';
 import FavoritesPage from './FavoritesPage';
 import SettingsPage from './SettingsPage';
 import ContractsPage from './ContractsPage';
@@ -127,10 +129,19 @@ interface BuyerDashboardProps {
 }
 
 const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Handle URL parameters for tab navigation
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
@@ -1865,13 +1876,13 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ user, onLogout }) => {
       case 'overview':
         return renderOverview();
       case 'orders':
-        return renderOrders();
+        return <BuyerOrdersPage />;
       case 'products':
         return <BuyerProductsPage />;
       case 'suppliers':
         return <SuppliersPage />;
       case 'analytics':
-        return <AnalyticsPage />;
+        return <BuyerAnalyticsPage />;
       case 'contracts':
         return <ContractsPage />;
       case 'favorites':

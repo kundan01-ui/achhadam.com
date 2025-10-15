@@ -73,56 +73,77 @@ class RazorpayService {
   }
 
   // Initialize Razorpay Payment
-  initializePayment(config: RazorpayConfig): void {
-    try {
-      // Wait for Razorpay to be available
-      const initRazorpay = () => {
-        if ((window as any).Razorpay) {
-          const razorpay = (window as any).Razorpay;
-          
-          // Create a simplified config without order_id for demo
-          const demoConfig = {
-            key: config.key,
-            amount: config.amount,
-            currency: config.currency,
-            name: config.name,
-            description: config.description,
-            prefill: config.prefill,
-            notes: config.notes,
-            theme: config.theme,
-            handler: config.handler,
-            modal: config.modal
-          };
-          
-          const razorpayInstance = new razorpay(demoConfig);
-          razorpayInstance.open();
-        } else {
-          console.error('❌ Razorpay not available');
-        }
-      };
-
-      // Check if Razorpay is already loaded
-      if ((window as any).Razorpay) {
-        initRazorpay();
-      } else {
-        // Wait for script to load
-        const checkRazorpay = setInterval(() => {
+  initializePayment(config: RazorpayConfig): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        // Wait for Razorpay to be available
+        const initRazorpay = () => {
           if ((window as any).Razorpay) {
-            clearInterval(checkRazorpay);
-            initRazorpay();
-          }
-        }, 100);
+            console.log('✅ Razorpay SDK loaded successfully');
+            const razorpay = (window as any).Razorpay;
 
-        // Timeout after 10 seconds
-        setTimeout(() => {
-          clearInterval(checkRazorpay);
-          console.error('❌ Razorpay loading timeout');
-        }, 10000);
+            // Create a simplified config without order_id for demo
+            const demoConfig = {
+              key: config.key,
+              amount: config.amount,
+              currency: config.currency,
+              name: config.name,
+              description: config.description,
+              prefill: config.prefill,
+              notes: config.notes,
+              theme: config.theme,
+              handler: (response: any) => {
+                console.log('✅ Payment successful:', response);
+                config.handler(response);
+                resolve();
+              },
+              modal: {
+                ondismiss: () => {
+                  console.log('Payment modal dismissed');
+                  config.modal.ondismiss();
+                  reject(new Error('Payment cancelled by user'));
+                }
+              }
+            };
+
+            console.log('🔄 Opening Razorpay payment modal...');
+            const razorpayInstance = new razorpay(demoConfig);
+            razorpayInstance.open();
+          } else {
+            console.error('❌ Razorpay not available');
+            reject(new Error('Razorpay SDK not loaded'));
+          }
+        };
+
+        // Check if Razorpay is already loaded
+        if ((window as any).Razorpay) {
+          console.log('✅ Razorpay already available');
+          initRazorpay();
+        } else {
+          console.log('⏳ Waiting for Razorpay SDK to load...');
+          let attempts = 0;
+          const maxAttempts = 50; // 5 seconds (50 * 100ms)
+
+          // Wait for script to load
+          const checkRazorpay = setInterval(() => {
+            attempts++;
+            if ((window as any).Razorpay) {
+              clearInterval(checkRazorpay);
+              console.log(`✅ Razorpay loaded after ${attempts} attempts`);
+              initRazorpay();
+            } else if (attempts >= maxAttempts) {
+              clearInterval(checkRazorpay);
+              const errorMsg = '❌ Razorpay SDK failed to load within 5 seconds. Please check your internet connection and try again.';
+              console.error(errorMsg);
+              reject(new Error(errorMsg));
+            }
+          }, 100);
+        }
+      } catch (error) {
+        console.error('❌ Error initializing Razorpay:', error);
+        reject(error);
       }
-    } catch (error) {
-      console.error('❌ Error initializing Razorpay:', error);
-      throw error;
-    }
+    });
   }
 
   // Verify Payment (Direct - No Backend)

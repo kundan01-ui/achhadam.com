@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/homepage/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import UserTypeSelectionPage from './pages/auth/UserTypeSelectionPage';
@@ -18,6 +18,9 @@ import DroneServicePage from './pages/services/DroneServicePage';
 import SeedServicePage from './pages/services/SeedServicePage';
 import AdvisoryServicePage from './pages/services/AdvisoryServicePage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import BuyerDashboard from './pages/dashboard/BuyerDashboard';
+import CheckoutPage from './pages/checkout/CheckoutPage';
+import PaymentSuccessPage from './pages/checkout/PaymentSuccessPage';
 import { LanguageProvider } from './contexts/LanguageContext';
 import CookieConsent from './components/CookieConsent';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
@@ -67,6 +70,16 @@ const App: React.FC = () => {
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+            {/* Buyer Dashboard Routes */}
+            <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
+
+            {/* Cart Route - Redirect to Buyer Dashboard */}
+            <Route path="/cart" element={<Navigate to="/buyer-dashboard" replace />} />
+
+            {/* Checkout & Payment Routes */}
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/payment-success" element={<PaymentSuccessPage />} />
           </Routes>
           <CookieConsent companyName="Achhadam" position="bottom" />
           <PWAInstallPrompt />
