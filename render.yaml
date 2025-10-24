@@ -45,6 +45,9 @@ services:
       - path: /assets/*
         name: Cache-Control
         value: public, max-age=31536000, immutable
+      - path: /*.html
+        name: Cache-Control
+        value: public, max-age=86400
     routes:
       - type: rewrite
         source: /*
@@ -55,7 +58,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: CACHE_BUST
-        value: v1.1.0-cache-fix-oct-2025
+        value: v1.1.1-seo-crawlable
+      - key: PRERENDER_TOKEN
+        value: enable-seo-crawling
 
 databases:
   # MongoDB Database

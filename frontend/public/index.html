@@ -58,6 +58,46 @@
 
     <title>Achhadam - Smart Agriculture Platform | Connect Farmers & Buyers Directly</title>
 
+    <!-- Structured Data (JSON-LD) for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Achhadam",
+      "alternateName": "Achhadam Private Limited",
+      "url": "https://achhadam.com",
+      "logo": "https://achhadam.com/achhadam-logo.jpg",
+      "description": "Direct farmer-to-consumer agricultural platform eliminating middlemen. Connect farmers with buyers, smart farming solutions with AI advisory.",
+      "foundingDate": "2024",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "IN"
+      },
+      "sameAs": [
+        "https://achhadam.com"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "Customer Service",
+        "availableLanguage": ["Hindi", "English"]
+      }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Achhadam",
+      "url": "https://achhadam.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://achhadam.com/products?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
     <!-- Firebase Phone Authentication - reCAPTCHA Required -->
     <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
 
@@ -69,8 +109,35 @@
         console.log('SPA Route detected:', window.location.pathname);
       }
     </script>
+
+    <!-- Prerender Detection for SEO Bots -->
+    <script>
+      // Detect if visitor is a bot/crawler
+      window.isCrawler = /bot|crawler|spider|crawling/i.test(navigator.userAgent);
+      if (window.isCrawler) {
+        console.log('SEO Bot detected:', navigator.userAgent);
+      }
+    </script>
   </head>
   <body>
+    <!-- Fallback content for non-JS crawlers -->
+    <noscript>
+      <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
+        <img src="/achhadam-logo.jpg" alt="Achhadam Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 20px;">
+        <h1 style="color: #10b981;">Achhadam - Smart Agriculture Platform</h1>
+        <p style="color: #666; max-width: 600px; margin: 20px auto;">
+          Connect farmers directly with buyers. Eliminate middlemen and revolutionize Indian agriculture.
+        </p>
+        <div style="margin-top: 30px;">
+          <a href="/privacy-policy.html" style="color: #10b981; margin: 0 10px;">Privacy Policy</a>
+          <a href="/terms-conditions.html" style="color: #10b981; margin: 0 10px;">Terms & Conditions</a>
+          <a href="/contact-us.html" style="color: #10b981; margin: 0 10px;">Contact Us</a>
+        </div>
+        <p style="color: #999; margin-top: 30px; font-size: 14px;">
+          Please enable JavaScript to use this application.
+        </p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <div id="recaptcha-container"></div>
     <script type="module" src="/src/main.tsx"></script>
