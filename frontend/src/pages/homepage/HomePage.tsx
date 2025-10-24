@@ -29,9 +29,9 @@ import quangImage from '../../assets/pexels-quang-nguyen-vinh-222549-2132171.jpg
 import kisanStandingImage from '../../assets/kisan standing.jpeg';
 import layerImage from '../../assets/layer.jpeg';
 // Import farmer photos
-import farmer1 from "../../assets/farmer photo/indian-farmer-holding-crop-plant-260nw-1116673256.webp";
-import farmer2 from "../../assets/farmer photo/istockphoto-1284378353-612x612.jpg";
-import farmer3 from "../../assets/farmer photo/young-indian-farmer-green-agriculture-260nw-2027885672.webp";
+import farmer1 from "../../assets/farmer-photos/indian-farmer-holding-crop-plant-260nw-1116673256.webp";
+import farmer2 from "../../assets/farmer-photos/istockphoto-1284378353-612x612.jpg";
+import farmer3 from "../../assets/farmer-photos/young-indian-farmer-green-agriculture-260nw-2027885672.webp";
 import operatingImage from '../../assets/seed-production-industry7bb7-768x384.jpg';
 import workingProcessImage from '../../assets/working process.jpeg';
 
