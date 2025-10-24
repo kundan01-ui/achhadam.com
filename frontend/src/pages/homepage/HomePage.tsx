@@ -546,7 +546,7 @@ const HomePage: React.FC = () => {
           "@context": "https://schema.org",
           "@type": "WebSite",
           "name": "Achhadam",
-          "alternateName": "Achhadam Private Limited",
+          "alternateName": "Achhadam Fintech Private Limited",
           "url": "https://www.achhadam.com",
           "description": "India's leading digital farming platform connecting farmers directly with consumers. Buy fresh crops, vegetables, fruits online. Eliminate middlemen, get fair prices.",
           "potentialAction": {
@@ -556,7 +556,7 @@ const HomePage: React.FC = () => {
           },
           "publisher": {
             "@type": "Organization",
-            "name": "Achhadam Private Limited",
+            "name": "Achhadam Fintech Private Limited",
             "logo": {
               "@type": "ImageObject",
               "url": "https://www.achhadam.com/achhadam%20logo.jpg"
@@ -833,7 +833,7 @@ const HomePage: React.FC = () => {
                          <li>Order management and tracking</li>
                        </ul>
                        <h3>About Achhadam:</h3>
-                       <p>Achhadam Private Limited is revolutionizing agriculture in India through technology. Our platform connects farmers directly with consumers, eliminating middlemen and ensuring fair prices. We provide smart farming solutions, crop analytics, and quality verification services.</p>
+                       <p>Achhadam Fintech Private Limited is revolutionizing agriculture in India through technology. Our platform connects farmers directly with consumers, eliminating middlemen and ensuring fair prices. We provide smart farming solutions, crop analytics, and quality verification services.</p>
                        <h3>Contact Information:</h3>
                        <p>Phone: +91-9905441890 | Email: shampawarp3@gmail.com | Location: Near Sai Mandir balsa road Jintur Maharashtra, India</p>
                      </div>
