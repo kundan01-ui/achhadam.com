@@ -28,6 +28,7 @@ import nicolasImage from '../../assets/pexels-nicolasveithen-1719669.jpg';
 import quangImage from '../../assets/pexels-quang-nguyen-vinh-222549-2132171.jpg';
 import kisanStandingImage from '../../assets/kisan standing.jpeg';
 import layerImage from '../../assets/layer.jpeg';
+// Import farmer photosimport farmer1 from "../../assets/farmer photo/indian-farmer-holding-crop-plant-260nw-1116673256.webp";import farmer2 from "../../assets/farmer photo/istockphoto-1284378353-612x612.jpg";import farmer3 from "../../assets/farmer photo/young-indian-farmer-green-agriculture-260nw-2027885672.webp";
 import operatingImage from '../../assets/seed-production-industry7bb7-768x384.jpg';
 import workingProcessImage from '../../assets/working process.jpeg';
 
@@ -816,7 +817,7 @@ const HomePage: React.FC = () => {
                      {/* SEO-friendly hidden content for search engines */}
                      <div className="sr-only">
                        <h2>Achhadam - India's Leading Digital Agriculture Platform</h2>
-                       <p>Achhadam is India's #1 digital farming platform connecting farmers directly with buyers. Buy fresh crops, vegetables, fruits online. Smart farming technology, crop analytics, KYC verification. Eliminate middlemen, get fair prices. Join 10,000+ farmers and buyers across India.</p>
+                       <p>Achhadam is India's #1 digital farming platform connecting farmers directly with buyers. Buy fresh crops, vegetables, fruits online. Smart farming technology, crop analytics, KYC verification. Eliminate middlemen, get fair prices. Join 100+ farmers and buyers across India.</p>
                        <h3>Agriculture Platform Features:</h3>
                        <ul>
                          <li>Direct farmer to consumer marketplace</li>
@@ -953,7 +954,7 @@ const HomePage: React.FC = () => {
                    <p className={`text-base sm:text-lg max-w-3xl mx-auto px-4 sm:px-0 transition-colors duration-500 ${
                      isDarkMode ? 'text-gray-300 group-hover:text-gray-200' : 'text-gray-600 group-hover:text-gray-700'
                    }`}>
-                     Join 10,000+ farmers who have transformed their lives through direct selling
+                     Join 100+ farmers who have transformed their lives through direct selling
                    </p>
                  </div>
                  
@@ -987,7 +988,7 @@ const HomePage: React.FC = () => {
                          </div>
                          <div>
                            <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-900 transition-colors duration-300">Success Stories</h3>
-                           <p className="text-gray-600 group-hover:text-orange-700 transition-colors duration-300">Join 10,000+ farmers who have transformed their lives through our platform</p>
+                           <p className="text-gray-600 group-hover:text-orange-700 transition-colors duration-300">Join 100+ farmers who have transformed their lives through our platform</p>
                          </div>
                        </div>
                      </div>
@@ -1011,7 +1012,7 @@ const HomePage: React.FC = () => {
                          <div className="w-8 h-8 rounded-full bg-gray-500 border-2 border-white group-hover:bg-green-500 transition-colors duration-300"></div>
                        </div>
                        <div className="text-sm text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">
-                         <span className="font-semibold group-hover:text-green-800 transition-colors duration-300">10,000+</span> farmers earning more
+                         <span className="font-semibold group-hover:text-green-800 transition-colors duration-300">100+</span> farmers earning more
                        </div>
                      </div>
                    </div>
@@ -1586,7 +1587,7 @@ const HomePage: React.FC = () => {
                      <Card key={index} className={`p-8 sm:p-10 testimonial-card animate-fade-in-up stagger-${index + 1} bg-white/90 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-500`}>
                        <CardContent className="p-0">
                          <div className="flex items-center mb-6">
-                           <div className="text-5xl mr-6 animate-float">{testimonial.avatar}</div>
+                           <div className="w-16 h-16 mr-6 rounded-full overflow-hidden shadow-lg animate-float border-4 border-green-100"><img src={testimonial.avatar} alt={testimonial.name} className="w-full h-full object-cover" /></div>
                            <div>
                              <div className="flex items-center mb-2">
                                {[...Array(testimonial.rating)].map((_, i) => (
