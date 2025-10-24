@@ -255,21 +255,21 @@ const testimonials = [
     content: 'ACHHADAM helped me increase my crop sales by 40% in just 3 months! The direct buyer connection is amazing.',
     name: 'Rajesh Kumar',
     role: 'Farmer, Maharashtra',
-    avatar: '🌾'
+    avatar: farmer1
   },
   {
     rating: 5,
     content: 'Best platform for sourcing quality crops directly from farmers. Fresh produce and fair prices guaranteed.',
     name: 'Priya Sharma',
     role: 'Buyer, Delhi',
-    avatar: '🏪'
+    avatar: farmer2
   },
   {
     rating: 5,
     content: 'Great earning opportunities and flexible working hours. The app makes everything so easy!',
     name: 'Amit Patel',
     role: 'Transporter, Gujarat',
-    avatar: '🚛'
+    avatar: farmer3
   }
 ];
 
@@ -1007,9 +1007,15 @@ const HomePage: React.FC = () => {
                      
                      <div className="flex items-center justify-center space-x-4 group hover:bg-gray-50 rounded-lg p-4 transition-all duration-300 cursor-pointer">
                        <div className="flex -space-x-2">
-                         <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white group-hover:bg-green-300 transition-colors duration-300"></div>
-                         <div className="w-8 h-8 rounded-full bg-gray-400 border-2 border-white group-hover:bg-green-400 transition-colors duration-300"></div>
-                         <div className="w-8 h-8 rounded-full bg-gray-500 border-2 border-white group-hover:bg-green-500 transition-colors duration-300"></div>
+                         <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden shadow-md group-hover:scale-110 transition-transform duration-300">
+                           <img src={farmer1} alt="Farmer 1" className="w-full h-full object-cover" />
+                         </div>
+                         <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden shadow-md group-hover:scale-110 transition-transform duration-300">
+                           <img src={farmer2} alt="Farmer 2" className="w-full h-full object-cover" />
+                         </div>
+                         <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden shadow-md group-hover:scale-110 transition-transform duration-300">
+                           <img src={farmer3} alt="Farmer 3" className="w-full h-full object-cover" />
+                         </div>
                        </div>
                        <div className="text-sm text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">
                          <span className="font-semibold group-hover:text-green-800 transition-colors duration-300">100+</span> farmers earning more
