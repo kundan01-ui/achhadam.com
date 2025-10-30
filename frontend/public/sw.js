@@ -1,55 +1,65 @@
-// ACHHADAM Service Worker - Production v1.1.0 - CACHE BUST
-const CACHE_VERSION = '1.1.0-cache-bust';
-const CACHE_NAME = `achhadam-v${CACHE_VERSION}`;
+// ACHHADAM Service Worker - Production with Dynamic Versioning
+// Use build timestamp for automatic version updates
+const BUILD_TIMESTAMP = '__BUILD_TIMESTAMP__'; // Will be replaced during build
+const CACHE_VERSION = `v${BUILD_TIMESTAMP || Date.now()}`;
+const CACHE_NAME = `achhadam-${CACHE_VERSION}`;
 
-// Only cache files that actually exist in production build
+// Cache strategy: Only cache essential files
+// DO NOT cache index.html or JS files - always fetch fresh
 const urlsToCache = [
-  '/',
-  '/manifest.json'
+  '/manifest.json',
+  '/achhadam-logo.jpg',
+  '/favicon.ico'
 ];
 
 // Install event - SKIP WAITING to force immediate activation
 self.addEventListener('install', (event) => {
-  console.log('🔧 SW v1.1.0: Installing and taking control immediately...');
+  console.log(`🔧 SW ${CACHE_VERSION}: Installing and taking control immediately...`);
 
   // Skip waiting and take control immediately
   self.skipWaiting();
 
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
+      .then(async (cache) => {
         console.log('✅ SW: Cache opened:', CACHE_NAME);
-        // Try to cache, but don't fail if some files don't exist
-        return cache.addAll(urlsToCache).catch((err) => {
-          console.warn('⚠️ SW: Some files could not be cached, continuing anyway');
-        });
+        // Cache files individually to avoid failure if one file fails
+        const cachePromises = urlsToCache.map(url =>
+          cache.add(url).catch(err => {
+            console.warn(`⚠️ SW: Could not cache ${url}:`, err.message);
+          })
+        );
+        return Promise.all(cachePromises);
+      })
+      .catch(err => {
+        console.error('❌ SW: Cache setup failed:', err);
       })
   );
 });
 
-// Activate event - AGGRESSIVELY DELETE ALL OLD CACHES
+// Activate event - DELETE OLD CACHES
 self.addEventListener('activate', (event) => {
-  console.log('🔧 SW v1.1.0: Activating and claiming clients...');
+  console.log(`🔧 SW ${CACHE_VERSION}: Activating and claiming clients...`);
 
   event.waitUntil(
     Promise.all([
-      // Delete ALL old caches
+      // Delete ALL old caches except current one
       caches.keys().then((cacheNames) => {
         return Promise.all(
-          cacheNames.map((cacheName) => {
-            if (cacheName !== CACHE_NAME) {
+          cacheNames
+            .filter(cacheName => cacheName !== CACHE_NAME)
+            .map((cacheName) => {
               console.log('🗑️ SW: DELETING OLD CACHE:', cacheName);
               return caches.delete(cacheName);
-            }
-          })
+            })
         );
       }),
-      // Claim all clients immediately
+      // Claim all clients immediately to activate new SW
       self.clients.claim()
     ])
   );
 
-  console.log('✅ SW v1.1.0: Activated and claimed all clients');
+  console.log(`✅ SW ${CACHE_VERSION}: Activated and claimed all clients`);
 });
 
 // Fetch event - NETWORK FIRST strategy for HTML, cache for assets only
@@ -72,30 +82,41 @@ self.addEventListener('fetch', (event) => {
     return; // Let browser handle
   }
 
-  // NEVER CACHE HTML FILES - Always fetch fresh from network
+  // NETWORK FIRST for HTML and JavaScript files - ALWAYS fetch fresh
   if (event.request.url.endsWith('.html') ||
+      event.request.url.endsWith('.js') ||
       event.request.url.endsWith('/') ||
       event.request.mode === 'navigate') {
-    console.log('🌐 SW: Network-only for HTML:', event.request.url);
     event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/index.html');
-      })
+      fetch(event.request)
+        .then(response => {
+          // Update cache with fresh content for offline use
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Fallback to cache if network fails
+          return caches.match(event.request);
+        })
     );
     return;
   }
 
-  // For assets (JS, CSS, images) - try cache first, then network
+  // For static assets (CSS, images, fonts) - cache first, then network
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        console.log('📦 SW: From cache:', event.request.url);
         return cachedResponse;
       }
 
       return fetch(event.request).then((response) => {
-        // Only cache successful responses
-        if (response && response.status === 200 && response.type === 'basic') {
+        // Cache successful responses for static assets
+        if (response && response.status === 200) {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);

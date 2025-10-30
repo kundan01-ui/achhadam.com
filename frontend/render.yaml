@@ -1,0 +1,59 @@
+services:
+  - type: web
+    name: achhadam-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+
+    # Custom headers for cache control
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+
+      # HTML files - Never cache (always fetch fresh)
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate, max-age=0
+
+      # Service Worker - Never cache (always check for updates)
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate, max-age=0
+
+      - path: /manifest.json
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate, max-age=0
+
+      # Static assets with hash - Cache forever (they have unique hashes)
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+
+      # Images - Cache for 1 week
+      - path: /*.jpg
+        name: Cache-Control
+        value: public, max-age=604800
+
+      - path: /*.png
+        name: Cache-Control
+        value: public, max-age=604800
+
+      - path: /*.webp
+        name: Cache-Control
+        value: public, max-age=604800
+
+      - path: /*.ico
+        name: Cache-Control
+        value: public, max-age=604800
+
+    # Routes for SPA
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production

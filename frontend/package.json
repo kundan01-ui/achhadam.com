@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:clean": "rm -rf dist && npm run build",
     "build:force": "npm install --legacy-peer-deps && npm install class-variance-authority clsx tailwind-merge && npm run build",
+    "deploy": "npm run build:clean && echo Deployment ready!",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },

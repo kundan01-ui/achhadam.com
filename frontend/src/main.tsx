@@ -3,55 +3,58 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './styles/globals.css'
 
-// Register Service Worker for PWA - v1.1.0 with Force Update
+// Register Service Worker for PWA - Smart Update Strategy
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      // STEP 1: Unregister ALL old service workers first
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (const registration of registrations) {
-        console.log('🗑️ Unregistering old SW:', registration.scope);
-        await registration.unregister();
-      }
-
-      // STEP 2: Clear all caches
-      const cacheKeys = await caches.keys();
-      for (const key of cacheKeys) {
-        console.log('🗑️ Deleting cache:', key);
-        await caches.delete(key);
-      }
-
-      // STEP 3: Register new service worker
+      // Register service worker
       const registration = await navigator.serviceWorker.register('/sw.js', {
-        updateViaCache: 'none' // Don't cache the SW file itself
+        updateViaCache: 'none', // Don't cache the SW file itself - always check for updates
+        scope: '/'
       });
 
-      console.log('✅ SW v1.1.0: Registered successfully');
+      console.log('✅ SW: Registered successfully');
 
-      // STEP 4: Force update check
-      registration.update();
+      // Check for updates immediately
+      await registration.update();
 
-      // STEP 5: Handle updates
+      // Handle service worker updates
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
-        console.log('🔄 SW: Update found, installing...');
+        if (!newWorker) return;
 
-        if (newWorker) {
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'activated') {
-              console.log('✅ SW: New version activated!');
-              // Force reload to use new SW
-              if (!navigator.serviceWorker.controller) {
-                window.location.reload();
-              }
+        console.log('🔄 SW: Update found, installing new version...');
+
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // New SW is installed but waiting to activate
+            console.log('✅ SW: New version installed, will activate on next page load');
+
+            // Show update notification to user (optional)
+            if (window.confirm('नया अपडेट उपलब्ध है! अभी रीफ्रेश करें?\nNew update available! Refresh now?')) {
+              window.location.reload();
             }
-          });
-        }
+          } else if (newWorker.state === 'activated') {
+            console.log('✅ SW: New version activated!');
+          }
+        });
+      });
+
+      // Check for updates every 30 minutes
+      setInterval(() => {
+        console.log('🔄 SW: Checking for updates...');
+        registration.update();
+      }, 30 * 60 * 1000);
+
+      // Handle controller change (new SW took over)
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('🔄 SW: Controller changed, reloading...');
+        window.location.reload();
       });
 
     } catch (error) {
-      console.log('❌ SW: Registration/cleanup failed:', error);
-      // Don't fail the app if SW fails
+      console.error('❌ SW: Registration failed:', error);
+      // App works without SW, so don't break
     }
   });
 }
