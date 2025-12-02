@@ -25,6 +25,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import CookieConsent from './components/CookieConsent';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import GeminiChatbot from './components/GeminiChatbot';
+import CacheClearButton from './components/CacheClearButton';
 import { initCookieConsent } from './services/cookieService';
 import { handleRouteFallback, checkRouteAccessibility } from './utils/routeFallback';
 
@@ -84,6 +85,8 @@ const App: React.FC = () => {
           <CookieConsent companyName="Achhadam" position="bottom" />
           <PWAInstallPrompt />
           <GeminiChatbot />
+          {/* Temporary cache clear button for mobile users - Remove after Dec 10, 2025 */}
+          {/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && <CacheClearButton />}
         </div>
       </Router>
     </LanguageProvider>

@@ -1,16 +1,18 @@
 # Cache Control Headers for Render Static Site
 
-# HTML files - Never cache
+# HTML files - Never cache (AGGRESSIVE for mobile)
 /index.html
-  Cache-Control: no-cache, no-store, must-revalidate, max-age=0
+  Cache-Control: no-cache, no-store, must-revalidate, max-age=0, s-maxage=0, proxy-revalidate
   Pragma: no-cache
   Expires: 0
+  X-Accel-Expires: 0
 
 # Service Worker - Never cache (critical for updates)
 /sw.js
-  Cache-Control: no-cache, no-store, must-revalidate, max-age=0
+  Cache-Control: no-cache, no-store, must-revalidate, max-age=0, s-maxage=0, proxy-revalidate
   Pragma: no-cache
   Expires: 0
+  X-Accel-Expires: 0
 
 # Manifest - Never cache
 /manifest.json

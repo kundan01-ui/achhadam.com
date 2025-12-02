@@ -14,12 +14,24 @@ services:
       # HTML files - Never cache (always fetch fresh)
       - path: /index.html
         name: Cache-Control
-        value: no-cache, no-store, must-revalidate, max-age=0
+        value: no-cache, no-store, must-revalidate, max-age=0, s-maxage=0
+      - path: /index.html
+        name: Pragma
+        value: no-cache
+      - path: /index.html
+        name: Expires
+        value: "0"
 
       # Service Worker - Never cache (always check for updates)
       - path: /sw.js
         name: Cache-Control
-        value: no-cache, no-store, must-revalidate, max-age=0
+        value: no-cache, no-store, must-revalidate, max-age=0, s-maxage=0
+      - path: /sw.js
+        name: Pragma
+        value: no-cache
+      - path: /sw.js
+        name: Expires
+        value: "0"
 
       - path: /manifest.json
         name: Cache-Control

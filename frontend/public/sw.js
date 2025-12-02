@@ -4,6 +4,8 @@ const BUILD_TIMESTAMP = '__BUILD_TIMESTAMP__'; // Will be replaced during build
 const CACHE_VERSION = `v${BUILD_TIMESTAMP || Date.now()}`;
 const CACHE_NAME = `achhadam-${CACHE_VERSION}`;
 
+console.log(`🚀 SW: Starting with version ${CACHE_VERSION}`);
+
 // Cache strategy: Only cache essential files
 // DO NOT cache index.html or JS files - always fetch fresh
 const urlsToCache = [
@@ -45,17 +47,32 @@ self.addEventListener('activate', (event) => {
     Promise.all([
       // Delete ALL old caches except current one
       caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames
-            .filter(cacheName => cacheName !== CACHE_NAME)
-            .map((cacheName) => {
-              console.log('🗑️ SW: DELETING OLD CACHE:', cacheName);
-              return caches.delete(cacheName);
-            })
-        );
+        console.log('📋 SW: Found caches:', cacheNames);
+        const deletedCaches = cacheNames
+          .filter(cacheName => {
+            // Delete ALL old achhadam caches and any other old caches
+            return cacheName !== CACHE_NAME &&
+                   (cacheName.startsWith('achhadam-') || cacheName.includes('workbox'));
+          })
+          .map((cacheName) => {
+            console.log('🗑️ SW: DELETING OLD CACHE:', cacheName);
+            return caches.delete(cacheName);
+          });
+        return Promise.all(deletedCaches);
       }),
       // Claim all clients immediately to activate new SW
-      self.clients.claim()
+      self.clients.claim().then(() => {
+        console.log('✅ SW: Claimed all clients');
+        // Send message to all clients to reload
+        return self.clients.matchAll().then(clients => {
+          clients.forEach(client => {
+            client.postMessage({
+              type: 'CACHE_UPDATED',
+              version: CACHE_VERSION
+            });
+          });
+        });
+      })
     ])
   );
 
