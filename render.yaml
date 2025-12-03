@@ -35,6 +35,13 @@ services:
     plan: free
     buildCommand: cd frontend && rm -rf node_modules/.vite && rm -rf node_modules/.cache && rm -rf dist && npm cache clean --force && npm install --no-cache && npm run build
     staticPublishPath: ./frontend/dist
+
+    # Custom Domains - CRITICAL for DNS routing
+    # Both www and non-www must be configured
+    # Add these domains in Render Dashboard → Settings → Custom Domain
+    domains:
+      - achhadam.com
+      - www.achhadam.com
     headers:
       # HTML - NEVER CACHE
       - path: /
@@ -100,7 +107,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: CACHE_BUST
-        value: v2.0.0-cache-fix-20251203
+        value: v2.0.1-dns-fix-20251203
       - key: PRERENDER_TOKEN
         value: enable-seo-crawling
       - key: FORCE_REBUILD
