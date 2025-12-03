@@ -33,34 +33,78 @@ services:
     name: achhadam-frontend
     env: static
     plan: free
-    buildCommand: cd frontend && rm -rf node_modules/.vite && rm -rf dist && npm install && npm run build
+    buildCommand: cd frontend && rm -rf node_modules/.vite && rm -rf node_modules/.cache && rm -rf dist && npm cache clean --force && npm install --no-cache && npm run build
     staticPublishPath: ./frontend/dist
     headers:
+      # HTML - NEVER CACHE
       - path: /
         name: Cache-Control
-        value: no-cache, no-store, must-revalidate, max-age=0
+        value: no-cache, no-store, must-revalidate, max-age=0, s-maxage=0
+      - path: /
+        name: Pragma
+        value: no-cache
+      - path: /
+        name: Expires
+        value: "0"
+
       - path: /index.html
         name: Cache-Control
-        value: no-cache, no-store, must-revalidate, max-age=0
+        value: no-cache, no-store, must-revalidate, max-age=0, s-maxage=0
+      - path: /index.html
+        name: Pragma
+        value: no-cache
+      - path: /index.html
+        name: Expires
+        value: "0"
+      - path: /index.html
+        name: X-Content-Type-Options
+        value: nosniff
+
+      # Service Worker - NEVER CACHE
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate, max-age=0, s-maxage=0
+      - path: /sw.js
+        name: Pragma
+        value: no-cache
+
+      # Assets with hash - Cache forever (immutable with hash)
       - path: /assets/*
         name: Cache-Control
         value: public, max-age=31536000, immutable
+
+      # Other HTML files - Cache for 1 hour
       - path: /*.html
         name: Cache-Control
+        value: no-cache, no-store, must-revalidate, max-age=0
+
+      # Images - Cache for 1 day only (reduced from 1 week)
+      - path: /*.jpg
+        name: Cache-Control
         value: public, max-age=86400
+      - path: /*.png
+        name: Cache-Control
+        value: public, max-age=86400
+      - path: /*.webp
+        name: Cache-Control
+        value: public, max-age=86400
+
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
+
     envVars:
       - key: VITE_API_URL
         value: https://acchadam1-backend.onrender.com
       - key: NODE_ENV
         value: production
       - key: CACHE_BUST
-        value: v1.1.1-seo-crawlable
+        value: v2.0.0-cache-fix-20251203
       - key: PRERENDER_TOKEN
         value: enable-seo-crawling
+      - key: FORCE_REBUILD
+        value: "true"
 
 databases:
   # MongoDB Database

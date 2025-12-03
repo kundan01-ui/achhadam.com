@@ -3,84 +3,31 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './styles/globals.css'
 
-// Register Service Worker for PWA - Smart Update Strategy
+// TEMPORARILY DISABLED: Service Worker causing production caching issues
+// Will re-enable after fixing Render CDN cache
+// Unregister all existing service workers to clear cache
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      // First, unregister any existing service workers to force fresh start
+      console.log('🧹 Clearing all service workers and caches...');
+
+      // Unregister ALL service workers
       const registrations = await navigator.serviceWorker.getRegistrations();
       for (const registration of registrations) {
-        console.log('🗑️ SW: Unregistering old service worker...');
+        console.log('🗑️ Unregistering service worker...');
         await registration.unregister();
       }
 
-      // Clear all caches
+      // Clear ALL caches
       const cacheNames = await caches.keys();
       for (const cacheName of cacheNames) {
-        console.log('🗑️ Cache: Deleting old cache:', cacheName);
+        console.log('🗑️ Deleting cache:', cacheName);
         await caches.delete(cacheName);
       }
 
-      // Register fresh service worker
-      const registration = await navigator.serviceWorker.register('/sw.js', {
-        updateViaCache: 'none', // Don't cache the SW file itself - always check for updates
-        scope: '/'
-      });
-
-      console.log('✅ SW: Registered successfully');
-
-      // Listen for messages from service worker
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'CACHE_UPDATED') {
-          console.log('📢 SW: Cache updated to version', event.data.version);
-          // Optionally show a subtle notification
-        }
-      });
-
-      // Check for updates immediately
-      await registration.update();
-
-      // Handle service worker updates
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        if (!newWorker) return;
-
-        console.log('🔄 SW: Update found, installing new version...');
-
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // New SW is installed but waiting to activate
-            console.log('✅ SW: New version installed, will activate on next page load');
-
-            // Show update notification to user
-            if (window.confirm('नया अपडेट उपलब्ध है! अभी रीफ्रेश करें?\nNew update available! Refresh now?')) {
-              // Clear everything before reload
-              caches.keys().then(keys => {
-                keys.forEach(key => caches.delete(key));
-              });
-              window.location.reload();
-            }
-          } else if (newWorker.state === 'activated') {
-            console.log('✅ SW: New version activated!');
-          }
-        });
-      });
-
-      // Check for updates every 10 minutes (more frequent for mobile)
-      setInterval(() => {
-        console.log('🔄 SW: Checking for updates...');
-        registration.update();
-      }, 10 * 60 * 1000);
-
-      // Handle controller change (new SW took over)
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('🔄 SW: Controller changed, reloading...');
-        window.location.reload();
-      });
-
+      console.log('✅ All caches cleared successfully');
     } catch (error) {
-      console.error('❌ SW: Registration failed:', error);
-      // App works without SW, so don't break
+      console.error('❌ Cache clearing failed:', error);
     }
   });
 }
@@ -90,12 +37,23 @@ if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
   console.log('📱 Mobile device detected - clearing old caches...');
   caches.keys().then(keys => {
     keys.forEach(key => {
-      if (!key.includes(Date.now().toString().slice(0, -5))) {
-        console.log('🗑️ Mobile: Deleting old cache:', key);
-        caches.delete(key);
-      }
+      console.log('🗑️ Mobile: Deleting cache:', key);
+      caches.delete(key);
     });
   });
+}
+
+// Force reload without cache on version mismatch
+const APP_VERSION = '__APP_VERSION__' || Date.now().toString();
+const STORED_VERSION = localStorage.getItem('app_version');
+
+if (STORED_VERSION && STORED_VERSION !== APP_VERSION) {
+  console.log(`🔄 Version mismatch detected. Stored: ${STORED_VERSION}, Current: ${APP_VERSION}`);
+  console.log('🔄 Force reloading without cache...');
+  localStorage.setItem('app_version', APP_VERSION);
+  window.location.reload();
+} else {
+  localStorage.setItem('app_version', APP_VERSION);
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

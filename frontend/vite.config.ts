@@ -3,36 +3,37 @@ import react from '@vitejs/plugin-react'
 import fs from 'fs'
 import path from 'path'
 
-// Custom plugin to handle service worker with timestamp and copy headers
-const serviceWorkerPlugin = () => ({
-  name: 'service-worker-plugin',
+// Custom plugin to inject version and copy headers
+const versionInjectionPlugin = () => ({
+  name: 'version-injection-plugin',
   closeBundle: async () => {
     const distDir = path.resolve(__dirname, 'dist');
-    const swPath = path.join(distDir, 'sw.js');
-    const publicSwPath = path.join(__dirname, 'public', 'sw.js');
     const headersPath = path.join(__dirname, 'public', '_headers');
     const distHeadersPath = path.join(distDir, '_headers');
 
     // Generate unique build timestamp
     const buildTimestamp = Date.now();
-    console.log(`\n🔧 Injecting build timestamp: ${buildTimestamp}`);
-
-    // Read the source sw.js
-    let swContent = fs.readFileSync(publicSwPath, 'utf8');
-
-    // Replace the placeholder with actual timestamp
-    swContent = swContent.replace('__BUILD_TIMESTAMP__', buildTimestamp.toString());
-
-    // Write to dist
-    fs.writeFileSync(swPath, swContent, 'utf8');
-
-    console.log('✅ Service Worker updated with cache version: achhadam-v' + buildTimestamp);
+    const buildVersion = `v${buildTimestamp}`;
+    console.log(`\n🔧 Build Version: ${buildVersion}`);
 
     // Copy _headers file to dist if it exists
     if (fs.existsSync(headersPath)) {
       fs.copyFileSync(headersPath, distHeadersPath);
       console.log('✅ _headers file copied to dist/');
     }
+
+    // Inject version into all JS files
+    const files = fs.readdirSync(path.join(distDir, 'assets')).filter(f => f.endsWith('.js'));
+    console.log(`📝 Injecting version into ${files.length} JS files...`);
+
+    for (const file of files) {
+      const filePath = path.join(distDir, 'assets', file);
+      let content = fs.readFileSync(filePath, 'utf8');
+      content = content.replace(/__APP_VERSION__/g, `"${buildVersion}"`);
+      fs.writeFileSync(filePath, content, 'utf8');
+    }
+
+    console.log('✅ Version injection complete!');
   }
 });
 
@@ -40,7 +41,7 @@ const serviceWorkerPlugin = () => ({
 export default defineConfig({
   plugins: [
     react(),
-    serviceWorkerPlugin()
+    versionInjectionPlugin()
   ],
   build: {
     outDir: 'dist',
