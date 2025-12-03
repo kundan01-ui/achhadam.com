@@ -76,7 +76,7 @@ if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 }
 
 // Force reload without cache on version mismatch
-const APP_VERSION = '__APP_VERSION__' || Date.now().toString();
+const APP_VERSION = Date.now().toString();
 const STORED_VERSION = localStorage.getItem('app_version');
 
 if (STORED_VERSION && STORED_VERSION !== APP_VERSION) {

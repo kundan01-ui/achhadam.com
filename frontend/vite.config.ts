@@ -3,37 +3,24 @@ import react from '@vitejs/plugin-react'
 import fs from 'fs'
 import path from 'path'
 
-// Custom plugin to inject version and copy headers
-const versionInjectionPlugin = () => ({
-  name: 'version-injection-plugin',
+// Custom plugin to copy headers file
+const headersPlugin = () => ({
+  name: 'headers-plugin',
   closeBundle: async () => {
     const distDir = path.resolve(__dirname, 'dist');
     const headersPath = path.join(__dirname, 'public', '_headers');
     const distHeadersPath = path.join(distDir, '_headers');
 
-    // Generate unique build timestamp
-    const buildTimestamp = Date.now();
-    const buildVersion = `v${buildTimestamp}`;
-    console.log(`\n🔧 Build Version: ${buildVersion}`);
-
     // Copy _headers file to dist if it exists
     if (fs.existsSync(headersPath)) {
       fs.copyFileSync(headersPath, distHeadersPath);
       console.log('✅ _headers file copied to dist/');
+    } else {
+      console.log('⚠️ No _headers file found in public/');
     }
 
-    // Inject version into all JS files
-    const files = fs.readdirSync(path.join(distDir, 'assets')).filter(f => f.endsWith('.js'));
-    console.log(`📝 Injecting version into ${files.length} JS files...`);
-
-    for (const file of files) {
-      const filePath = path.join(distDir, 'assets', file);
-      let content = fs.readFileSync(filePath, 'utf8');
-      content = content.replace(/__APP_VERSION__/g, `"${buildVersion}"`);
-      fs.writeFileSync(filePath, content, 'utf8');
-    }
-
-    console.log('✅ Version injection complete!');
+    console.log('✅ Build complete with cache-busting enabled!');
+    console.log('📝 Version will be generated at runtime using Date.now()');
   }
 });
 
@@ -41,7 +28,7 @@ const versionInjectionPlugin = () => ({
 export default defineConfig({
   plugins: [
     react(),
-    versionInjectionPlugin()
+    headersPlugin()
   ],
   build: {
     outDir: 'dist',
