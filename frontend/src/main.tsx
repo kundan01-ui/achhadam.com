@@ -32,60 +32,29 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Force clear cache on mobile devices with iOS-specific handling
-if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-  console.log('📱 Mobile device detected - clearing old caches...');
+// One-time cache clear on first visit only (prevents infinite reload loop)
+const CACHE_CLEARED_FLAG = 'achhadam_cache_cleared_v1';
+const cacheAlreadyCleared = sessionStorage.getItem(CACHE_CLEARED_FLAG);
 
-  // Clear all caches
-  caches.keys().then(keys => {
-    keys.forEach(key => {
-      console.log('🗑️ Mobile: Deleting cache:', key);
-      caches.delete(key);
-    });
-  });
+if (!cacheAlreadyCleared) {
+  console.log('🧹 First visit detected - clearing old caches once...');
 
-  // iOS/Safari specific: Clear localStorage and sessionStorage
-  try {
-    localStorage.clear();
-    sessionStorage.clear();
-    console.log('🧹 iOS: Cleared localStorage and sessionStorage');
-  } catch (e) {
-    console.warn('⚠️ Could not clear storage:', e);
+  // Set flag FIRST to prevent infinite loop
+  sessionStorage.setItem(CACHE_CLEARED_FLAG, 'true');
+
+  // Clear all browser caches (async, non-blocking)
+  if ('caches' in window) {
+    caches.keys().then(keys => {
+      keys.forEach(key => {
+        console.log('🗑️ Deleting cache:', key);
+        caches.delete(key);
+      });
+    }).catch(err => console.warn('Cache clear error:', err));
   }
 
-  // iOS Safari specific: Force reload without cache using location.replace
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-  if (isIOS || isSafari) {
-    console.log('🍎 iOS/Safari detected - applying aggressive cache busting');
-
-    // Check if we've already done the iOS reload
-    const iosReloadFlag = sessionStorage.getItem('ios_reload_done');
-
-    if (!iosReloadFlag) {
-      console.log('🔄 iOS: First load - will force reload to clear cache');
-      sessionStorage.setItem('ios_reload_done', 'true');
-
-      // Use setTimeout to allow current page to load first
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    }
-  }
-}
-
-// Force reload without cache on version mismatch
-const APP_VERSION = Date.now().toString();
-const STORED_VERSION = localStorage.getItem('app_version');
-
-if (STORED_VERSION && STORED_VERSION !== APP_VERSION) {
-  console.log(`🔄 Version mismatch detected. Stored: ${STORED_VERSION}, Current: ${APP_VERSION}`);
-  console.log('🔄 Force reloading without cache...');
-  localStorage.setItem('app_version', APP_VERSION);
-  window.location.reload();
+  console.log('✅ Cache clearing initiated (one-time only)');
 } else {
-  localStorage.setItem('app_version', APP_VERSION);
+  console.log('✅ Cache already cleared on this session');
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
