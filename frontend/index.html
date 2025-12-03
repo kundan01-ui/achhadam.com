@@ -181,10 +181,15 @@
     <!-- X-Frame-Options should be set via HTTP headers, not meta tags -->
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
 
-    <!-- Aggressive Cache Busting for Mobile Browsers -->
+    <!-- Aggressive Cache Busting for ALL Browsers (Desktop + Mobile) -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+
+    <!-- iOS Safari Specific Cache Prevention -->
+    <meta name="apple-mobile-web-app-cache" content="no" />
+    <meta http-equiv="x-dns-prefetch-control" content="off" />
+    <meta http-equiv="cleartype" content="on" />
     
     <!-- Performance Hints -->
     <!-- Remove preload hints that are not immediately used -->

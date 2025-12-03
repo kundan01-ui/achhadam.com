@@ -96,9 +96,35 @@ For users still seeing old content, they need to:
 - Chrome: `Ctrl + Shift + Delete` > Clear browsing data
 - Or: Hard reload with `Ctrl + Shift + R`
 
-**Mobile:**
-- Android Chrome: Settings > Privacy > Clear browsing data
-- iOS Safari: Settings > Safari > Clear History and Website Data
+**Android Mobile:**
+- Chrome: Settings > Privacy > Clear browsing data
+- Or: Close all tabs and reopen browser
+
+**iOS/iPad (CRITICAL - Most Aggressive Caching!):**
+
+**iPhone:**
+1. Settings > Safari > Clear History and Website Data
+2. Close all Safari tabs
+3. Force quit Safari (swipe up from app switcher)
+4. Restart iPhone (recommended)
+5. Open Safari > Visit achhadam.com
+
+**iPad:**
+1. Settings > Safari > Advanced > Website Data
+2. Search "achhadam" and Delete
+3. Settings > Safari > Clear History and Website Data
+4. Restart iPad (recommended)
+5. Open Safari > Visit achhadam.com
+
+**Quick Fix (All iOS):**
+- Use Private Browsing mode: Safari > Tab button > Private
+- Visit: https://www.achhadam.com
+
+**Note:** iOS Safari is the most stubborn with caching. If issues persist:
+- Delete home screen PWA icon (if added)
+- Turn off iCloud Safari sync temporarily
+- Clear and restart device
+- See `IOS_IPAD_CACHE_FIX.md` for detailed iOS troubleshooting
 
 ### Step 5: Verify Deployment
 

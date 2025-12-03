@@ -32,15 +32,47 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Force clear cache on mobile devices
+// Force clear cache on mobile devices with iOS-specific handling
 if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
   console.log('📱 Mobile device detected - clearing old caches...');
+
+  // Clear all caches
   caches.keys().then(keys => {
     keys.forEach(key => {
       console.log('🗑️ Mobile: Deleting cache:', key);
       caches.delete(key);
     });
   });
+
+  // iOS/Safari specific: Clear localStorage and sessionStorage
+  try {
+    localStorage.clear();
+    sessionStorage.clear();
+    console.log('🧹 iOS: Cleared localStorage and sessionStorage');
+  } catch (e) {
+    console.warn('⚠️ Could not clear storage:', e);
+  }
+
+  // iOS Safari specific: Force reload without cache using location.replace
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  if (isIOS || isSafari) {
+    console.log('🍎 iOS/Safari detected - applying aggressive cache busting');
+
+    // Check if we've already done the iOS reload
+    const iosReloadFlag = sessionStorage.getItem('ios_reload_done');
+
+    if (!iosReloadFlag) {
+      console.log('🔄 iOS: First load - will force reload to clear cache');
+      sessionStorage.setItem('ios_reload_done', 'true');
+
+      // Use setTimeout to allow current page to load first
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    }
+  }
 }
 
 // Force reload without cache on version mismatch
