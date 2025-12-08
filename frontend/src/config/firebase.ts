@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { AUTH_CONFIG } from './authConfig';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -113,14 +114,24 @@ export const initializeRecaptcha = (elementId: string = 'recaptcha-container') =
     // Create new recaptcha verifier with unique ID
     const uniqueId = `recaptcha-${Date.now()}`;
     targetElement.id = uniqueId;
-    
+
+    console.log('🔑 reCAPTCHA site key from env:', AUTH_CONFIG.RECAPTCHA.SITE_KEY);
+    console.log('🔑 Creating RecaptchaVerifier for element:', uniqueId);
+
+    // Firebase automatically uses Google's reCAPTCHA service
+    // No need to manually configure reCAPTCHA site key
+    // Firebase SDK handles everything internally
     recaptchaVerifier = new RecaptchaVerifier(auth, uniqueId, {
       size: 'invisible',
       callback: (response: any) => {
         console.log('✅ Recaptcha verified successfully:', response);
       },
       'expired-callback': () => {
-        console.log('⚠️ Recaptcha expired');
+        console.log('⚠️ Recaptcha expired, retrying...');
+        // Auto-retry on expiration
+        if (recaptchaVerifier) {
+          recaptchaVerifier.clear();
+        }
       },
       'error-callback': (error: any) => {
         console.error('❌ Recaptcha error:', error);

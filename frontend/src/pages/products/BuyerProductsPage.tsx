@@ -192,7 +192,7 @@ const BuyerProductsPage: React.FC = () => {
 
     // Fallback to default if no valid images
     if (imageUrls.length === 0) {
-      imageUrls = ['/images/default-crop.jpg'];
+      imageUrls = ['/images/default-crop.svg'];
     }
 
     console.log(`📸 Crop "${crop.name}" images:`, imageUrls);
@@ -276,6 +276,9 @@ const BuyerProductsPage: React.FC = () => {
     if (!product) return;
 
     try {
+      console.log('🛒 Starting payment process for:', product.name);
+      showNotification('Initiating payment...', 'info');
+
       // Create Razorpay order
       const order = await razorpayService.createOrder(
         product.price,
@@ -283,8 +286,10 @@ const BuyerProductsPage: React.FC = () => {
         `receipt_${Date.now()}`
       );
 
-      // Initialize Razorpay payment
-      razorpayService.initializePayment({
+      console.log('✅ Order created:', order.id);
+
+      // Initialize Razorpay payment - now with await
+      await razorpayService.initializePayment({
         key: 'rzp_test_RLB4SWduV7kkkH', // Test API key
         amount: order.amount,
         currency: order.currency,
@@ -303,12 +308,55 @@ const BuyerProductsPage: React.FC = () => {
         theme: {
           color: '#16a34a' // Green color
         },
-        handler: (response: any) => {
+        handler: async (response: any) => {
           console.log('✅ Payment successful:', response);
-          showNotification(`Payment successful! Order ID: ${response.razorpay_payment_id}`, 'success');
 
-          // Add to orders after successful payment
+          // Create order object with full details
+          const orderData = {
+            orderId: order.receipt,
+            razorpayOrderId: order.id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+            orderDetails: {
+              cropName: product.name,
+              variety: product.subcategory || '',
+              quality: product.quality || 'Good',
+              quantity: 1,
+              unit: product.unit,
+              pricePerUnit: product.price,
+              totalAmount: product.price,
+              currency: 'INR'
+            },
+            payment: {
+              method: 'razorpay',
+              status: 'paid',
+              amount: product.price,
+              currency: 'INR',
+              transactionId: response.razorpay_payment_id,
+              paymentDate: new Date().toISOString()
+            },
+            delivery: {
+              type: 'delivery',
+              deliveryCharges: 0,
+              estimatedDeliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+            },
+            farmerId: {
+              firstName: product.supplier.name.split(' ')[0],
+              lastName: product.supplier.name.split(' ').slice(1).join(' ') || '',
+              phone: ''
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+
+          // Save to localStorage for PaymentSuccessPage
+          localStorage.setItem(`order_${order.receipt}`, JSON.stringify(orderData));
+
+          // Add to orders
           buyNow(product, 1);
+
+          // Redirect to success page with orderId
+          window.location.href = `/payment-success?orderId=${order.receipt}`;
         },
         modal: {
           ondismiss: () => {
@@ -317,9 +365,10 @@ const BuyerProductsPage: React.FC = () => {
           }
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Payment error:', error);
-      showNotification('Failed to initiate payment', 'error');
+      const errorMessage = error?.message || 'Failed to initiate payment';
+      showNotification(errorMessage, 'error');
     }
   };
 

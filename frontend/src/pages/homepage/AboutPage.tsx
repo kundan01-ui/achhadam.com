@@ -13,10 +13,10 @@ const AboutPage: React.FC<AboutPageProps> = ({ onBackToHome }) => {
   const { t } = useLanguage();
 
   const stats = [
-    { value: '100+', label: 'Farmers', icon: Leaf, color: 'text-green-600', bgColor: 'bg-green-100' },
-    { value: '50+', label: 'Buyers', icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-100' },
-    { value: '20+', label: 'Transporters', icon: Truck, color: 'text-orange-600', bgColor: 'bg-orange-100' },
-    { value: '₹1000+', label: 'Trade Volume', icon: TrendingUp, color: 'text-purple-600', bgColor: 'bg-purple-100' }
+    { value: '20+', label: 'Farmers', icon: Leaf, color: 'text-green-600', bgColor: 'bg-green-100' },
+    { value: '00+', label: 'Buyers', icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+    { value: '00+', label: 'Transporters', icon: Truck, color: 'text-orange-600', bgColor: 'bg-orange-100' },
+    { value: '₹00+', label: 'Trade Volume', icon: TrendingUp, color: 'text-purple-600', bgColor: 'bg-purple-100' }
   ];
 
   const values = [
@@ -52,10 +52,16 @@ const AboutPage: React.FC<AboutPageProps> = ({ onBackToHome }) => {
 
   const team = [
     {
-      name: 'Sham Haribhau Pawar',
-      role: 'Founder & CEO',
+      name: 'Vivekanandan',
+      role: 'CEO',
       avatar: '🌾',
-      description: 'Former farmer turned tech entrepreneur with 15+ years in agriculture'
+      description: 'Visionary leader'
+    },
+    {
+      name: 'Sham Haribhau Pawar',
+      role: 'COO',
+      avatar: '🌾',
+      description: 'Experienced agricultural entrepreneur'
     },
     {
       name: 'Kundan Pal',
@@ -64,11 +70,18 @@ const AboutPage: React.FC<AboutPageProps> = ({ onBackToHome }) => {
       description: 'Tech leader with expertise in building scalable digital platforms'
     },
     {
-      name: 'Dipak Pawar & Maroti Shewale',
-      role: 'Head of Operations',
+      name: 'Dipak Pawar',
+      role: 'CMO',
       avatar: '🚛',
       description: 'Logistics expert with deep understanding of supply chain management'
+    },
+    {
+      name: 'Maroti Shewale',
+      role: 'CFO',
+      avatar: '🚛',
+      description: 'Expert in financial planning and analysis for startups'
     }
+
   ];
 
   const milestones = [
@@ -79,8 +92,8 @@ const AboutPage: React.FC<AboutPageProps> = ({ onBackToHome }) => {
     },
     {
       year: '2025 JULY',
-      title: 'First 1000 Farmers',
-      description: 'Reached our first milestone of 100 registered farmers'
+      title: 'First 15 Farmers',
+      description: 'Reached our first milestone of 15 registered farmers'
     },
     {
       year: '2025 AUGUST',

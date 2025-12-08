@@ -172,7 +172,7 @@ const getHeroSlides = (t: (key: string) => string) => [
 // Data arrays
 const stats = [
   { 
-    value: '100+', 
+    value: '20+', 
     label: 'Active Farmers', 
     icon: Users, 
     color: 'text-gray-600 group-hover:text-green-600',
@@ -181,7 +181,7 @@ const stats = [
     cardBg: 'bg-green-50/80'
   },
   { 
-    value: '50+', 
+    value: '00+', 
     label: 'Verified Buyers', 
     icon: Shield, 
     color: 'text-gray-600 group-hover:text-blue-600',
@@ -190,7 +190,7 @@ const stats = [
     cardBg: 'bg-blue-50/80'
   },
   { 
-    value: '20+', 
+    value: '00+', 
     label: 'Transport Partners', 
     icon: Truck, 
     color: 'text-gray-600 group-hover:text-orange-600',
@@ -199,7 +199,7 @@ const stats = [
     cardBg: 'bg-orange-50/80'
   },
   { 
-    value: '₹1000+', 
+    value: '00+', 
     label: 'Trade Volume', 
     icon: TrendingUp, 
     color: 'text-gray-600 group-hover:text-purple-600',
@@ -254,8 +254,8 @@ const features = [
 
 const testimonials = [
   {
-    rating: 5,
-    content: 'ACHHADAM helped me increase my crop sales by 40% in just 3 months! The direct buyer connection is amazing.',
+    rating: 4,
+    content: 'ACHHADAM helped me increase my crop sales by 10% in just 3 months! The direct buyer connection is amazing.',
     name: 'Rajesh Kumar',
     role: 'Farmer, Maharashtra',
     avatar: farmer1
@@ -268,7 +268,7 @@ const testimonials = [
     avatar: farmer2
   },
   {
-    rating: 5,
+    rating: 4,
     content: 'Great earning opportunities and flexible working hours. The app makes everything so easy!',
     name: 'Amit Patel',
     role: 'Transporter, Gujarat',
@@ -957,7 +957,7 @@ const HomePage: React.FC = () => {
                    <p className={`text-base sm:text-lg max-w-3xl mx-auto px-4 sm:px-0 transition-colors duration-500 ${
                      isDarkMode ? 'text-gray-300 group-hover:text-gray-200' : 'text-gray-600 group-hover:text-gray-700'
                    }`}>
-                     Join 100+ farmers who have transformed their lives through direct selling
+                     Join 20+ farmers who have transformed their lives through direct selling
                    </p>
                  </div>
                  
@@ -971,7 +971,7 @@ const HomePage: React.FC = () => {
                          </div>
                          <div>
                            <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-900 transition-colors duration-300 mobile-text-touch mobile-text-touch">Increased Income</h3>
-                           <p className="text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch mobile-text-touch">Farmers earn 40% more by selling directly to buyers, eliminating middleman commissions</p>
+                           <p className="text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch mobile-text-touch">Farmers earn 10% more by selling directly to buyers, eliminating middleman commissions</p>
                          </div>
                        </div>
                        
@@ -991,7 +991,7 @@ const HomePage: React.FC = () => {
                          </div>
                          <div>
                            <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-900 transition-colors duration-300">Success Stories</h3>
-                           <p className="text-gray-600 group-hover:text-orange-700 transition-colors duration-300">Join 100+ farmers who have transformed their lives through our platform</p>
+                           <p className="text-gray-600 group-hover:text-orange-700 transition-colors duration-300">Join 20+ farmers who have transformed their lives through our platform</p>
                          </div>
                        </div>
                      </div>
@@ -999,11 +999,11 @@ const HomePage: React.FC = () => {
                      {/* Stats Cards */}
                      <div className="grid grid-cols-2 gap-6">
                        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 text-center group hover:bg-green-50 hover:border-green-200 transition-all duration-300 cursor-pointer ">
-                         <div className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300">₹2.5L+</div>
+                         <div className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300">₹1.5L+</div>
                          <div className="text-sm text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">Monthly Income</div>
                        </div>
                        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 text-center group hover:bg-blue-50 hover:border-blue-200 transition-all duration-300 cursor-pointer ">
-                         <div className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">40%</div>
+                         <div className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">10%</div>
                          <div className="text-sm text-gray-600 group-hover:text-blue-700 transition-colors duration-300">Higher Profits</div>
                        </div>
                      </div>
@@ -1021,7 +1021,7 @@ const HomePage: React.FC = () => {
                          </div>
                        </div>
                        <div className="text-sm text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">
-                         <span className="font-semibold group-hover:text-green-800 transition-colors duration-300">100+</span> farmers earning more
+                         <span className="font-semibold group-hover:text-green-800 transition-colors duration-300">10+</span> farmers earning more
                        </div>
                      </div>
                    </div>
@@ -1225,7 +1225,7 @@ const HomePage: React.FC = () => {
                          <div className="text-xs text-gray-600 group-hover:text-purple-700 transition-colors duration-300">Support</div>
                        </div>
                        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 text-center group hover:bg-indigo-50 hover:border-indigo-200 transition-all duration-300 cursor-pointer">
-                         <div className="text-xl font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors duration-300">99%</div>
+                         <div className="text-xl font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors duration-300">96%</div>
                          <div className="text-xs text-gray-600 group-hover:text-indigo-700 transition-colors duration-300">Success Rate</div>
                        </div>
                        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 text-center group hover:bg-pink-50 hover:border-pink-200 transition-all duration-300 cursor-pointer">
@@ -1320,7 +1320,7 @@ const HomePage: React.FC = () => {
                        </div>
                        <div>
                          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-900 transition-colors duration-300 mobile-text-touch">Fair Pricing</h3>
-                         <p className="text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">Farmers get 40% more profit, buyers save 25%</p>
+                         <p className="text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">Farmers get 10% more profit, buyers save 5%</p>
                        </div>
                      </div>
                      
@@ -1337,11 +1337,11 @@ const HomePage: React.FC = () => {
                      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
                        <div className="grid grid-cols-2 gap-6">
                          <div className="text-center">
-                           <div className="text-2xl font-bold text-gray-900 mb-2">₹1000+</div>
+                           <div className="text-2xl font-bold text-gray-900 mb-2">₹00+</div>
                            <div className="text-sm text-gray-600">Trade Volume</div>
                          </div>
                          <div className="text-center">
-                           <div className="text-2xl font-bold text-gray-900 mb-2">150+</div>
+                           <div className="text-2xl font-bold text-gray-900 mb-2">00+</div>
                            <div className="text-sm text-gray-600">Successful Trades</div>
                          </div>
                        </div>
@@ -1432,7 +1432,7 @@ const HomePage: React.FC = () => {
                        </div>
                        <div>
                          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-900 transition-colors duration-300 mobile-text-touch">Yield Optimization</h3>
-                         <p className="text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">AI-powered recommendations to increase production by 40%</p>
+                         <p className="text-gray-600 group-hover:text-green-700 transition-colors duration-300 mobile-text-touch">AI-powered recommendations to increase production by 10%</p>
                        </div>
                      </div>
                      

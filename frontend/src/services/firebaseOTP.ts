@@ -172,10 +172,12 @@ export class FirebaseOTPService {
 
   // Method to check if Firebase is properly configured
   isFirebaseConfigured(): boolean {
+    // RE-ENABLED: Firebase is economically better (free) than SMS services like Fast2SMS
+    // Using Firebase Test Phone Numbers for development (no reCAPTCHA needed)
+    // For production: Firebase automatically handles reCAPTCHA
     try {
-      // Check if Firebase config is properly set
       const config = (window as any).firebaseConfig;
-      return config && config.apiKey && config.apiKey !== 'YOUR_API_KEY' && config.apiKey === 'AIzaSyDIr9HygDcTillF47oYfi1xIEozr9l8mBA';
+      return config && config.apiKey && config.apiKey !== 'YOUR_API_KEY';
     } catch (error) {
       return false;
     }

@@ -89,8 +89,8 @@ const InvestorPage: React.FC<InvestorPageProps> = ({ onBackToHome }) => {
     {
       icon: <TrendingUp className="w-8 h-8 text-green-600" />,
       title: "Rapid Growth Trajectory",
-      description: "40% year-over-year growth in farmer registrations and 60% increase in transaction volume.",
-      metrics: ["₹5000+ GMV", "10,000+ Active Users", "20+ Cities"]
+      description: "20% year-over-year growth in farmer registrations and 60% increase in transaction volume.",
+      metrics: ["₹500+ GMV", "20+ Active Users", "50+ Cities"]
     },
     {
       icon: <Shield className="w-8 h-8 text-blue-600" />,
@@ -101,8 +101,8 @@ const InvestorPage: React.FC<InvestorPageProps> = ({ onBackToHome }) => {
     {
       icon: <Globe className="w-8 h-8 text-purple-600" />,
       title: "Market Expansion",
-      description: "Expanding to 500+ cities across India with international market entry planned.",
-      metrics: ["25 States", "500+ Cities", "5 Countries"]
+      description: "Expanding to 50+ cities across India with international market entry planned.",
+      metrics: ["3 States", "50+ Cities", "1 Countries"]
     },
     {
       icon: <Smartphone className="w-8 h-8 text-orange-600" />,
@@ -115,7 +115,7 @@ const InvestorPage: React.FC<InvestorPageProps> = ({ onBackToHome }) => {
   const financialMetrics = [
     {
       title: "Revenue Growth",
-      value: "150%",
+      value: "15%",
       period: "YoY",
       icon: <GrowthIcon className="w-6 h-6 text-green-600" />,
       description: "Consistent revenue growth driven by user acquisition"

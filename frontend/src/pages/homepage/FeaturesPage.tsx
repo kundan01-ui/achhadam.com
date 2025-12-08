@@ -168,10 +168,10 @@ const FeaturesPage: React.FC<FeaturesPageProps> = ({ onBackToHome }) => {
   ];
 
   const stats = [
-    { value: "100+", label: "Active Farmers", icon: Users },
-    { value: "50+", label: "Verified Buyers", icon: ShoppingCart },
-    { value: "20+", label: "Transport Partners", icon: Truck },
-    { value: "₹1000+", label: "Transaction Volume", icon: DollarSign }
+    { value: "20+", label: "Active Farmers", icon: Users },
+    { value: "00+", label: "Verified Buyers", icon: ShoppingCart },
+    { value: "00+", label: "Transport Partners", icon: Truck },
+    { value: "₹00+", label: "Transaction Volume", icon: DollarSign }
   ];
 
   return (
