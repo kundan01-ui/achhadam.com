@@ -4,32 +4,33 @@ import fs from 'fs'
 import path from 'path'
 
 // Custom plugin to copy headers file
-const headersPlugin = () => ({
-  name: 'headers-plugin',
-  closeBundle: async () => {
-    const distDir = path.resolve(__dirname, 'dist');
-    const headersPath = path.join(__dirname, 'public', '_headers');
-    const distHeadersPath = path.join(distDir, '_headers');
+// const headersPlugin = () => ({
+//   name: 'headers-plugin',
+//   closeBundle: async () => {
+//     const distDir = path.resolve(__dirname, 'dist');
+//     const headersPath = path.resolve(process.cwd(), 'public', '_headers');
+//     const distHeadersPath = path.resolve(distDir, '_headers');
 
-    // Copy _headers file to dist if it exists
-    if (fs.existsSync(headersPath)) {
-      fs.copyFileSync(headersPath, distHeadersPath);
-      console.log('✅ _headers file copied to dist/');
-    } else {
-      console.log('⚠️ No _headers file found in public/');
-    }
 
-    console.log('✅ Build complete with cache-busting enabled!');
-    console.log('📝 Version will be generated at runtime using Date.now()');
-  }
-});
+//     // Copy _headers file to dist if it exists
+//     if (fs.existsSync(headersPath)) {
+//       fs.copyFileSync(headersPath, distHeadersPath);
+//       console.log('✅ _headers file copied to dist/');
+//     } else {
+//       console.log('⚠️ No _headers file found in public/');
+//     }
+
+//     console.log('✅ Build complete with cache-busting enabled!');
+//     console.log('📝 Version will be generated at runtime using Date.now()');
+//   }
+// });
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    headersPlugin()
-  ],
+  // plugins: [
+  //   react(),
+  //   headersPlugin()
+  // ],
   build: {
     outDir: 'dist',
     sourcemap: false,
