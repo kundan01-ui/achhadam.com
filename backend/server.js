@@ -77,6 +77,10 @@ const otpLimiter = rateLimit({
     return isLocalhost;
   }
 });
+app.get("/", (req, res) => {
+  res.send("ACHHADAM backend is running");
+});
+
 
 // Middleware
 app.use(helmet({
