@@ -76,33 +76,24 @@ app.use(helmet({
 
 // CORS configuration - Allow multiple origins for mobile/different devices
 const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:5173',
-  config.security.corsOrigin,
-  // Add your production URLs here
-  process.env.FRONTEND_URL,
-  process.env.PRODUCTION_URL,
-].filter(Boolean); // Remove undefined values
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://achhadam-com-frontend.vercel.app"
+];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
+
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
-      callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
     } else {
-      logger.warn(`CORS blocked origin: ${origin}`);
-      callback(null, true); // Still allow for now, log for debugging
+      console.log("CORS BLOCKED:", origin);
+      return callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400, // 24 hours
+  credentials: true
 }));
 
 // Rate limiting
