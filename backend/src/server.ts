@@ -95,6 +95,12 @@ app.use(cors({
   },
   credentials: true
 }));
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    message: "Backend is working"
+  });
+});
 
 // Rate limiting
 const limiter = rateLimit({
